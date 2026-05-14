@@ -1,88 +1,99 @@
-import CardAccion from "./CardAction";
+import { useState } from "react";
+import CardAction from "./CardAction";
 
 const Registro = () => {
+  const [nombre, setNombre] = useState<string>("");
+  const [correo, setCorreo] = useState<string>("");
+  const [contraseña, setContraseña] = useState<string>("");
+  const [verResultado, setVerResultado] = useState<boolean>(false);
 
-    const registrar = () => {
+  const manejarAccion = () => {
+    alert(`[Módulo: Registro]\nNombre: ${nombre}\nCorreo: ${correo}\nContraseña: ${contraseña}`);
+  };
 
-        const nombre = (
-            document.getElementById("nombre") as HTMLInputElement
-        ).value;
+  return (
+    <main style={{
+      minHeight: "100vh",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center"
+    }}>
+      <div style={{
+        border: "2px solid #afeba4",
+        borderRadius: "4px",
+        backgroundColor: "#77836e",
+        padding: "2rem",
+        width: "350px",
+        textAlign: "center"
+      }}>
+        <h2>Registro de Usuarios</h2>
+        <p style={{ color: "#e8f5e1" }}>Crear nueva cuenta</p>
 
-        const correo = (
-            document.getElementById("correo") as HTMLInputElement
-        ).value;
+        <input
+          type="text"
+          placeholder="Nombre"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          style={{ width: "250px", padding: "0.5rem", display: "block", margin: "0 auto 1rem auto" }}
+        />
 
-        const contraseña = (
-            document.getElementById("contraseña") as HTMLInputElement
-        ).value;
+        <input
+          type="text"
+          placeholder="Correo"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
+          style={{ width: "250px", padding: "0.5rem", display: "block", margin: "0 auto 1rem auto" }}
+        />
 
-        alert(`Nombre: ${nombre}\nCorreo: ${correo}\nContraseña: ${contraseña}`);
-    };
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={contraseña}
+          onChange={(e) => setContraseña(e.target.value)}
+          style={{ width: "250px", padding: "0.5rem", display: "block", margin: "0 auto 1rem auto" }}
+        />
 
-    return (
-        <main
-            style={{
-                minHeight: '100vh',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
-            }}>
+        <CardAction
+          titulo="Registrarse"
+          descripcion=""
+          textoBoton="Registrarse"
+          onAccion={manejarAccion}
+        />
 
-            <div
-                style={{
-                    border: '2px solid #afeba4',
-                    borderRadius: '4px',
-                    backgroundColor: '#77836e',
-                    padding: '2rem',
-                    width: '350px',
-                    textAlign: 'center'
-                }}>
+        <button
+          onClick={() => setVerResultado(!verResultado)}
+          style={{
+            marginTop: "0.8rem",
+            padding: "0.5rem 1rem",
+            backgroundColor: "#4e7750",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontWeight: "bold"
+          }}
+        >
+          {verResultado ? "Ocultar datos" : "Mostrar datos"}
+        </button>
 
-                <h2>Registro de Usuarios</h2>
-                <p style={{ fontSize: '1rem', color:'#3a3b3a' }}>Crear nueva cuenta</p>
-
-                <input
-                    id="nombre"
-                    type="text"
-                    placeholder="Nombre"
-                    style={{
-                        width: '250px',
-                        padding: '0.5rem',
-                        display: 'block',
-                        margin: '0 auto 1rem auto'
-                    }}/>
-
-                <input
-                    id="correo"
-                    type="text"
-                    placeholder="Correo"
-                    style={{
-                        width: '250px',
-                        padding: '0.5rem',
-                        display: 'block',
-                        margin: '0 auto 1rem auto'
-                    }}/>
-
-                <input
-                    id="contraseña"
-                    type="password"
-                    placeholder="Contraseña"
-                    style={{
-                        width: '250px',
-                        padding: '0.5rem',
-                        display: 'block',
-                        margin: '0 auto 1rem auto'
-                    }}/>
-
-                <CardAccion
-                    titulo=""
-                    descripcion=""
-                    textoBoton="Registrar"
-                    onAccion={registrar}
-                />
-            </div>
-        </main>
-    );
+        {verResultado && (
+          <div style={{
+            marginTop: "1rem",
+            backgroundColor: "#5a6e52",
+            border: "1px solid #afeba4",
+            borderRadius: "4px",
+            padding: "0.8rem",
+            color: "#e8f5e1",
+            textAlign: "left"
+          }}>
+            <p style={{ margin: "0.3rem 0" }}>Nombre: <strong>{nombre}</strong></p>
+            <p style={{ margin: "0.3rem 0" }}>Correo: <strong>{correo}</strong></p>
+            <p style={{ margin: "0.3rem 0" }}>Contraseña: <strong>{contraseña}</strong></p>
+          </div>
+        )}
+      </div>
+    </main>
+  );
 };
 
 export default Registro;

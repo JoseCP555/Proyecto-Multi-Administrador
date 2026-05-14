@@ -4,6 +4,7 @@ import Productos from './components/Productos.tsx';
 import Login from './components/Login.tsx';
 import Registro from './components/Registro.tsx';
 import Reportes from './components/Reportes.tsx';
+import Visitantes from './components/Visitantes.tsx';
 
 function App() {
   const [pagina, setPagina] = useState<string>('usuarios');
@@ -16,6 +17,7 @@ function App() {
         <button onClick={() => setPagina('login')} style={{ marginLeft: '10px' }}>Ver Login</button>
         <button onClick={() => setPagina('registro')} style={{ marginLeft: '10px' }}>Ver Registro</button>
         <button onClick={() => setPagina('reportes')} style={{ marginLeft: '10px' }}>Ver Reportes</button>
+        <button onClick={() => setPagina('visitantes')} style={{ marginLeft: '10px' }}>Ver visitantes</button>
       </nav>
 
       <hr />
@@ -26,6 +28,7 @@ function App() {
         {pagina === 'login' && <Login />}
         {pagina === 'registro' && <Registro />}
         {pagina === 'reportes' && <Reportes />}
+        {pagina === 'visitantes' && <Visitantes />}
       </main>
     </div>
   );

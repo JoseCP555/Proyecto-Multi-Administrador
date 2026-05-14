@@ -1,79 +1,88 @@
+import { useState } from "react";
 import CardAccion from "./CardAction";
 
 const Productos = () => {
+  const [mostrarMenu, setMostrarMenu] = useState<boolean>(false);
 
-    const mostrarAccion = (accion: string) => {
-      alert(`Se seleccionó: ${accion}`);
-    };
+  const mostrarAccion = (accion: string) => {
+    alert(`[Módulo: Productos] Se seleccionó: ${accion}`);
+  };
 
-    return (
-      <aside
+  return (
+    <aside style={{
+      width: "280px",
+      minHeight: "100vh",
+      padding: "1rem",
+      backgroundColor: "#77836e",
+      display: "flex",
+      flexDirection: "column",
+      gap: "1rem"
+    }}>
+      <h2 style={{ color: "white", textAlign: "center" }}>
+        Funciones Administrador
+      </h2>
+
+      <button
+        onClick={() => setMostrarMenu(!mostrarMenu)}
         style={{
-            width: '260px',
-            minHeight: '100vh',
-            padding: '1rem',
-            backgroundColor: '#77836e',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem'
-            }}>
+          padding: "0.6rem 1rem",
+          backgroundColor: "#4e7750",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer",
+          fontWeight: "bold"
+        }}
+      >
+        {mostrarMenu ? "Ocultar funciones" : "Ver funciones"}
+      </button>
 
-            <h2 style={{
-                  color:'white',
-                  textAlign:'center'
-                }}>
-                  
-                Funciones Administrador
-            </h2>
-
-            <CardAccion
-                titulo="Conjuntos"
-                descripcion="Seleccionar conjuntos"
-                textoBoton="Conjuntos"
-                onAccion={() => mostrarAccion("Seleccionar Conjuntos")}
-            />
-
-            <CardAccion
-                titulo="Horarios"
-                descripcion="Consultar horarios"
-                textoBoton="Horarios"
-                onAccion={() => mostrarAccion("Consultar Horarios")}
-            />
-
-            <CardAccion
-                titulo="Finanzas"
-                descripcion="Consultar finanzas"
-                textoBoton="Finanzas"
-                onAccion={() => mostrarAccion("Consultar Finanzas")}
-            />
-
-            <CardAccion
-                titulo="Proveedores"
-                descripcion="Añadir proveedores"
-                textoBoton="Proveedores"
-                onAccion={() => mostrarAccion("Añadir Proveedores")}
-            />
-
-            <CardAccion
-                titulo="Documentos"
-                descripcion="Consultar documentos"
-                textoBoton="Documentos"
-                onAccion={() => mostrarAccion("Consultar Documentos")}
-            />
-
-            <CardAccion
-                titulo="Mantenimientos"
-                descripcion="Consultar mantenimientos"
-                textoBoton="Mantenimientos"
-                onAccion={() => mostrarAccion("Consultar Mantenimientos")}
-            />
-
-            <CardAccion
-                titulo="Configuración"
-                descripcion="Abrir configuración"
-                textoBoton="Configuración"
-                onAccion={() => mostrarAccion("Configuración")}
-            />
+      {mostrarMenu && (
+        <>
+          <CardAccion
+            titulo="Conjuntos"
+            descripcion=""
+            textoBoton="Conjuntos"
+            onAccion={mostrarAccion}
+          />
+          <CardAccion
+            titulo="Horarios"
+            descripcion=""
+            textoBoton="Horarios"
+            onAccion={mostrarAccion}
+          />
+          <CardAccion
+            titulo="Finanzas"
+            descripcion=""
+            textoBoton="Finanzas"
+            onAccion={mostrarAccion}
+          />
+          <CardAccion
+            titulo="Proveedores"
+            descripcion=""
+            textoBoton="Proveedores"
+            onAccion={mostrarAccion}
+          />
+          <CardAccion
+            titulo="Documentos"
+            descripcion=""
+            textoBoton="Documentos"
+            onAccion={mostrarAccion}
+          />
+          <CardAccion
+            titulo="Mantenimientos"
+            descripcion=""
+            textoBoton="Mantenimientos"
+            onAccion={mostrarAccion}
+          />
+          <CardAccion
+            titulo="Configuración"
+            descripcion=""
+            textoBoton="Configuración"
+            onAccion={mostrarAccion}
+          />
+        </>
+      )}
     </aside>
   );
 };
