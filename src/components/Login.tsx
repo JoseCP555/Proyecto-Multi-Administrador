@@ -1,13 +1,18 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import CardAction from "./CardAction";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [usuario, setUsuario] = useState<string>("");
   const [contraseña, setContraseña] = useState<string>("");
   const [verResultado, setVerResultado] = useState<boolean>(false);
 
   const manejarAccion = () => {
-    alert(`[Módulo: Login]\nUsuario: ${usuario}\nContraseña: ${contraseña}`);
+
+    alert(Bienvenido ${usuario});
+
+    navigate("/usuarios");
   };
 
   return (
