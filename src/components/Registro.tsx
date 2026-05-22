@@ -1,19 +1,14 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import CardAction from "./CardAction";
 
 const Registro = () => {
-  const navigate = useNavigate();
   const [nombre, setNombre] = useState<string>("");
   const [correo, setCorreo] = useState<string>("");
   const [contraseña, setContraseña] = useState<string>("");
   const [verResultado, setVerResultado] = useState<boolean>(false);
 
   const manejarAccion = () => {
-
-    alert(`Cuenta registrada para ${nombre}`);
-
-    navigate("/");
+    alert(`[Módulo: Registro]\nNombre: ${nombre}\nCorreo: ${correo}\nContraseña: ${contraseña}`);
   };
 
   return (
