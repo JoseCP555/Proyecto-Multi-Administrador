@@ -1,44 +1,55 @@
-import { useState } from 'react';
-import Usuarios from './components/Usuarios copy.tsx';
-import Productos from './components/Productos copy.tsx';
-import Login from './components/Login copy.tsx';
-import Registro from './components/Registro copy.tsx';
-import Reportes from './components/Reportes copy.tsx';
-import Visitantes from './components/Visitantes copy.tsx';
-import Configuracion from './components/Configuracion.tsx';
-import CoreAdmin from './Components/CoreAdmin .tsx';
+import { Routes, Route, Link } from "react-router-dom";
+
+import Usuarios from "./components/Usuarios";
+import Productos from "./components/Productos";
+import Login from "./components/Login";
+import Registro from "./components/Registro";
+import Reportes from "./components/Reportes";
+import Visitantes from "./components/Visitantes";
+import Configuracion from "./components/Configuracion";
+
 function App() {
-  const [pagina, setPagina] = useState<string>('usuarios');
-
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
-      <nav style={{ marginBottom: '20px' }}>
-        <button onClick={() => setPagina('usuarios')}>Ver Usuarios</button>
-        <button onClick={() => setPagina('productos')} style={{ marginLeft: '10px' }}>Ver Productos</button>
-        <button onClick={() => setPagina('login')} style={{ marginLeft: '10px' }}>Ver Login</button>
-        <button onClick={() => setPagina('registro')} style={{ marginLeft: '10px' }}>Ver Registro</button>
-        <button onClick={() => setPagina('reportes')} style={{ marginLeft: '10px' }}>Ver Reportes</button>
-        <button onClick={() => setPagina('visitantes')} style={{ marginLeft: '10px' }}>Ver visitantes</button>
-        <button onClick={() => setPagina('configuracion')} style={{ marginLeft: '10px' }}>Configuración</button>
-        <button onClick={() => setPagina('CoreAdmin ')} style={{ marginLeft: '10px' }}>Ver CoreAdmin </button>
-
+    <div style={{ fontFamily: "sans-serif" }}>
+      
+      <nav
+        style={{
+          display: "flex",
+          gap: "1rem",
+          padding: "1rem",
+          backgroundColor: "#1e293b",
+          flexWrap: "wrap",
+        }}
+      >
+        <Link style={linkStyle} to="/">Login</Link>
+        <Link style={linkStyle} to="/usuarios">Usuarios</Link>
+        <Link style={linkStyle} to="/productos">Productos</Link>
+        <Link style={linkStyle} to="/registro">Registro</Link>
+        <Link style={linkStyle} to="/reportes">Reportes</Link>
+        <Link style={linkStyle} to="/visitantes">Visitantes</Link>
+        <Link style={linkStyle} to="/configuracion">Configuración</Link>
       </nav>
 
-      <hr />
-
-      <main>
-        {pagina === 'usuarios' && <Usuarios />}
-        {pagina === 'productos' && <Productos />}
-        {pagina === 'login' && <Login />}
-        {pagina === 'registro' && <Registro />}
-        {pagina === 'reportes' && <Reportes />}
-        {pagina === 'visitantes' && <Visitantes />}
-        {pagina === 'configuracion' && <Configuracion />}
-        {pagina === 'CoreAdmin ' && <CoreAdmin  />}
-
-      </main>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/usuarios" element={<Usuarios />} />
+        <Route path="/productos" element={<Productos />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="/reportes" element={<Reportes />} />
+        <Route path="/visitantes" element={<Visitantes />} />
+        <Route path="/configuracion" element={<Configuracion />} />
+      </Routes>
     </div>
   );
 }
+
+const linkStyle = {
+  color: "white",
+  textDecoration: "none",
+  fontWeight: "bold",
+  padding: "0.5rem 1rem",
+  backgroundColor: "#334155",
+  borderRadius: "8px",
+};
 
 export default App;
