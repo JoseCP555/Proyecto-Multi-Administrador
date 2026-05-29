@@ -1,81 +1,160 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
 }
 
-body {
-    background: #e6c76e;
+body{
+    background:#eef4ff;
 }
 
-.top-bar {
-    background: #d9d9d9;
-    padding: 10px;
-    font-size: 14px;
+/* ===== Barra superior ===== */
+
+.top-bar{
+    background:white;
+    padding:12px 20px;
+    font-size:18px;
+    font-weight:bold;
+    color:#2563eb;
+    border-bottom:2px solid #dbeafe;
 }
 
-.header {
-    text-align: center;
-    padding: 20px;
-    border-bottom: 2px solid #000;
+/* ===== Header Azul ===== */
+
+.header{
+    background:#2563eb;
+    text-align:center;
+    padding:30px 20px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.1);
 }
 
-.header h1 {
-    font-size: 55px;
+.header h1{
+    font-size:60px;
+    color:white;
 }
 
-.header h2 {
-    font-size: 20px;
-    font-weight: normal;
+.header h2{
+    margin-top:8px;
+    font-size:24px;
+    color:white;
+    font-weight:normal;
 }
 
-.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 40px;
-    gap: 80px;
+/* ===== Contenedor ===== */
+
+.container{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:60px;
 }
 
-/* ===== FORMULARIO ===== */
-.form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 260px;
+/* ===== Formulario ===== */
+
+.form{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    width:350px;
 }
 
-.google-btn {
-    background: #7ea6d8;
-    color: white;
-    padding: 8px;
-    text-align: center;
-    border: 1px solid black;
+/* ===== Botón Google ===== */
+
+.google-btn{
+    background:#dbeafe;
+    color:#2563eb;
+    padding:15px;
+    border-radius:12px;
+    font-size:18px;
+    font-weight:bold;
+    text-align:center;
+    cursor:pointer;
+    border:2px solid #bfdbfe;
+    transition:0.3s;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
 
-label {
-    font-size: 13px;
+.google-btn:hover{
+    background:#bfdbfe;
+    transform:translateY(-2px);
 }
 
-input {
-    padding: 8px;
-    border: 1px solid #999;
-    background: #eee;
+/* ===== Labels ===== */
+
+label{
+    font-size:18px;
+    color:#111827;
 }
 
-.link {
-    font-size: 12px;
-    color: blue;
-    text-align: center;
+/* ===== Inputs ===== */
+
+input{
+    padding:14px;
+    border-radius:30px;
+    border:2px solid #bfdbfe;
+    outline:none;
+    font-size:16px;
+    background:white;
+    transition:0.3s;
 }
 
-.btn {
-    margin-top: 10px;
-    padding: 8px;
-    background: #7ea6d8;
-    color: white;
-    border: 1px solid black;
-    text-align: center;
-    cursor: pointer;
+input:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 10px rgba(37,99,235,0.3);
+}
+
+/* ===== Link ===== */
+
+.link{
+    color:#2563eb;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.link:hover{
+    text-decoration:underline;
+}
+
+/* ===== Botón Iniciar ===== */
+
+.btn{
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:#1d4ed8;
+    color:white;
+    font-size:20px;
+    font-weight:bold;
+    text-align:center;
+    cursor:pointer;
+    transition:0.3s;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+.btn:hover{
+    background:#2563eb;
+    transform:translateY(-2px);
+}
+
+/* ===== Responsive ===== */
+
+@media(max-width:768px){
+
+    .header h1{
+        font-size:42px;
+    }
+
+    .header h2{
+        font-size:20px;
+    }
+
+    .container{
+        padding:30px;
+    }
+
+    .form{
+        width:100%;
+    }
+
 }

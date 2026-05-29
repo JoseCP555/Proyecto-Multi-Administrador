@@ -2,117 +2,272 @@
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Arial;
+    font-family:Arial, Helvetica, sans-serif;
 }
 
 body{
-    background:#d9bb6b;
+    background:#eef4ff;
 }
 
-/* Barra superior */
+/* ===== Barra Superior ===== */
+
 .top{
-    background:#ddd;
-    padding:8px;
-    font-size:14px;
+    background:white;
+    padding:15px 25px;
+    border-bottom:2px solid #dbeafe;
 }
 
-/* Layout */
+.top h2{
+    color:#2563eb;
+    font-size:20px;
+}
+
+/* ===== Layout ===== */
+
 .main{
     display:flex;
+    min-height:100vh;
 }
 
-/* Sidebar */
+/* ===== Sidebar ===== */
+
 .sidebar{
-    width:220px;
-    background:#e2a94f;
-    height:100vh;
-    padding:15px;
+    width:280px;
+    background:#2563eb;
+    padding:25px 22px;
+    color:white;
     position:relative;
 }
 
+/* ===== Logo ===== */
+
+.logo{
+    text-align:center;
+    margin-bottom:35px;
+}
+
+.logo p{
+    color:white;
+    font-size:22px;
+    font-weight:bold;
+}
+
+/* ===== Menu ===== */
+
 .menu-title{
     text-align:center;
-    margin:10px 0;
+    margin-bottom:25px;
+    font-size:20px;
     font-weight:bold;
+    color:white;
+}
+
+/* ===== Botones ===== */
+
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
 }
 
 .menu button{
     width:100%;
-    padding:10px;
-    margin:5px 0;
+    padding:15px;
     border:none;
-    background:#f3d58c;
-    text-align:left;
+    border-radius:14px;
+    background:white;
+    color:#1d4ed8;
+    font-size:17px;
+    font-weight:bold;
     cursor:pointer;
+    transition:0.3s;
 }
+
+.menu button:hover{
+    background:#dbeafe;
+    transform:translateY(-2px);
+}
+
+/* ===== Footer ===== */
 
 .footer{
     position:absolute;
-    bottom:10px;
-    left:15px;
-    font-size:12px;
+    bottom:25px;
+    left:22px;
+    font-size:14px;
+    line-height:28px;
 }
 
-/* Contenido */
+/* ===== Contenido ===== */
+
 .content{
     flex:1;
-    padding:20px;
+    padding:30px;
 }
 
-/* Barra superior interna */
+/* ===== Barra búsqueda ===== */
+
 .search-bar{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    border-bottom:2px solid black;
-    padding-bottom:10px;
+    background:white;
+    padding:20px 25px;
+    border-radius:20px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
+
+/* ===== Input ===== */
 
 .search-bar input{
     width:60%;
-    padding:8px;
-    border-radius:20px;
-    border:1px solid #999;
+    padding:14px 18px;
+    border-radius:30px;
+    border:2px solid #bfdbfe;
+    outline:none;
+    font-size:17px;
+}
+
+.search-bar input:focus{
+    border-color:#2563eb;
+}
+
+/* ===== Iconos ===== */
+
+.icons{
+    display:flex;
+    gap:25px;
 }
 
 .icons span{
-    margin-left:15px;
-    font-size:20px;
+    font-size:24px;
+    cursor:pointer;
 }
 
-/* Saludo */
+/* ===== Encabezado ===== */
+
 .top-content{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin:15px 0;
-}
-
-select{
-    padding:5px;
-}
-
-.btn-orange{
-    background:orange;
-    border:none;
-    padding:5px 10px;
-}
-
-/* Tarjetas */
-.cards{
-    display:flex;
+    margin:30px 0;
     flex-wrap:wrap;
     gap:20px;
 }
 
-.card{
-    width:200px;
-    height:150px;
-    background:#eee;
-    border:1px solid #000;
-    padding:10px;
+.top-content h3{
+    font-size:32px;
+    color:#1d4ed8;
 }
 
+/* ===== Filtros ===== */
+
+.filters{
+    display:flex;
+    gap:15px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+/* ===== Select ===== */
+
+select{
+    padding:12px 15px;
+    border-radius:12px;
+    border:2px solid #bfdbfe;
+    outline:none;
+    font-size:16px;
+    background:white;
+}
+
+/* ===== Botón ===== */
+
+.btn-blue{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:14px 18px;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:15px;
+    transition:0.3s;
+}
+
+.btn-blue:hover{
+    background:#1d4ed8;
+}
+
+/* ===== Tarjetas ===== */
+
+.cards{
+    display:flex;
+    flex-wrap:wrap;
+    gap:25px;
+}
+
+/* ===== Card ===== */
+
+.card{
+    width:250px;
+    min-height:180px;
+    background:white;
+    border-radius:20px;
+    padding:22px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+}
+
+/* ===== Titulo ===== */
+
 .card h3{
-    margin-bottom:5px;
+    color:#2563eb;
+    margin-bottom:15px;
+    font-size:22px;
+}
+
+/* ===== Texto ===== */
+
+.card p{
+    color:#334155;
+    line-height:26px;
+    font-size:16px;
+}
+
+/* ===== Responsive ===== */
+
+@media(max-width:900px){
+
+    .main{
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+        min-height:auto;
+    }
+
+    .footer{
+        position:static;
+        margin-top:25px;
+    }
+
+    .search-bar{
+        flex-direction:column;
+        gap:20px;
+    }
+
+    .search-bar input{
+        width:100%;
+    }
+
+    .top-content{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
 }

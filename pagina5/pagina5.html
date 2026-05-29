@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Multi-Administrador</title>
+    <link rel="stylesheet" href="pagina5.css">
+</head>
+<body>
+
+<!-- TOP -->
+<div class="top">
+    <h1>Mul-Admi</h1>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>MENU</h2>
+
+    <div class="menu">
+        <button>Propiedades</button>
+        <button>Residentes</button>
+        <button>Finanzas</button>
+        <button>Mantenimiento</button>
+        <button>Documentos</button>
+        <button>Reportes</button>
+        <button>Configuración</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="topbar">
+        <input type="text" placeholder="Buscar...">
+        <div>📅 🔔 💬 👤</div>
+    </div>
+
+    <h2>Hola, Administrador</h2>
+
+    <!-- CARDS -->
+    <div class="cards">
+
+        <div class="card">
+            <h3>Copropiedades</h3>
+            <p>Conjunto Residencial Marensa</p>
+            <p>Edificio Época II</p>
+            <p>Parque Industrial Av. 98</p>
+        </div>
+
+        <div class="card">
+            <h3>Facturas por Pago</h3>
+            <p>Aguas = 1.800.000$</p>
+            <p>Electricidad = 2.450.000$</p>
+            <p>Internet = 200.000$</p>
+        </div>
+
+    </div>
+
+    <!-- CALENDARIO -->
+    <div class="small-card">
+
+        <h3>Calendario 📅</h3>
+
+        <div class="calendar-header">
+            <button onclick="prevMonth()">&#10094;</button>
+            <span id="monthYear"></span>
+            <button onclick="nextMonth()">&#10095;</button>
+        </div>
+
+        <table id="calendar">
+            <thead>
+                <tr>
+                    <th>S</th>
+                    <th>M</th>
+                    <th>T</th>
+                    <th>W</th>
+                    <th>T</th>
+                    <th>F</th>
+                    <th>S</th>
+                </tr>
+            </thead>
+
+            <tbody id="calendarBody"></tbody>
+        </table>
+
+    </div>
+
+    <!-- EVENTOS -->
+    <div class="small-card">
+
+        <h3>Eventos</h3>
+
+        <ul id="eventList"></ul>
+
+        <div class="important-box">
+
+            <div class="item" onclick="toggleItem(this)">
+                Fechas importantes
+                <span>🔔</span>
+            </div>
+
+            <div class="item" onclick="toggleItem(this)">
+                Recordatorios
+                <span>☀️</span>
+            </div>
+
+            <div class="item" onclick="toggleItem(this)">
+                Eventos
+                <span>📅</span>
+            </div>
+
+        </div>
+
+        <div class="buttons">
+            <button onclick="addEvent()">Añadir Eventos</button>
+            <button onclick="removeEvent()">Quitar Eventos</button>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="pagina5.js"></script>
+
+</body>
+</html>

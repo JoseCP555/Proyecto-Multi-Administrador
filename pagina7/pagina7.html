@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Administrador</title>
+    <link rel="stylesheet" href="pagina7.css">
+</head>
+<body>
+
+<!-- TOP -->
+<div class="top-header">
+    <h1>Mul-Admi</h1>
+</div>
+
+<div class="container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <h2>MENU</h2>
+
+        <nav class="menu">
+            <button class="menu-item active">Propiedades</button>
+            <button class="menu-item">Residentes</button>
+            <button class="menu-item">Finanzas</button>
+            <button class="menu-item">Mantenimiento</button>
+            <button class="menu-item">Documentos</button>
+            <button class="menu-item">Reportes</button>
+            <button class="menu-item">Configuración</button>
+        </nav>
+
+        <div class="footer">
+            <p>⚙ Soporte Técnico</p>
+            <p>❓ Centro de Ayuda</p>
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- BUSCADOR -->
+        <div class="search-bar">
+
+            <input type="text" id="search" placeholder="Buscar residente...">
+
+            <div class="icons">
+                📅 🔔 💬 👤
+            </div>
+
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filters">
+
+            <h2>Hola, Administrador</h2>
+
+            <div class="selects">
+                <select>
+                    <option>Conjuntos</option>
+                </select>
+
+                <select>
+                    <option>Residencial Marensa</option>
+                </select>
+            </div>
+
+        </div>
+
+        <!-- FORM -->
+        <div class="form">
+
+            <input type="text" id="nombre" placeholder="Nombre del residente">
+
+            <select id="conjunto"></select>
+
+            <button id="btnAgregar">Agregar</button>
+            <button id="btnEditar">Editar</button>
+            <button id="btnEliminar">Eliminar</button>
+
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="content">
+
+            <!-- LISTA -->
+            <div class="box">
+
+                <h3>Lista de Residentes</h3>
+
+                <ul id="lista"></ul>
+
+            </div>
+
+            <!-- DETALLE -->
+            <div class="box">
+
+                <h3>Detalle</h3>
+
+                <p id="detalle">
+                    Selecciona un residente
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- MENSAJE -->
+        <div id="mensaje"></div>
+
+    </main>
+
+</div>
+
+<script src="pagina7.js"></script>
+
+</body>
+</html>

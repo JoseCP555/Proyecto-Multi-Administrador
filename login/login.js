@@ -1,46 +1,91 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Seleccionamos los elementos del DOM
+
+    // Elementos
     const loginBtn = document.querySelector(".btn");
     const googleBtn = document.querySelector(".google-btn");
     const inputs = document.querySelectorAll("input");
     const forgotPasswordLink = document.querySelector(".link");
 
-    // Evento para el botón de INICIAR
+    // Botón iniciar sesión
     loginBtn.addEventListener("click", () => {
+
         const email = inputs[0].value.trim();
         const password = inputs[1].value.trim();
 
-        if (email === "" || password === "") {
-            alert("Por favor, completa todos los campos.");
+        if(email === "" || password === ""){
+            alert("Por favor completa todos los campos.");
             return;
         }
 
-        // Aquí iría la lógica de conexión con tu base de datos o API
-        console.log("Intentando iniciar sesión con:", email);
-        alert(`¡Bienvenido! Has ingresado con el correo: ${email}`);
-    });
+        fetch("http://localhost:3000/login", {
 
-    // Evento para el botón de Google (Simulación)
-    googleBtn.addEventListener("click", () => {
-        alert("Redirigiendo a la autenticación de Google...");
-    });
+            method: "POST",
 
-    // Evento para "Olvidaste tu contraseña"
-    forgotPasswordLink.addEventListener("click", () => {
-        const email = inputs[0].value.trim();
-        if (email) {
-            alert(`Se ha enviado un enlace de recuperación a: ${email}`);
-        } else {
-            alert("Por favor, escribe tu correo electrónico primero.");
-        }
-    });
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-    // Permitir iniciar sesión al presionar "Enter" en los campos
-    inputs.forEach(input => {
-        input.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                loginBtn.click();
+            body: JSON.stringify({
+                email,
+                password
+            })
+
+        })
+        .then(response => response.json())
+
+        .then(data => {
+
+            if(data.success){
+
+                alert(`¡Bienvenido ${email}!`);
+
+                window.location.href = "../pagina1/pagina_1.html";
+            }else{
+
+                alert("Correo o contraseña incorrectos");
+
             }
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            alert("Error al conectar con el servidor");
+
         });
     });
+
+    // Botón Google
+    googleBtn.addEventListener("click", () => {
+        alert("Redirigiendo a Google...");
+    });
+
+    // Recuperar contraseña
+    forgotPasswordLink.addEventListener("click", () => {
+
+        const email = inputs[0].value.trim();
+
+        if(email === ""){
+            alert("Escribe tu correo primero.");
+        }else{
+            alert(`Se envió un enlace a: ${email}`);
+        }
+
+    });
+
+    // Enter para iniciar
+    inputs.forEach(input => {
+
+        input.addEventListener("keypress", (e) => {
+
+            if(e.key === "Enter"){
+                loginBtn.click();
+            }
+
+        });
+
+    });
+
 });
