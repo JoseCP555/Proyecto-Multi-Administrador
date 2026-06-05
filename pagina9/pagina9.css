@@ -1,0 +1,284 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
+}
+
+body{
+    background:#eef2f7;
+}
+
+/* HEADER */
+
+.top-header{
+    height:90px;
+    background:white;
+    display:flex;
+    align-items:center;
+    padding:0 35px;
+    border-bottom:2px solid #d8e3ff;
+}
+
+.logo-top{
+    color:#2563eb;
+    font-size:52px;
+    font-weight:800;
+}
+
+/* CONTAINER */
+
+.container{
+    display:flex;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    width:330px;
+    min-height:calc(100vh - 90px);
+    background:linear-gradient(180deg,#1d56f0,#2145ca);
+    padding:35px 22px;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+.sidebar-title{
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:40px;
+}
+
+.menu-title{
+    text-align:center;
+    margin-bottom:25px;
+    font-size:18px;
+    font-weight:700;
+}
+
+/* MENU */
+
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.menu button{
+    background:white;
+    border:none;
+    border-radius:18px;
+    padding:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    color:#374151;
+    font-size:17px;
+    transition:.3s;
+}
+
+.menu button span{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.menu button:hover{
+    transform:translateX(5px);
+}
+
+.active{
+    background:#2563eb !important;
+    color:white !important;
+    border:2px solid white;
+}
+
+/* FOOTER */
+
+.sidebar-footer{
+    border-top:1px solid rgba(255,255,255,.3);
+    padding-top:25px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    font-size:16px;
+}
+
+/* MAIN */
+
+.main{
+    flex:1;
+    padding:35px;
+}
+
+/* SEARCH */
+
+.search-bar{
+    background:white;
+    border-radius:25px;
+    padding:22px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.search-input{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    width:70%;
+}
+
+.search-input i{
+    font-size:30px;
+    color:#6b7280;
+}
+
+.search-input input{
+    border:none;
+    outline:none;
+    width:100%;
+    font-size:30px;
+}
+
+/* ICONOS */
+
+.top-icons{
+    display:flex;
+    gap:35px;
+    color:#5b21b6;
+    font-size:38px;
+}
+
+/* TITULO */
+
+.main-title{
+    margin:40px 0;
+    font-size:64px;
+    color:#111827;
+}
+
+/* DASHBOARD */
+
+.dashboard{
+    display:grid;
+    grid-template-columns:1.2fr .9fr 1fr;
+    gap:30px;
+}
+
+/* CARDS */
+
+.card{
+    background:white;
+    border-radius:25px;
+    padding:25px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.card h2{
+    margin-bottom:20px;
+    font-size:26px;
+    color:#111827;
+}
+
+/* LISTAS */
+
+.list-box{
+    border:2px solid #d1d5db;
+    border-radius:18px;
+    padding:18px;
+    height:550px;
+    overflow:auto;
+}
+
+.list-box p{
+    margin-bottom:18px;
+    font-size:18px;
+}
+
+/* SERVICES */
+
+.services{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.service-card{
+    background:white;
+    border-radius:22px;
+    padding:22px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.icon-circle{
+    width:72px;
+    height:72px;
+    border-radius:50%;
+    background:#2563eb;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:32px;
+}
+
+.service-card h3{
+    font-size:22px;
+    margin-bottom:10px;
+}
+
+.success{
+    color:#16a34a;
+    font-weight:700;
+    font-size:20px;
+}
+
+.danger{
+    color:red;
+    font-weight:700;
+    font-size:20px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1200px){
+
+    .dashboard{
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:900px){
+
+    .container{
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+        min-height:auto;
+    }
+
+    .search-bar{
+        flex-direction:column;
+        gap:20px;
+    }
+
+    .search-input{
+        width:100%;
+    }
+
+    .main-title{
+        font-size:42px;
+    }
+
+}

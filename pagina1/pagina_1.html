@@ -2,6 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Multi-Administrador</title>
 
 <link rel="stylesheet" href="pagina1.css">
@@ -10,18 +12,22 @@
 
 <body>
 
-<div class="top">Mul-Admi</div>
+<!-- Barra Superior -->
+<div class="top">
+    <h2>Mul-Admi</h2>
+</div>
 
 <div class="main">
 
     <!-- Sidebar -->
     <div class="sidebar">
+
+        <!-- Logo -->
         <div class="logo">
-            <div class="logo-box"></div>
-            <div class="logo-circle"></div>
             <p>Multi-Administrador</p>
         </div>
 
+        <!-- Menú -->
         <div class="menu-title">MENU</div>
 
         <div class="menu">
@@ -34,39 +40,56 @@
             <button>Configuración</button>
         </div>
 
+        <!-- Footer -->
         <div class="footer">
             ⚙ Soporte Tecnico<br>
             ❓ Centro de Ayuda
         </div>
+
     </div>
 
     <!-- Contenido -->
     <div class="content">
 
+        <!-- Barra búsqueda -->
         <div class="search-bar">
-            <input type="text" placeholder=" Buscar">
+
+            <input type="text" placeholder="Buscar">
+
             <div class="icons">
                 <span>📅</span>
                 <span>🔔</span>
                 <span>💬</span>
                 <span>👤</span>
             </div>
+
         </div>
 
+        <!-- Encabezado -->
         <div class="top-content">
+
             <h3>Hola, Administrador</h3>
 
-            <div>
+            <div class="filters">
+
                 <select>
                     <option>Copropiedad</option>
+                    <option>Edificios</option>
+                    <option>Apartamentos</option>
                 </select>
 
                 <select>
                     <option>Conjuntos</option>
+                    <option>Torres</option>
+                    <option>Casas</option>
                 </select>
 
-                <button class="btn-orange">Diseño de Pagina</button>
+                <button class="btn-blue">
+                    Diseño de Pagina
+                </button>
+
             </div>
+
         </div>
 
         <!-- Tarjetas -->
@@ -74,7 +97,10 @@
 
             <div class="card">
                 <h3>Horario</h3>
-                <p>Lunes<br>Edificio Epoca 7:00 AM - 12:00 PM</p>
+                <p>
+                    Lunes <br>
+                    Edificio Epoca 7:00 AM - 12:00 PM
+                </p>
             </div>
 
             <div class="card">
@@ -89,19 +115,27 @@
 
             <div class="card">
                 <h3>Reuniones</h3>
-                <p>Reunion de Consejo<br>6:00 PM - Viernes</p>
+                <p>
+                    Reunion de Consejo <br>
+                    6:00 PM - Viernes
+                </p>
             </div>
 
             <div class="card">
                 <h3>Mantenimiento</h3>
-                <p>Revisión Tanques de agua<br>Martes</p>
+                <p>
+                    Revisión Tanques de agua <br>
+                    Martes
+                </p>
             </div>
 
         </div>
 
     </div>
-<script src="script_P1.js"></script>
+
 </div>
+
+<script src="script_P1.js"></script>
 
 </body>
 </html>

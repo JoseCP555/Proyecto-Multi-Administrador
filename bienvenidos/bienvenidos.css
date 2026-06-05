@@ -2,83 +2,199 @@
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Arial;
+    font-family:Arial, Helvetica, sans-serif;
 }
 
 body{
-    background:#e6c76e;
+    background:#eef4ff;
 }
 
-/* Barra superior */
+/* ===== Barra superior ===== */
+
 .top{
-    background:#ddd;
-    padding:8px;
-    font-size:14px;
+    background:white;
+    padding:12px 20px;
+    font-size:18px;
+    font-weight:bold;
+    color:#2563eb;
+    border-bottom:2px solid #dbeafe;
 }
 
-/* Header */
+/* ===== Header Azul ===== */
+
 .header{
+    background:#2563eb;
     text-align:center;
-    padding:20px;
-    border-bottom:2px solid #000;
+    padding:30px 20px;
     position:relative;
+    box-shadow:0 3px 10px rgba(0,0,0,0.1);
 }
 
 .header h1{
-    font-size:55px;
+    font-size:60px;
+    color:white;
 }
 
 .header h2{
-    font-size:18px;
+    margin-top:8px;
+    font-size:24px;
+    color:white;
     font-weight:normal;
 }
 
-/* Iconos derecha */
+/* ===== Iconos ===== */
+
 .header-icons{
     position:absolute;
-    right:20px;
-    top:25px;
-    font-size:20px;
+    right:30px;
+    top:35px;
+    font-size:28px;
+    color:white;
+    cursor:pointer;
 }
 
-/* Contenido */
+/* ===== Contenedor ===== */
+
 .container{
     display:flex;
     justify-content:center;
     align-items:center;
-    gap:80px;
-    padding:40px;
+    gap:100px;
+    padding:60px;
+    flex-wrap:wrap;
+}
+
+/* ===== Imagen ===== */
+
+.image{
+    position:relative;
+    width:260px;
+    height:320px;
+}
+
+/* Edificio grande */
+
+.building{
+    position:absolute;
+    width:130px;
+    height:250px;
+    background:#2563eb;
+    left:80px;
+    top:0;
+    border-radius:12px;
+    border:6px solid white;
+    box-shadow:0 5px 15px rgba(0,0,0,0.15);
+}
+
+/* Casa */
+
+.house{
+    position:absolute;
+    width:95px;
+    height:170px;
+    background:#1d4ed8;
+    left:0;
+    bottom:25px;
+    border-radius:12px;
+    border:6px solid white;
+    box-shadow:0 5px 15px rgba(0,0,0,0.15);
+}
+
+/* Persona */
+
+.person{
+    position:absolute;
+    width:150px;
+    height:150px;
+    background:#60a5fa;
+    border-radius:50%;
+    left:75px;
+    bottom:0;
+    box-shadow:0 5px 15px rgba(0,0,0,0.15);
 }
 
 /* ===== Formulario ===== */
+
 .form{
     display:flex;
     flex-direction:column;
-    gap:12px;
-    width:280px;
+    gap:18px;
+    width:330px;
 }
+
+/* Input */
 
 input{
-    padding:8px;
-    border-radius:20px;
-    border:1px solid #000;
+    padding:14px;
+    border-radius:30px;
+    border:2px solid #bfdbfe;
+    outline:none;
+    font-size:16px;
+    background:white;
+    transition:0.3s;
 }
+
+input:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 10px rgba(37,99,235,0.3);
+}
+
+/* ===== Botones ===== */
 
 .btn{
-    padding:8px;
-    border-radius:6px;
-    border:1px solid #000;
-    text-align:center;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:white;
+    color:#1d4ed8;
+    font-size:18px;
+    font-weight:bold;
     cursor:pointer;
-    background:#e0e0e0;
+    transition:0.3s;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
+
+.btn:hover{
+    transform:translateY(-2px);
+}
+
+/* Google */
 
 .google{
-    background:#7ea6d8;
+    background:#2563eb;
     color:white;
 }
 
+.google:hover{
+    background:#1d4ed8;
+}
+
+/* Apple */
+
 .apple{
-    background:#333;
+    background:#0f172a;
     color:white;
+}
+
+.apple:hover{
+    background:#1e293b;
+}
+
+/* ===== Responsive ===== */
+
+@media(max-width:768px){
+
+    .header h1{
+        font-size:42px;
+    }
+
+    .header h2{
+        font-size:20px;
+    }
+
+    .container{
+        gap:50px;
+        padding:30px;
+    }
+
 }

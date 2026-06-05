@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Configuración Ajustes</title>
+
+    <link rel="stylesheet" href="pagina17.css">
+
+    <!-- ICONOS -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+</head>
+
+<body>
+
+    <!-- HEADER SUPERIOR -->
+
+    <header class="top-header">
+
+        <h1 class="logo-top">
+            Mul-Admi
+        </h1>
+
+    </header>
+
+    <!-- LINEA AZUL -->
+
+    <div class="top-line"></div>
+
+    <!-- CONTENEDOR -->
+
+    <div class="container">
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar">
+
+            <div>
+
+                <h2 class="sidebar-title">
+                    Multi-Administrador
+                </h2>
+
+                <h3 class="menu-title">
+                    MENU
+                </h3>
+
+                <!-- MENU -->
+
+                <div class="menu">
+
+                    <button>
+                        <span>
+                            <i class="fa-solid fa-building"></i>
+                            Propiedades
+                        </span>
+
+                        <i class="fa-solid fa-angle-down"></i>
+                    </button>
+
+                    <button>
+                        <span>
+                            <i class="fa-solid fa-users"></i>
+                            Residentes
+                        </span>
+
+                        <i class="fa-solid fa-angle-down"></i>
+                    </button>
+
+                    <button>
+                        <span>
+                            <i class="fa-solid fa-coins"></i>
+                            Finanzas
+                        </span>
+
+                        <i class="fa-solid fa-angle-down"></i>
+                    </button>
+
+                    <button>
+                        <span>
+                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                            Mantenimiento
+                        </span>
+
+                        <i class="fa-solid fa-angle-down"></i>
+                    </button>
+
+                    <button>
+                        <span>
+                            <i class="fa-solid fa-folder"></i>
+                            Documentos
+                        </span>
+
+                        <i class="fa-solid fa-angle-down"></i>
+                    </button>
+
+                    <button>
+                        <span>
+                            <i class="fa-solid fa-chart-line"></i>
+                            Reportes
+                        </span>
+
+                        <i class="fa-solid fa-angle-down"></i>
+                    </button>
+
+                    <button class="active">
+                        <span>
+                            <i class="fa-solid fa-gear"></i>
+                            Configuración
+                        </span>
+
+                        <i class="fa-solid fa-angle-down"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+
+            <div class="sidebar-footer">
+
+                <p>
+                    <i class="fa-solid fa-headset"></i>
+                    Soporte Tecnico
+                </p>
+
+                <p>
+                    <i class="fa-regular fa-circle-question"></i>
+                    Centro de Ayuda
+                </p>
+
+            </div>
+
+        </aside>
+
+        <!-- MAIN -->
+
+        <main class="main">
+
+            <!-- TOPBAR -->
+
+            <div class="topbar">
+
+                <div class="search-box">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input type="text" placeholder="Buscar">
+
+                </div>
+
+                <div class="top-icons">
+
+                    <i class="fa-regular fa-calendar"></i>
+
+                    <i class="fa-solid fa-bell"></i>
+
+                    <i class="fa-solid fa-message"></i>
+
+                    <div class="separator"></div>
+
+                    <i class="fa-solid fa-user"></i>
+
+                </div>
+
+            </div>
+
+            <!-- HEADER CONTENIDO -->
+
+            <div class="header-content">
+
+                <h2>Hola, Administrador</h2>
+
+                <div class="header-right">
+
+                    <select>
+                        <option>Ajustes</option>
+                    </select>
+
+                    <button class="design-btn">
+                        Diseño de Pagina
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- CONFIGURACION -->
+
+            <div class="settings-container">
+
+                <!-- NOTIFICACIONES -->
+
+                <div class="card">
+
+                    <h3>Notificaciones</h3>
+
+                    <div class="option-group">
+
+                        <p>Activar Notificaciones</p>
+
+                        <label>
+                            <input type="checkbox" checked>
+                            Si
+                        </label>
+
+                        <label>
+                            <input type="checkbox">
+                            No
+                        </label>
+
+                    </div>
+
+                    <div class="option-group">
+
+                        <p>Activar Notificaciones a los residentes</p>
+
+                        <label>
+                            <input type="checkbox" checked>
+                            Si
+                        </label>
+
+                        <label>
+                            <input type="checkbox">
+                            No
+                        </label>
+
+                    </div>
+
+                    <div class="option-group">
+
+                        <p>Activar Notificaciones de Vigilancia</p>
+
+                        <label>
+                            <input type="checkbox">
+                            Si
+                        </label>
+
+                        <label>
+                            <input type="checkbox" checked>
+                            No
+                        </label>
+
+                    </div>
+
+                </div>
+
+                <!-- PANTALLA -->
+
+                <div class="card">
+
+                    <h3>Pantalla</h3>
+
+                    <div class="brightness">
+
+                        <label>Nivel de Brillo</label>
+
+                        <input type="range" min="0" max="100" value="70">
+
+                    </div>
+
+                    <div class="option-group">
+
+                        <p>Ajustes para Daltonismo</p>
+
+                        <label>
+                            <input type="checkbox">
+                            Rojos-Verdes
+                        </label>
+
+                        <label>
+                            <input type="checkbox">
+                            Azul-Amarillo
+                        </label>
+
+                        <label>
+                            <input type="checkbox">
+                            Ninguno
+                        </label>
+
+                    </div>
+
+                    <div class="option-group">
+
+                        <p>Tema</p>
+
+                        <label>
+                            <input type="radio" name="tema">
+                            Claro
+                        </label>
+
+                        <label>
+                            <input type="radio" name="tema">
+                            Oscuro
+                        </label>
+
+                        <label>
+                            <input type="radio" name="tema" checked>
+                            Siguiendo
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- BOTON -->
+
+            <div class="reset-container">
+
+                <button class="reset-btn">
+                    restablecimiento
+                </button>
+
+            </div>
+
+        </main>
+
+    </div>
+
+<script src="pagina17.js"></script>
+
+</body>
+</html>

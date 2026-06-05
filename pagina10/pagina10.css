@@ -1,0 +1,300 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
+}
+
+body{
+    background:#dfe5ee;
+}
+
+/* HEADER */
+
+.top-header{
+    height:90px;
+    background:#f4f4f4;
+    display:flex;
+    align-items:center;
+    padding:0 35px;
+}
+
+.logo-top{
+    color:#2563eb;
+    font-size:52px;
+    font-weight:800;
+}
+
+/* LINEA AZUL */
+
+.top-line{
+    width:350px;
+    height:4px;
+    background:#2563eb;
+}
+
+/* CONTAINER */
+
+.container{
+    display:flex;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    width:320px;
+    min-height:calc(100vh - 94px);
+    background:linear-gradient(180deg,#1d56f0,#2145ca);
+    padding:30px 20px;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+/* TITULO */
+
+.sidebar-title{
+    font-size:40px;
+    font-weight:800;
+    margin-bottom:35px;
+}
+
+/* MENU TITLE */
+
+.menu-title{
+    text-align:center;
+    margin-bottom:20px;
+    font-size:22px;
+    font-weight:700;
+}
+
+/* MENU */
+
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.menu button{
+    background:white;
+    border:none;
+    border-radius:18px;
+    padding:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    color:#1e3a8a;
+    font-size:17px;
+    font-weight:600;
+    transition:.3s;
+}
+
+.menu button span{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.menu button:hover{
+    transform:translateX(5px);
+}
+
+.active{
+    background:#2563eb !important;
+    color:white !important;
+}
+
+/* FOOTER */
+
+.sidebar-footer{
+    border-top:1px solid rgba(255,255,255,.3);
+    padding-top:25px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    font-size:16px;
+}
+
+/* MAIN */
+
+.main{
+    flex:1;
+    padding:30px;
+}
+
+/* TOPBAR */
+
+.topbar{
+    background:#f4f4f4;
+    border-radius:25px;
+    padding:22px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+/* SEARCH */
+
+.search-box{
+    background:white;
+    border:1px solid #bfd3ff;
+    border-radius:15px;
+    padding:14px 20px;
+    width:70%;
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.search-box i{
+    color:#6b7280;
+    font-size:20px;
+}
+
+.search-box input{
+    border:none;
+    outline:none;
+    width:100%;
+    font-size:18px;
+}
+
+/* ICONOS */
+
+.top-icons{
+    display:flex;
+    gap:35px;
+    font-size:30px;
+    color:#5b21b6;
+}
+
+/* HEADER CONTENT */
+
+.header-content{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:35px 0;
+}
+
+.header-content h1{
+    font-size:52px;
+    color:#111827;
+}
+
+/* SELECT */
+
+.selectors{
+    display:flex;
+    gap:15px;
+}
+
+.selectors select{
+    padding:12px 18px;
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    background:white;
+    box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+
+/* CONTENT */
+
+.content{
+    display:flex;
+    gap:30px;
+    margin-bottom:30px;
+}
+
+/* CARD */
+
+.card{
+    background:#f4f4f4;
+    border-radius:25px;
+    padding:25px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.card h2{
+    margin-bottom:20px;
+    color:#2563eb;
+    font-size:30px;
+}
+
+/* BOX */
+
+.box{
+    background:white;
+    border-radius:18px;
+    padding:20px;
+    min-height:220px;
+}
+
+.box p{
+    margin-bottom:18px;
+    font-size:18px;
+    color:#374151;
+}
+
+/* SIZES */
+
+.small-card{
+    width:350px;
+}
+
+.large-card{
+    flex:1;
+}
+
+.vigilancia{
+    width:700px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1200px){
+
+    .content{
+        flex-direction:column;
+    }
+
+    .vigilancia{
+        width:100%;
+    }
+
+}
+
+@media(max-width:900px){
+
+    .container{
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+        min-height:auto;
+    }
+
+    .topbar{
+        flex-direction:column;
+        gap:20px;
+    }
+
+    .search-box{
+        width:100%;
+    }
+
+    .header-content{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:20px;
+    }
+
+    .header-content h1{
+        font-size:40px;
+    }
+
+}

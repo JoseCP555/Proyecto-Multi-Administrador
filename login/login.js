@@ -1,46 +1,57 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Seleccionamos los elementos del DOM
+
+    // Elementos
     const loginBtn = document.querySelector(".btn");
     const googleBtn = document.querySelector(".google-btn");
     const inputs = document.querySelectorAll("input");
     const forgotPasswordLink = document.querySelector(".link");
 
-    // Evento para el botón de INICIAR
+    // Botón iniciar sesión
     loginBtn.addEventListener("click", () => {
+
         const email = inputs[0].value.trim();
         const password = inputs[1].value.trim();
 
-        if (email === "" || password === "") {
-            alert("Por favor, completa todos los campos.");
+        if(email === "" || password === ""){
+            alert("Por favor completa todos los campos.");
             return;
         }
 
-        // Aquí iría la lógica de conexión con tu base de datos o API
-        console.log("Intentando iniciar sesión con:", email);
-        alert(`¡Bienvenido! Has ingresado con el correo: ${email}`);
+        alert(`¡Bienvenido ${email}!`);
+
+        // Redirección
+        window.location.href = "pagina_1.html";
     });
 
-    // Evento para el botón de Google (Simulación)
+    // Botón Google
     googleBtn.addEventListener("click", () => {
-        alert("Redirigiendo a la autenticación de Google...");
+        alert("Redirigiendo a Google...");
     });
 
-    // Evento para "Olvidaste tu contraseña"
+    // Recuperar contraseña
     forgotPasswordLink.addEventListener("click", () => {
+
         const email = inputs[0].value.trim();
-        if (email) {
-            alert(`Se ha enviado un enlace de recuperación a: ${email}`);
-        } else {
-            alert("Por favor, escribe tu correo electrónico primero.");
+
+        if(email === ""){
+            alert("Escribe tu correo primero.");
+        }else{
+            alert(`Se envió un enlace a: ${email}`);
         }
+
     });
 
-    // Permitir iniciar sesión al presionar "Enter" en los campos
+    // Enter para iniciar
     inputs.forEach(input => {
+
         input.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
+
+            if(e.key === "Enter"){
                 loginBtn.click();
             }
+
         });
+
     });
+
 });

@@ -6,30 +6,30 @@
 }
 
 body{
-    background:#eef2ff;
-    color:#1e293b;
+    background:#eef3fb;
+    color:#1f2937;
 }
 
-/* Barra superior */
+/* TOP */
 .top{
-    background:#ffffff;
     height:70px;
+    background:#ffffff;
     display:flex;
     align-items:center;
     padding:0 25px;
-    font-size:26px;
+    font-size:24px;
     font-weight:700;
     color:#2563eb;
     border-bottom:1px solid #dbeafe;
-    box-shadow:0 2px 12px rgba(0,0,0,0.05);
+    box-shadow:0 2px 10px rgba(0,0,0,0.05);
 }
 
-/* Layout */
+/* LAYOUT */
 .main{
     display:flex;
 }
 
-/* Sidebar */
+/* SIDEBAR */
 .sidebar{
     width:280px;
     min-height:100vh;
@@ -37,33 +37,22 @@ body{
     padding:25px 20px;
     position:relative;
     color:white;
+    box-shadow:4px 0 20px rgba(0,0,0,0.08);
 }
 
-/* Logo */
-.logo{
+.sidebar h3{
     text-align:center;
-    margin-bottom:35px;
-}
-
-.logo p{
-    font-size:38px;
+    font-size:34px;
     font-weight:800;
-    line-height:1.1;
+    margin-bottom:35px;
+    line-height:1.2;
 }
 
-/* Menu */
-.menu-title{
-    text-align:center;
-    font-size:20px;
-    font-weight:700;
-    margin-bottom:20px;
-    letter-spacing:1px;
-}
-
+/* MENU */
 .menu{
     display:flex;
     flex-direction:column;
-    gap:16px;
+    gap:15px;
 }
 
 .menu button{
@@ -75,6 +64,7 @@ body{
     color:#2563eb;
     font-size:16px;
     font-weight:700;
+    text-align:center;
     cursor:pointer;
     transition:0.3s;
     box-shadow:0 5px 15px rgba(0,0,0,0.08);
@@ -90,27 +80,27 @@ body{
     color:#1d4ed8;
 }
 
-/* Footer */
+/* FOOTER */
 .footer{
     position:absolute;
-    bottom:30px;
+    bottom:25px;
     left:20px;
     font-size:14px;
     line-height:1.8;
-    opacity:0.9;
+    opacity:0.95;
 }
 
-/* Contenido */
+/* CONTENIDO */
 .content{
     flex:1;
     padding:30px;
 }
 
-/* Barra de búsqueda */
+/* SEARCH BAR */
 .search-bar{
     background:#ffffff;
-    border-radius:24px;
     padding:18px 25px;
+    border-radius:24px;
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -139,18 +129,18 @@ body{
     color:#7c3aed;
 }
 
-/* Filtros */
+/* FILTROS */
 .filters{
     display:flex;
-    align-items:center;
     gap:15px;
+    align-items:center;
     flex-wrap:wrap;
     margin-bottom:25px;
 }
 
 .filters h3{
     width:100%;
-    font-size:40px;
+    font-size:38px;
     color:#111827;
     margin-bottom:5px;
 }
@@ -161,8 +151,8 @@ select{
     border:2px solid #bfdbfe;
     background:#ffffff;
     font-size:15px;
-    outline:none;
     cursor:pointer;
+    outline:none;
     transition:0.3s;
 }
 
@@ -170,15 +160,15 @@ select:hover{
     border-color:#2563eb;
 }
 
-/* Secciones */
+/* SECCIONES */
 .section{
     display:flex;
-    gap:22px;
+    gap:25px;
     margin-top:20px;
     flex-wrap:wrap;
 }
 
-/* Tarjetas */
+/* TARJETAS */
 .card{
     background:#ffffff;
     border-radius:24px;
@@ -203,9 +193,9 @@ select:hover{
     line-height:1.8;
 }
 
-/* Tamaños */
+/* TAMAÑOS */
 .small{
-    width:260px;
+    width:280px;
     min-height:220px;
 }
 
@@ -215,28 +205,11 @@ select:hover{
 }
 
 .full{
-    width:700px;
-    min-height:180px;
+    width:820px;
+    min-height:220px;
 }
 
-/* Caja derecha */
-.right-box{
-    display:flex;
-    align-items:flex-start;
-    justify-content:center;
-}
-
-.label-box{
-    background:#ffffff;
-    padding:18px 26px;
-    border-radius:18px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.06);
-    color:#2563eb;
-    font-weight:700;
-    font-size:18px;
-}
-
-/* Responsive */
+/* RESPONSIVE */
 @media(max-width:1100px){
 
     .main{
