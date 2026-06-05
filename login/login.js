@@ -17,10 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        alert(`¡Bienvenido ${email}!`);
-
-        // Redirección
-        window.location.href = "pagina_1.html";
     });
 
     // Botón Google
