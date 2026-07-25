@@ -1,0 +1,172 @@
+.mant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mant-header h2 { font-size: 22px; font-weight: 700; color: #1e293b; }
+
+.mant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.mant-card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mant-card-header {
+  border-left: 4px solid;
+  padding-left: 12px;
+}
+
+.mant-card-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.mant-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.mant-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.mant-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mant-remove {
+  margin-left: auto;
+  background: none;
+  color: #cbd5e1;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.mant-remove:hover { color: #ef4444; }
+
+.mant-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.mant-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.mant-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1e293b;
+  transition: border 0.2s;
+  background: #f8fafc;
+}
+
+.mant-input:focus {
+  border-color: #2563eb;
+  background: white;
+}
+
+.mant-confirm-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.mant-confirm-btn:hover { opacity: 0.85; }
+
+.mant-cancel-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.mant-cancel-btn:hover { background: #e2e8f0; color: #ef4444; }
+
+.mant-btn {
+  padding: 10px;
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+  border: none;
+}
+
+.mant-btn:hover { opacity: 0.85; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .mant-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .mant-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mant-form {
+    flex-direction: column;
+  }
+
+  .mant-form input,
+  .mant-form select {
+    min-width: unset;
+    width: 100%;
+  }
+}
