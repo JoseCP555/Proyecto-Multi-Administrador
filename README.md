@@ -250,7 +250,7 @@ Incluye:
 
 ## Inicio de sesión
 
-  <img src="./images/Inicio Sesión.png" alt="Inicio Sesión Multi-Administrador" width="220">
+  <img src="./images/Inicio Sesión.png" alt="Inicio Sesión Multi-Administrador" width="520">
 
 ---
 
@@ -262,14 +262,14 @@ Incluye:
 
 ## Gestión de residentes
 
-  <img src="./images/Gestión de Residentes.png" alt="Gestión de Residentes Multi-Administrador" width="220">
+  <img src="./images/Gestión de Residentes.png" alt="Gestión de Residentes Multi-Administrador" width="520">
 
 
 ---
 
 ## Gestión Financiera
 
-  <img src="./images/Gestión Financiera.png" alt="Gestión Financiera Multi-Administrador" width="220">
+  <img src="./images/Gestión Financiera.png" alt="Gestión Financiera Multi-Administrador" width="520">
 
 
 ---
