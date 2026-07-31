@@ -1,44 +1,47 @@
+# Multi-Administrador
+
 <p align="center">
-  <img src="docs/images/logo.png" width="220" alt="Logo Multi-Administrador">
+  <img src="./images/logo.png" alt="Logo Multi-Administrador" width="220">
 </p>
 
-<h1 align="center">Multi-Administrador</h1>
-
 <p align="center">
-Sistema Web para la Administración de Copropiedades y Conjuntos Residenciales
+Sistema web para la administración integral de conjuntos residenciales y propiedades horizontales.
 </p>
 
 ---
 
 # Descripción
 
-Multi-Administrador es una aplicación web desarrollada como proyecto formativo del SENA, cuyo objetivo es facilitar la administración de conjuntos residenciales y copropiedades.
+**Multi-Administrador** es una plataforma web desarrollada como proyecto formativo del **Servicio Nacional de Aprendizaje (SENA)**, orientada a facilitar la gestión administrativa de conjuntos residenciales, edificios y propiedades horizontales.
 
-El sistema permite centralizar la información de residentes, propiedades, finanzas, documentos y demás procesos administrativos en una sola plataforma y de forma rápida.
-
----
-
-# Objetivo General
-
-Desarrollar una plataforma web que permita optimizar la gestión administrativa de conjuntos residenciales mediante una aplicación moderna, segura y fácil de utilizar.
+La aplicación centraliza procesos administrativos, financieros y documentales mediante una arquitectura cliente-servidor, permitiendo administrar la información de residentes, inmuebles, pagos, mantenimientos, documentos y demás recursos asociados a una copropiedad.
 
 ---
 
-# Funcionalidades
+# Objetivos del proyecto
 
-- Inicio de sesión.
-- Registro de usuarios.
-- Recuperación de contraseña mediante correo electrónico.
-- Gestión de residentes.
-- Gestión de propiedades.
-- Gestión financiera.
-- Gestión documental.
-- Gestión de mantenimiento.
-- Reportes.
-- Actas.
-- Configuración del sistema.
-- Perfil de usuario.
-- Notificaciones.
+## Objetivo general
+
+Desarrollar una plataforma web que permita administrar de manera eficiente la información y los procesos internos de conjuntos residenciales.
+
+## Objetivos específicos
+
+* Gestionar usuarios y residentes.
+* Administrar propiedades e inmuebles.
+* Controlar la información financiera.
+* Gestionar documentación administrativa.
+* Registrar mantenimientos y solicitudes.
+* Generar reportes administrativos.
+* Facilitar la comunicación entre administradores y residentes.
+
+---
+
+# Integrantes
+
+* Isabella Olivares
+* Sayeth Joseph Medina Bermúdez
+* Kristian Andrei Luna Pérez
+* José David Caicedo Padilla
 
 ---
 
@@ -46,50 +49,67 @@ Desarrollar una plataforma web que permita optimizar la gestión administrativa 
 
 ## Frontend
 
-- React
-- TypeScript
-- Vite
-- CSS
-- FontAwesome
+* React
+* TypeScript
+* Vite
+* React Router DOM
+* PNPM
 
 ## Backend
 
-- Python
-- FastAPI
-- SQLAlchemy
-- Uvicorn
+* Python
+* FastAPI
+* SQLAlchemy
+* PostgreSQL
+* Pydantic
+* Uvicorn
 
-## Base de Datos
+## Base de datos
 
-- PostgreSQL
+* PostgreSQL
 
-## Control de versiones
+## Herramientas de desarrollo
 
-- Git
-- GitHub
+* Visual Studio Code
+* Git
+* GitHub
+* pgAdmin 4
+* SQLTools
 
 ---
 
-# Arquitectura del Proyecto
+# Arquitectura del proyecto
 
-```
+```text
 Proyecto-Multi-Administrador
 │
-├── multi-admin-responsive
-│   ├── src
-│   ├── public
-│   ├── package.json
-│   └── vite.config.ts
+├── frontend/
 │
-├── multi-bakend
-│   ├── main.py
-│   ├── models.py
-│   ├── database.py
-│   ├── auth.py
-│   └── requirements.txt
+├── backend/
 │
+├── docs/
+│
+├── images/
+│
+├── .gitignore
+├── .env.example
 └── README.md
 ```
+
+---
+
+# Módulos implementados
+
+* Inicio de sesión
+* Recuperación de contraseña
+* Gestión de usuarios
+* Gestión de residentes
+* Gestión de propiedades
+* Gestión financiera
+* Gestión documental
+* Mantenimiento
+* Reportes
+* Configuración
 
 ---
 
@@ -101,7 +121,7 @@ Proyecto-Multi-Administrador
 git clone https://github.com/JoseCP555/Proyecto-Multi-Administrador.git
 ```
 
-Entrar al proyecto
+Ingresar al proyecto
 
 ```bash
 cd Proyecto-Multi-Administrador
@@ -109,57 +129,63 @@ cd Proyecto-Multi-Administrador
 
 ---
 
-# Frontend
+# Configuración del Frontend
 
-Entrar a la carpeta
+Ingresar a la carpeta:
 
 ```bash
-cd multi-admin-responsive
+cd frontend
 ```
 
-Instalar dependencias
+Instalar dependencias:
 
 ```bash
-npm install
+pnpm install
 ```
 
-Ejecutar
+Ejecutar el proyecto:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ---
 
-# Backend
+# Configuración del Backend
 
-Entrar a la carpeta
-
-```bash
-cd multi-bakend
-```
-
-Crear entorno virtual
+Ingresar a la carpeta:
 
 ```bash
-python -m venv venv
+cd backend
 ```
 
-Activar entorno
-
-Windows
+Crear entorno virtual:
 
 ```bash
-venv\Scripts\activate
+python -m venv .venv
 ```
 
-Instalar dependencias
+Activar entorno virtual.
+
+### Windows
+
+```bash
+.venv\Scripts\activate
+```
+
+### Linux / macOS
+
+```bash
+source .venv/bin/activate
+```
+
+Instalar dependencias:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Ejecutar servidor
+Ejecutar el servidor:
 
 ```bash
 uvicorn main:app --reload
@@ -167,84 +193,120 @@ uvicorn main:app --reload
 
 ---
 
-# Base de Datos
+# Variables de entorno
 
-Motor utilizado:
+Para ejecutar correctamente el proyecto, crear un archivo `.env` utilizando como referencia el archivo:
 
-- PostgreSQL
+```text
+.env.example
+```
 
-La base de datos contiene las tablas necesarias para la administración de:
+Completar las variables correspondientes a:
 
-- Usuarios
-- Roles
-- Copropiedades
-- Residentes
-- Propiedades
-- Finanzas
-- Documentos
-- Mantenimiento
-- Reportes
-
-El script SQL se encuentra incluido dentro del proyecto.
+* Base de datos.
+* Claves secretas.
+* Configuración SMTP.
+* Configuración del servidor.
 
 ---
 
-# Capturas del Sistema
+# Base de datos
+
+El proyecto utiliza PostgreSQL como gestor de base de datos.
+
+La estructura de la base de datos fue diseñada para soportar la administración de:
+
+* Usuarios
+* Roles
+* Residentes
+* Propiedades
+* Documentos
+* Finanzas
+* Mantenimientos
+
+---
+
+# Documentación
+
+La documentación técnica y funcional del proyecto se encuentra organizada dentro de la carpeta:
+
+```text
+docs/
+```
+
+Incluye:
+
+* Requisitos funcionales
+* Requisitos no funcionales
+* Restricciones
+* Historias de usuario
+* Reglas de negocio
+* Endpoints
+* Criterios de aceptación
+* Flujo del sistema
+
+---
+
+# Capturas del sistema
 
 ## Inicio de sesión
 
-<img src="docs/images/Inicio Sesión.png" width="550" alt="Inicio de Sesión">
+> Agregar captura en:
+>
+> `images/login.png`
 
 ---
 
 ## Dashboard
 
-<img src="docs/images/Dashboard.png" width="550" alt="Dashboard">
+> Agregar captura en:
+>
+> `images/dashboard.png`
 
 ---
 
-## Gestión de Residentes
+## Gestión de residentes
 
-<img src="docs/images/Gestión de Residentes.png" width="550" alt="Gestión de Residentes">
-
----
-
-## Gestión Financiera
-
-<img src="docs/images/Gestión Financiera.png" width="550" alt="Gestión Financiera">
+> Agregar captura en:
+>
+> `images/residentes.png`
 
 ---
 
-## Recuperación de contraseña
+## Gestión de propiedades
 
-<img src="docs/images/Recuperación de contraseña.png" width="550" alt="Recuperación de contraseña">
-
----
-
-# Integrantes
-
-- Jose David Caicedo Padilla
-- Sarha Isabella Olivares Rodriguez
-- Sayeth Joseph Medina Bermúdez
-- Kristian Andrei Luna Pérez
+> Agregar captura en:
+>
+> `images/propiedades.png`
 
 ---
 
-# Estado del Proyecto
+# Estado del proyecto
 
-Actualmente el proyecto se encuentra en desarrollo y continúa incorporando nuevas funcionalidades y mejoras tanto en el frontend como en el backend.
-
----
-
-# Futuras Mejoras
-
-- Dashboard con estadísticas.
-- Notificaciones en tiempo real.
-- Integración con pagos en línea.
-- Gestión de visitantes.
-- Aplicación móvil.
-- Panel de administración avanzado.
-- Auditoría de usuarios.
+Actualmente el proyecto se encuentra en fase de desarrollo y continúa incorporando nuevas funcionalidades y mejoras.
 
 ---
 
+# Buenas prácticas implementadas
+
+* Arquitectura Cliente – Servidor.
+* API REST.
+* Gestión mediante Git y GitHub.
+* Separación entre frontend y backend.
+* Uso de variables de entorno.
+* Documentación técnica.
+* Control de versiones.
+
+---
+
+# Licencia
+
+Proyecto desarrollado con fines académicos como evidencia del programa **Tecnólogo en Análisis y Desarrollo de Software** del **Servicio Nacional de Aprendizaje (SENA)**.
+
+No está autorizado su uso comercial sin el consentimiento de los autores.
+
+---
+
+<p align="center">
+Desarrollado por el equipo de Multi-Administrador • SENA 2026
+</p>
