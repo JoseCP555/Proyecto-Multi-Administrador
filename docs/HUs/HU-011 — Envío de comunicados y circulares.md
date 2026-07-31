@@ -1,4 +1,4 @@
-#HU-011 — Envío de comunicados y circulares
+# HU-011 — Envío de comunicados y circulares
 
 ¿Qué? Historia de usuario que describe el envío de comunicados y circulares masivas a los residentes por parte del administrador. 
 ¿Para qué? Formalizar la necesidad de informar sobre novedades, normas o eventos importantes del conjunto.
