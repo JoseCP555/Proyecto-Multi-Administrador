@@ -14,7 +14,7 @@ Sistema Web para la Administración de Copropiedades y Conjuntos Residenciales
 
 Multi-Administrador es una aplicación web desarrollada como proyecto formativo del SENA, cuyo objetivo es facilitar la administración de conjuntos residenciales y copropiedades.
 
-El sistema permite centralizar la información de residentes, propiedades, finanzas, documentos y demás procesos administrativos en una sola plataforma y de forma rapida.
+El sistema permite centralizar la información de residentes, propiedades, finanzas, documentos y demás procesos administrativos en una sola plataforma y de forma rápida.
 
 ---
 
@@ -224,7 +224,7 @@ El script SQL se encuentra incluido dentro del proyecto.
 # Integrantes
 
 - Jose David Caicedo Padilla
-- Isabella Olivares
+- Sarha Isabella Olivares Rodriguez
 - Sayeth Joseph Medina Bermúdez
 - Kristian Andrei Luna Pérez
 
@@ -245,12 +245,6 @@ Actualmente el proyecto se encuentra en desarrollo y continúa incorporando nuev
 - Aplicación móvil.
 - Panel de administración avanzado.
 - Auditoría de usuarios.
-
----
-
-# Repositorio
-
-https://github.com/JoseCP555/Proyecto-Multi-Administrador
 
 ---
 
