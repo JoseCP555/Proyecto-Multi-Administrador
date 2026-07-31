@@ -41,7 +41,7 @@ Desarrollar una plataforma web que permita administrar de manera eficiente la in
 * Isabella Olivares
 * Sayeth Joseph Medina Bermúdez
 * Kristian Andrei Luna Pérez
-* José David Caicedo Padilla
+* Jose David Caicedo Padilla
 
 ---
 
@@ -222,7 +222,6 @@ La estructura de la base de datos fue diseñada para soportar la administración
 * Propiedades
 * Documentos
 * Finanzas
-* Mantenimientos
 
 ---
 
@@ -251,33 +250,27 @@ Incluye:
 
 ## Inicio de sesión
 
-> Agregar captura en:
->
-> `images/login.png`
+  <img src="./images/Inicio Sesión.png" alt="Inicio Sesión Multi-Administrador" width="220">
 
 ---
 
 ## Dashboard
 
-> Agregar captura en:
->
-> `images/dashboard.png`
+  <img src="./images/Dashboard.png" alt="Dashboard Multi-Administrador" width="520">
 
 ---
 
 ## Gestión de residentes
 
-> Agregar captura en:
->
-> `images/residentes.png`
+  <img src="./images/Gestión de Residentes.png" alt="Gestión de Residentes Multi-Administrador" width="220">
+
 
 ---
 
-## Gestión de propiedades
+## Gestión Financiera
 
-> Agregar captura en:
->
-> `images/propiedades.png`
+  <img src="./images/Gestión Financiera.png" alt="Gestión Financiera Multi-Administrador" width="220">
+
 
 ---
 
