@@ -1,0 +1,176 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input, select, textarea {
+  outline: none;
+  font-family: inherit;
+}
+
+/* Dark theme */
+.theme-dark body,
+.theme-dark {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.theme-dark .dashboard-content,
+.theme-dark .login-form,
+.theme-dark .config-card,
+.theme-dark .inicio-card,
+.theme-dark .acta-card,
+.theme-dark .prop-card,
+.theme-dark .notif-panel,
+.theme-dark .account-picker-modal,
+.theme-dark .topbar {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+.theme-dark .topbar-search,
+.theme-dark input,
+.theme-dark select {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.theme-dark body {
+  background: #0f172a;
+}
+
+.theme-dark .config-card h3,
+.theme-dark .inicio-card h3,
+.theme-dark .acta-card h3,
+.theme-dark .propiedades-header h2,
+.theme-dark .config-header h2,
+.theme-dark .actas-header h2,
+.theme-dark .inicio-header h2,
+.theme-dark h2,
+.theme-dark h3 {
+  color: #f1f5f9;
+}
+
+.theme-dark .option-group p,
+.theme-dark .check-label,
+.theme-dark .sub,
+.theme-dark .config-sub,
+.theme-dark .acta-card p,
+.theme-dark .evento-title,
+.theme-dark .notif-title,
+.theme-dark .account-name {
+  color: #cbd5e1;
+}
+
+/* ===== RESPONSIVE GLOBAL ===== */
+
+/* Tables scroll horizontally on mobile */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Grids adapt to smaller screens */
+@media (max-width: 768px) {
+  .inicio-top-grid,
+  .res-grid,
+  .fin-grid,
+  .mant-grid,
+  .prop-grid,
+  .rep-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Forms stack vertically */
+  .res-form,
+  .fin-form,
+  .mant-form,
+  .prop-form {
+    flex-direction: column;
+  }
+
+  .res-form input,
+  .res-form select,
+  .fin-form input,
+  .fin-form select,
+  .mant-form input,
+  .mant-form select {
+    min-width: unset !important;
+    width: 100%;
+  }
+
+  /* Headers stack */
+  .res-header,
+  .fin-header,
+  .mant-header,
+  .prop-header,
+  .actas-header,
+  .reportes-header,
+  .inicio-header,
+  .config-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+
+  /* Selects wrap */
+  .res-selects,
+  .fin-selects {
+    flex-wrap: wrap;
+  }
+
+  /* Actas cards */
+  .acta-card {
+    padding: 14px !important;
+  }
+
+  /* Configuracion */
+  .config-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  h2 {
+    font-size: 18px !important;
+  }
+
+  h3 {
+    font-size: 14px !important;
+  }
+
+  .inicio-card,
+  .acta-card,
+  .prop-card,
+  .fin-card,
+  .mant-card,
+  .doc-card {
+    padding: 14px 16px !important;
+    border-radius: 10px !important;
+  }
+}

@@ -1,0 +1,43 @@
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+.pnpm-store/
+
+# React / Vite
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Entornos virtuales
+venv/
+.venv/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# PostgreSQL
+*.backup
+*.sql.backup
+
+# Pruebas
+.pytest_cache/
+
+# Coverage
+coverage/
+htmlcov/
