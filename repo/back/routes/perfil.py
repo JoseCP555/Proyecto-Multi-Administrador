@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, field_validator
  
@@ -11,7 +11,7 @@ from auth_jwt import verificar_token
  
 router = APIRouter(prefix="/perfil", tags=["Perfil"])
  
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+bearer_scheme = HTTPBearer()
  
  
 def get_db():
@@ -23,10 +23,12 @@ def get_db():
  
  
 def get_usuario_actual(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db)
 ) -> Usuario:
+    token = credentials.credentials
     payload = verificar_token(token)
+
  
     if not payload:
         raise HTTPException(
