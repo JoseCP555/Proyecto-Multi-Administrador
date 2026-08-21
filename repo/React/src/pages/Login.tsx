@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loginWithAccount, GOOGLE_ACCOUNTS, APPLE_ACCOUNTS } from '../auth'
+import {
+  loginWithAccount,
+  GOOGLE_ACCOUNTS,
+  APPLE_ACCOUNTS,
+  saveAuthSession
+} from '../auth'
 import AccountPicker from '../components/AccountPicker'
 import API_URL from '../api'
 import './Login.css'
@@ -43,14 +48,12 @@ export default function Login() {
         return
       }
 
-      localStorage.setItem(
-        "usuario",
-        JSON.stringify(data.usuario)
-      )
+      saveAuthSession(data.usuario, data.access_token)
 
-      setError("")
+      setError('')
+      navigate('/inicio')
 
-      navigate("/inicio")
+
 
     } catch (error) {
 
