@@ -28,7 +28,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-multiadmin}:${POSTGRES_PASSWORD:-multiadmin}@db:5432/${POSTGRES_DB:-multiadmin_db}
       SECRET_KEY: ${SECRET_KEY:-cambia-esto-por-un-valor-secreto-largo-y-aleatorio}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:80}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:80}
       SQL_ECHO: ${SQL_ECHO:-false}
       EMAIL_USER: ${EMAIL_USER:-}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}

@@ -91,7 +91,24 @@ export default function Login() {
 
       const data = await response.json()
 
-      alert(data.mensaje)
+      // Si el correo SE ENVIO a Gmail (enviado=true), avisamos al usuario
+      // que revise su bandeja.
+      if (data.correo_enviado === true) {
+        alert("Te enviamos un correo a " + email + ". Revisa tu bandeja de entrada (y la carpeta de spam).")
+      } else if (data.link_debug) {
+        // El backend genero el link pero Gmail fallo. Mostramos el error y el link.
+        const errorInfo = data.error_smtp ? "\n\nError SMTP: " + data.error_smtp : ""
+        const abrir = window.confirm(
+          "Gmail rechazo el envio del correo (revisar configuracion SMTP)." + errorInfo +
+          "\n\nComo respaldo, puedes abrir este link directamente para cambiar tu contrasena:\n\n" +
+          data.link_debug + "\n\nDeseas abrirlo ahora?"
+        )
+        if (abrir) {
+          window.location.href = data.link_debug
+        }
+      } else {
+        alert(data.mensaje || "Si el correo existe, se enviara un enlace.")
+      }
 
       setError("")
     } catch (err) {

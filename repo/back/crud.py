@@ -1,13 +1,24 @@
-from sqlalchemy.orm import Session
-from models import Usuario
-from datetime import datetime, timedelta
-from fastapi_mail import FastMail, MessageSchema, MessageType
-from email_config import conf
-from passlib.context import CryptContext
-import secrets
+import asyncio
+import logging
 import os
+import secrets
+from datetime import datetime, timedelta
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from fastapi_mail import FastMail, MessageSchema, MessageType
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from email_config import conf
+from models import Usuario
+
+
+logger = logging.getLogger(__name__)
+
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
 
 def hashear_password(password: str) -> str:
@@ -17,12 +28,27 @@ def hashear_password(password: str) -> str:
 def verificar_password(password: str, password_hash: str) -> bool:
     try:
         return pwd_context.verify(password, password_hash)
-    except Exception:
+    except Exception as error:
+        logger.error(
+            "[login] Error al verificar la contraseña: %s",
+            type(error).__name__
+        )
         return False
 
 
 def crear_usuario(db: Session, usuario):
-    nuevo = Usuario(
+    usuario_existente = (
+        db.query(Usuario)
+        .filter(Usuario.correo == usuario.correo)
+        .first()
+    )
+
+    if usuario_existente:
+        raise ValueError(
+            "Ya existe un usuario registrado con ese correo"
+        )
+
+    nuevo_usuario = Usuario(
         nombre=usuario.nombre,
         telefono=usuario.telefono,
         correo=usuario.correo,
@@ -33,11 +59,11 @@ def crear_usuario(db: Session, usuario):
         id_copropiedad=usuario.id_copropiedad
     )
 
-    db.add(nuevo)
+    db.add(nuevo_usuario)
     db.commit()
-    db.refresh(nuevo)
+    db.refresh(nuevo_usuario)
 
-    return nuevo
+    return nuevo_usuario
 
 
 def obtener_usuarios(db: Session):
@@ -45,13 +71,49 @@ def obtener_usuarios(db: Session):
 
 
 async def enviar_recuperacion(db: Session, correo: str):
+    """
+    Genera un token de recuperación, lo guarda en la base de datos
+    e intenta enviar el correo.
 
-    usuario = db.query(Usuario).filter(
-        Usuario.correo == correo
-    ).first()
+    Retorna:
+    {
+        "link": enlace generado o None,
+        "enviado": True o False,
+        "error": mensaje interno o None
+    }
+    """
+
+    correo_limpio = correo.strip()
+
+    usuario = (
+        db.query(Usuario)
+        .filter(Usuario.correo == correo_limpio)
+        .first()
+    )
 
     if not usuario:
-        return False
+        logger.info(
+            "[recuperacion] Solicitud para un correo no registrado"
+        )
+
+        return {
+            "link": None,
+            "enviado": False,
+            "error": None
+        }
+
+    frontend_url = os.getenv("FRONTEND_URL", "").strip()
+
+    if not frontend_url:
+        logger.error(
+            "[recuperacion] Falta configurar FRONTEND_URL"
+        )
+
+        return {
+            "link": None,
+            "enviado": False,
+            "error": "Falta configurar FRONTEND_URL"
+        }
 
     token = secrets.token_urlsafe(32)
 
@@ -60,49 +122,91 @@ async def enviar_recuperacion(db: Session, correo: str):
 
     db.commit()
 
-    link = f"{os.getenv('FRONTEND_URL')}/restablecer/{token}"
+    link = f"{frontend_url.rstrip('/')}/restablecer/{token}"
+
     mensaje = MessageSchema(
         subject="Recuperación de contraseña - MultiAdmin",
-        recipients=[correo],
+        recipients=[correo_limpio],
         body=f"""
 Hola {usuario.nombre},
 
 Se solicitó recuperar tu contraseña.
 
-Haz clic en este enlace:
+Utiliza el siguiente enlace para establecer una nueva contraseña:
 
 {link}
 
 Este enlace expirará en 30 minutos.
 
-Si no solicitaste este cambio puedes ignorar este correo.
+Si no solicitaste este cambio, puedes ignorar este correo.
 
 Equipo MultiAdmin.
 """,
         subtype=MessageType.plain
     )
 
-    fm = FastMail(conf)
+    try:
+        fast_mail = FastMail(conf)
 
-    await fm.send_message(mensaje)
+        await asyncio.wait_for(
+            fast_mail.send_message(mensaje),
+            timeout=30
+        )
 
-    return True
+        logger.info(
+            "[recuperacion] Correo enviado correctamente"
+        )
+
+        return {
+            "link": link,
+            "enviado": True,
+            "error": None
+        }
+
+    except asyncio.TimeoutError:
+        logger.error(
+            "[recuperacion] Tiempo agotado al enviar el correo"
+        )
+
+        return {
+            "link": link,
+            "enviado": False,
+            "error": "Tiempo agotado al conectar con el servidor de correo"
+        }
+
+    except Exception as error:
+        logger.exception(
+            "[recuperacion] Error al enviar el correo"
+        )
+
+        return {
+            "link": link,
+            "enviado": False,
+            "error": f"{type(error).__name__}: {error}"
+        }
 
 
-def cambiar_password(db: Session, token: str, nueva_password: str):
-
-    usuario = db.query(Usuario).filter(
-        Usuario.token_recuperacion == token
-    ).first()
+def cambiar_password(
+    db: Session,
+    token: str,
+    nueva_password: str
+):
+    usuario = (
+        db.query(Usuario)
+        .filter(Usuario.token_recuperacion == token)
+        .first()
+    )
 
     if not usuario:
+        return False
+
+    if not usuario.expira_token:
         return False
 
     if usuario.expira_token < datetime.utcnow():
         return False
 
     usuario.contrasena_hash = hashear_password(nueva_password)
-
     usuario.token_recuperacion = None
     usuario.expira_token = None
 
@@ -110,16 +214,25 @@ def cambiar_password(db: Session, token: str, nueva_password: str):
 
     return True
 
-def login_usuario(db: Session, correo: str, password: str):
 
-    usuario = db.query(Usuario).filter(
-        Usuario.correo == correo
-    ).first()
+def login_usuario(
+    db: Session,
+    correo: str,
+    password: str
+):
+    usuario = (
+        db.query(Usuario)
+        .filter(Usuario.correo == correo.strip())
+        .first()
+    )
 
     if not usuario:
         return None
 
-    if not verificar_password(password, usuario.contrasena_hash):
+    if not verificar_password(
+        password,
+        usuario.contrasena_hash
+    ):
         return None
 
     return usuario
