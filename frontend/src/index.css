@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply text-gray-800 antialiased;
+    font-family: "Inter", "Poppins", system-ui, sans-serif;
+    background: linear-gradient(135deg, #E8E0FF 0%, #D6CCFA 50%, #C5B8F5 100%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  /* Tarjeta base, idéntica al estilo del dashboard */
+  .card {
+    @apply bg-white rounded-3xl border border-gray-100 shadow-card p-6 transition-all duration-200;
+  }
+  .card:hover {
+    @apply shadow-card-hover;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-primary-500 text-white hover:bg-primary-600 shadow-pill;
+  }
+  .btn-outline {
+    @apply border border-gray-200 text-gray-700 bg-white hover:bg-gray-50;
+  }
+  .btn-ghost {
+    @apply text-gray-600 hover:bg-gray-100;
+  }
+  .input {
+    @apply w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:bg-white transition;
+  }
+  /* Tablas del dashboard */
+  .card table thead tr {
+    @apply text-[11px] uppercase tracking-wider text-gray-400 border-b border-gray-100;
+  }
+  .card table tbody tr {
+    @apply border-b border-gray-50 hover:bg-primary-50/40 transition;
+  }
+  .label {
+    @apply block text-sm font-medium text-gray-600 mb-1;
+  }
+  .badge {
+    @apply inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full;
+  }
+}
+
+/* Scrollbar sutil */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

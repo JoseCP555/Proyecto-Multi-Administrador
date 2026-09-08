@@ -1,0 +1,93 @@
+# Multi-Administrador - Orquestación completa (PostgreSQL + Redis + Backend + Frontend)
+# El frontend queda disponible en el puerto 3000.
+
+services:
+  # ------------------------------------------------------------------ DB
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-multiadmin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-multiadmin}
+      POSTGRES_DB: ${POSTGRES_DB:-multiadmin_db}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      # Script de creación del esquema (se ejecuta en la primera creación del volumen).
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-multiadmin} -d ${POSTGRES_DB:-multiadmin_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # -------------------------------------------------------------- Redis
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ------------------------------------------------------------ Backend
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-multiadmin}:${POSTGRES_PASSWORD:-multiadmin}@db:5432/${POSTGRES_DB:-multiadmin_db}
+      SECRET_KEY: ${SECRET_KEY:-cambia-esto-por-un-valor-secreto-largo-y-aleatorio}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      SQL_ECHO: ${SQL_ECHO:-false}
+      REDIS_URL: redis://redis:6379/0
+      # ---- SMTP (correo real) ----
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SERVER: ${MAIL_SERVER:-}
+      # ---- Chatbot ----
+      CHATBOT_ENGINE: ${CHATBOT_ENGINE:-local}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+    ports:
+      - "8000:8000"
+    volumes:
+      - documentos_data:/app/archivos_documentos
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ----------------------------------------------------------- Frontend
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # El requisito es exponer la app en el puerto 3000.
+      - "3000:80"
+
+volumes:
+  db_data:
+  redis_data:
+  documentos_data:

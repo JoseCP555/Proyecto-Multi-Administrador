@@ -1,43 +1,23 @@
-# Variables de entorno
+# Entorno
 .env
-.env.*
-!.env.example
+.env.local
 
 # Node
 node_modules/
-.pnpm-store/
-
-# React / Vite
 dist/
-build/
+.vite/
+*.local
 
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Entornos virtuales
-venv/
+*.py[cod]
 .venv/
+venv/
+test.db
+*.db
 
-# VS Code
-.vscode/
-
-# Logs
-*.log
-
-# Sistema
+# Editor / SO
 .DS_Store
-Thumbs.db
-
-# PostgreSQL
-*.backup
-*.sql.backup
-
-# Pruebas
-.pytest_cache/
-
-# Coverage
-coverage/
-htmlcov/
+.idea/
+.vscode/*
+!.vscode/settings.json

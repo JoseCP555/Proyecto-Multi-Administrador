@@ -1,305 +1,210 @@
 # Multi-Administrador
 
 <p align="center">
-  <img src="./images/logo.png" alt="Logo Multi-Administrador" width="220">
+  <strong>Sistema web para la administración integral de conjuntos residenciales y propiedades horizontales.</strong>
 </p>
 
-<p align="center">
-Sistema web para la administración integral de conjuntos residenciales y propiedades horizontales.
-</p>
+**Multi-Administrador** es una plataforma web profesional que centraliza los procesos administrativos, financieros y documentales de una copropiedad: residentes, propiedades, pagos, mantenimientos, documentos, reportes y un **asistente virtual (chatbot)** que responde con datos reales del sistema.
 
----
+## Stack
 
-# Descripción
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | React 18 + TypeScript + Vite + Tailwind CSS 3 + Framer Motion + React Router 6 |
+| Backend | Python + FastAPI + SQLAlchemy + Pydantic |
+| Base de datos | PostgreSQL 16 |
+| Caché / sesiones | Redis 7 |
+| Asistente virtual | Motor local (RAG sobre la BD) u OpenAI (opcional) |
+| Orquestación | Docker Compose |
+| Paquete | PNPM |
 
-**Multi-Administrador** es una plataforma web desarrollada como proyecto formativo del **Servicio Nacional de Aprendizaje (SENA)**, orientada a facilitar la gestión administrativa de conjuntos residenciales, edificios y propiedades horizontales.
+## Módulos
 
-La aplicación centraliza procesos administrativos, financieros y documentales mediante una arquitectura cliente-servidor, permitiendo administrar la información de residentes, inmuebles, pagos, mantenimientos, documentos y demás recursos asociados a una copropiedad.
+- Landing page de presentación antes del login/registro.
+- Autenticación (registro, login, JWT) y **recuperación de contraseña por correo real** (SMTP).
+- Gestión de **usuarios** con **RBAC real** (roles: super_admin, admin, residente, tesorería, seguridad). La matriz rol → permisos vive en `backend/app/permisos.py` y se sincroniza en la BD al arrancar.
 
----
+  | Módulo | super_admin | admin | tesorería | residente | seguridad |
+  |---|---|---|---|---|---|
+  | Usuarios | CRUD + eliminar | ver/crear/editar | — | — | — |
+  | Residentes | CRUD | CRUD | ver | — | ver |
+  | Propiedades | CRUD | CRUD | ver | ver | ver |
+  | Finanzas / reportes | CRUD | CRUD | CRUD | — | — |
+  | Mantenimiento | CRUD | CRUD | — | ver + crear solicitud | ver/crear/editar |
+  | Documentos | CRUD + descargar | CRUD + descargar | ver/descargar | ver/descargar | ver/descargar |
+  | Eventos | CRUD | CRUD | — | ver | ver |
+  | Configuración / respaldo BD | sí / sí | sí / — | — | — | — |
+  | Chatbot | sí | sí | sí (solo módulos permitidos) | sí (solo módulos permitidos) | sí (solo módulos permitidos) |
 
-# Objetivos del proyecto
+  El registro público (`/register`) siempre crea **residentes**; asignar otro rol exige estar autenticado con `usuarios.crear` (y solo un super_admin crea super_admins).
+- Gestión de **residentes** y **propiedades**.
+- Gestión **financiera** (conceptos, movimientos, resumen, gráficas).
+- Mantenimiento (órdenes, prioridades, estados).
+- Documentos y eventos.
+- Dashboard con estadísticas en tiempo real y chatbot flotante.
 
-## Objetivo general
-
-Desarrollar una plataforma web que permita administrar de manera eficiente la información y los procesos internos de conjuntos residenciales.
-
-## Objetivos específicos
-
-* Gestionar usuarios y residentes.
-* Administrar propiedades e inmuebles.
-* Controlar la información financiera.
-* Gestionar documentación administrativa.
-* Registrar mantenimientos y solicitudes.
-* Generar reportes administrativos.
-* Facilitar la comunicación entre administradores y residentes.
-
----
-
-# Integrantes
-
-* Isabella Olivares
-* Sayeth Joseph Medina Bermúdez
-* Kristian Andrei Luna Pérez
-* Jose David Caicedo Padilla
-
----
-
-# Tecnologías utilizadas
-
-## Frontend
-
-* React
-* TypeScript
-* Vite
-* React Router DOM
-* PNPM
-
-## Backend
-
-* Python
-* FastAPI
-* SQLAlchemy
-* PostgreSQL
-* Pydantic
-* Uvicorn
-
-## Base de datos
-
-* PostgreSQL
-
-## Herramientas de desarrollo
-
-* Visual Studio Code
-* Git
-* GitHub
-* pgAdmin 4
-* SQLTools
-
----
-
-# Arquitectura del proyecto
+## Arquitectura
 
 ```text
-Proyecto-Multi-Administrador
-│
-├── frontend/
-│
-├── backend/
-│
-├── docs/
-│
-├── images/
-│
-├── .gitignore
-├── .env.example
-└── README.md
+Cliente (navegador)  ──►  Frontend (:3000)  ──►  Backend FastAPI (:8000)
+                                                        │
+                                    ┌───────────────────┼────────────────────┐
+                                    │                   │                    │
+                              PostgreSQL (:5432)     Redis (:6379)      Chatbot
+                                                            │        (local/LLM)
+                                                       caché/sesiones
 ```
 
----
+## Ejecución con Docker Compose (recomendado)
 
-# Módulos implementados
-
-* Inicio de sesión
-* Recuperación de contraseña
-* Gestión de usuarios
-* Gestión de residentes
-* Gestión de propiedades
-* Gestión financiera
-* Gestión documental
-* Mantenimiento
-* Reportes
-* Configuración
-
----
-
-# Instalación
-
-## Clonar el repositorio
+Requisitos: Docker + Docker Compose instalados.
 
 ```bash
-git clone https://github.com/JoseCP555/Proyecto-Multi-Administrador.git
+# 1. Copiar variables de entorno
+cp .env.example .env
+#    Edita .env y agrega las credenciales SMTP si quieres correo real.
+
+# 2. Levantar todos los servicios (DB + Redis + Backend + Frontend)
+docker compose up --build -d
+
+# 3. Acceder
+#    Frontend : http://localhost:3000
+#    API      : http://localhost:8000  (documentación en /docs)
 ```
 
-Ingresar al proyecto
+> El backend **crea la base de datos y siembra datos demo** automáticamente al arrancar (roles, admin, propiedades, finanzas, etc.). Es 100 % funcional desde el primer arranque.
 
-```bash
-cd Proyecto-Multi-Administrador
-```
+### Credenciales de demostración
 
----
+| Campo | Valor |
+|-------|-------|
+| Correo | `admin@multiadmin.com` |
+| Contraseña | `Admin2026!` |
 
-# Configuración del Frontend
+## Desarrollo local (sin Docker)
 
-Ingresar a la carpeta:
-
-```bash
-cd frontend
-```
-
-Instalar dependencias:
-
-```bash
-pnpm install
-```
-
-Ejecutar el proyecto:
-
-```bash
-pnpm dev
-```
-
----
-
-# Configuración del Backend
-
-Ingresar a la carpeta:
+### Backend
 
 ```bash
 cd backend
-```
-
-Crear entorno virtual:
-
-```bash
 python -m venv .venv
-```
-
-Activar entorno virtual.
-
-### Windows
-
-```bash
-.venv\Scripts\activate
-```
-
-### Linux / macOS
-
-```bash
-source .venv/bin/activate
-```
-
-Instalar dependencias:
-
-```bash
+# Windows: .venv\Scripts\activate   |  Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
+copy .env.example .env   # o: cp .env.example .env
+uvicorn app.main:app --reload --port 8000
 ```
 
-Ejecutar el servidor:
+### Frontend
 
 ```bash
-uvicorn main:app --reload
+cd frontend
+pnpm install
+pnpm dev          # inicia en http://localhost:3000
 ```
 
----
+La app espera un PostgreSQL y Redis en ejecución (o usa Docker para `db` y `redis`):
 
-# Variables de entorno
+```bash
+docker compose up -d db redis
+```
 
-Para ejecutar correctamente el proyecto, crear un archivo `.env` utilizando como referencia el archivo:
+## Recuperación de contraseña (SMTP)
+
+Para que el correo se envíe de verdad, configura en `.env`:
+
+```env
+MAIL_SERVER=smtp.gmail.com
+EMAIL_USER=tu_correo@gmail.com
+EMAIL_PASSWORD=tu_contraseña_de_app
+MAIL_FROM=tu_correo@gmail.com
+```
+
+Si no hay SMTP configurado, el sistema igual guarda el token en la BD y responde de forma segura sin revelar si el correo existe.
+
+## Chatbot
+
+- **Motor local (por defecto):** responde con datos reales de la BD (finanzas, pagos, mantenimiento, propiedades, residentes, documentos, eventos). No requiere servicios de pago.
+- **Motor LLM (opcional):** configura `CHATBOT_ENGINE=llm` y `OPENAI_API_KEY` para usar un modelo externo.
+
+## Base de datos y Redis
+
+### Base de datos (PostgreSQL)
+- El script `db/init.sql` define el **esquema completo** (extensiones `uuid-ossp`, `pgcrypto`, y `vector` de forma **opcional**; 12 tablas; índices estratégicos; trigger de `updated_at`).
+- En **Docker**, se ejecuta automáticamente desde `/docker-entrypoint-initdb.d` cuando el volumen es nuevo, como el usuario `POSTGRES_USER` (dueño), así que los permisos quedan correctos.
+- Los datos iniciales (roles, admin, propiedades, finanzas, etc.) los siembra el backend al arrancar (`app/seed.py`), que es **idempotente**: solo pobla si la BD está vacía.
+
+#### Creación manual en PostgreSQL (sin Docker)
+```bash
+# 1) Ser superusuario (o con psql -U postgres)
+sudo -u postgres psql << 'SQL'
+  CREATE ROLE multiadmin LOGIN PASSWORD 'multiadmin' CREATEDB;
+  CREATE DATABASE multiadmin_db OWNER multiadmin;
+  \c multiadmin_db
+  GRANT ALL ON SCHEMA public TO multiadmin;
+SQL
+
+# 2) Aplicar el esquema
+psql -U multiadmin -d multiadmin_db -f db/init.sql
+
+# 3) Arrancar el backend apuntando a esa BD
+cd backend
+DATABASE_URL=postgresql://multiadmin:multiadmin@localhost:5432/multiadmin_db uvicorn app.main:app --reload
+```
+
+> Nota: si ejecutas `init.sql` como un superusuario distinto al de la app, otorga los privilegios:
+> `GRANT ALL ON ALL TABLES/SEQUENCES IN SCHEMA public TO multiadmin;`
+
+### Redis
+Se usa para 4 casos reales (verificado contra un servidor Redis 8 en vivo):
+1. **Caché de respuestas** (estadísticas del dashboard, resumen financiero, serie mensual) con TTL de 60s — clave `dashboard_stats`, expira automáticamente.
+2. **Rate limiting** de login y recuperación de contraseña (anti fuerza bruta) — clave `rl:ip:login:/login`; al superar 5 intentos en 60s devuelve **HTTP 429**.
+3. **Revocación de sesiones**: el endpoint `POST /logout` añade el JWT a una *lista negra* en Redis (clave `blacklist:<token>`) con TTL = vida del token; la dependencia `get_current_user` rechaza tokens revocados con `"Sesión cerrada. Inicia sesión de nuevo."`.
+4. **Métricas** de uso del sistema.
+
+Si Redis no está disponible (ej. desarrollo sin Docker), el sistema **degrada a memoria** automáticamente y sigue funcionando.
+
+#### Configurar y ver Redis
+```bash
+# En Docker, el backend ya usa REDIS_URL=redis://redis:6379/0.
+
+# Ver las claves activas (caché, blacklist, rate-limit)
+redis-cli keys '*'
+
+# TTL de la caché del dashboard (~60s)
+redis-cli ttl dashboard_stats
+
+# Ver la lista negra de tokens (sesiones cerradas)
+redis-cli keys 'blacklist:*'
+
+# Vaciar (reinicio)
+redis-cli flushall
+```
+
+## Estructura
 
 ```text
-.env.example
+multi-admin/
+├── backend/         # FastAPI + SQLAlchemy + Redis
+│   └── app/
+│       ├── main.py
+│       ├── models.py / schemas.py / crud.py
+│       ├── chatbot.py / seed.py
+│       ├── redis_client.py / deps.py
+│       └── routers/ (auth, finanzas, mantenimiento, etc.)
+├── frontend/        # React + TS + Tailwind + Framer Motion
+│   └── src/
+│       ├── pages/ (LandingPage, Login, Register, Dashboard/*)
+│       ├── components/ (landing, ui, layout)
+│       └── hooks/ lib/ context/ types/ utils/
+├── db/
+│   └── init.sql     # Esquema completo de PostgreSQL (DDL)
+├── docker-compose.yml
+└── .env.example
 ```
 
-Completar las variables correspondientes a:
-
-* Base de datos.
-* Claves secretas.
-* Configuración SMTP.
-* Configuración del servidor.
-
 ---
 
-# Base de datos
-
-El proyecto utiliza PostgreSQL como gestor de base de datos.
-
-La estructura de la base de datos fue diseñada para soportar la administración de:
-
-* Usuarios
-* Roles
-* Residentes
-* Propiedades
-* Documentos
-* Finanzas
-
----
-
-# Documentación
-
-La documentación técnica y funcional del proyecto se encuentra organizada dentro de la carpeta:
-
-```text
-docs/
-```
-
-Incluye:
-
-* Requisitos funcionales
-* Requisitos no funcionales
-* Restricciones
-* Historias de usuario
-* Reglas de negocio
-* Endpoints
-* Criterios de aceptación
-* Flujo del sistema
-
----
-
-# Capturas del sistema
-
-## Inicio de sesión
-
-  <img src="./images/Inicio Sesión.png" alt="Inicio Sesión Multi-Administrador" width="520">
-
----
-
-## Dashboard
-
-  <img src="./images/Dashboard.png" alt="Dashboard Multi-Administrador" width="520">
-
----
-
-## Gestión de residentes
-
-  <img src="./images/Gestión de Residentes.png" alt="Gestión de Residentes Multi-Administrador" width="520">
-
-
----
-
-## Gestión Financiera
-
-  <img src="./images/Gestión Financiera.png" alt="Gestión Financiera Multi-Administrador" width="520">
-
-
----
-
-# Estado del proyecto
-
-Actualmente el proyecto se encuentra en fase de desarrollo y continúa incorporando nuevas funcionalidades y mejoras.
-
----
-
-# Buenas prácticas implementadas
-
-* Arquitectura Cliente – Servidor.
-* API REST.
-* Gestión mediante Git y GitHub.
-* Separación entre frontend y backend.
-* Uso de variables de entorno.
-* Documentación técnica.
-* Control de versiones.
-
----
-
-# Licencia
-
-Proyecto desarrollado con fines académicos como evidencia del programa **Tecnólogo en Análisis y Desarrollo de Software** del **Servicio Nacional de Aprendizaje (SENA)**.
-
-No está autorizado su uso comercial sin el consentimiento de los autores.
-
----
-
-<p align="center">
-Desarrollado por el equipo de Multi-Administrador • SENA 2026
-</p>
+Desarrollado con React, FastAPI y PostgreSQL. Proyecto académico.
+#   M u l t i . A d m i n 
+ 
+ 
