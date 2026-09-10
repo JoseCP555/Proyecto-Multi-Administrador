@@ -44,7 +44,7 @@ export default function HeroSection() {
             <Sparkles className="w-3.5 h-3.5" /> La plataforma #1 para administradoras de conjuntos
           </motion.span>
           <motion.h1 variants={item} className="mt-6 text-[2.35rem] sm:text-5xl lg:text-[3.6rem] font-extrabold tracking-tight text-dark-100 leading-[1.08]">
-            Administra tu conjunto residencial de forma{" "}
+            Administra tus propiedades de forma{" "}
             <span className="bg-gradient-to-r from-primary-500 to-primary-700 bg-clip-text text-transparent">inteligente y centralizada</span>
           </motion.h1>
           <motion.p variants={item} className="mt-6 text-lg text-gray-500 max-w-xl leading-relaxed">
