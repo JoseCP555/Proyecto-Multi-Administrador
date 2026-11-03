@@ -47,10 +47,18 @@ def _respuesta_xlsx(nombre: str, wb: Workbook) -> bytes:
     return buf.getvalue()
 
 
+def _por_conjunto(consulta, modelo, id_conjunto):
+    """Filtra por conjunto si el modelo tiene la columna (multi-copropiedad)."""
+    if id_conjunto is None:
+        return consulta
+    columna = getattr(modelo, "id_conjunto", None)
+    return consulta.filter(columna == id_conjunto) if columna is not None else consulta
+
+
 # ---------------------------------------------------------------------------
 # Finanzas -> Excel
 # ---------------------------------------------------------------------------
-def finanzas_xlsx(db: Session) -> bytes:
+def finanzas_xlsx(db: Session, id_conjunto: int = None) -> bytes:
     wb = Workbook()
     ws = wb.active
     ws.title = "Movimientos"
@@ -60,7 +68,7 @@ def finanzas_xlsx(db: Session) -> bytes:
 
     concepto = {c.id: c for c in db.query(models.ConceptoFinanciero).all()}
     movs = (
-        db.query(models.MovimientoFinanciero)
+        _por_conjunto(db.query(models.MovimientoFinanciero), models.MovimientoFinanciero, id_conjunto)
         .order_by(models.MovimientoFinanciero.fecha_vencimiento)
         .all()
     )
@@ -81,7 +89,7 @@ def finanzas_xlsx(db: Session) -> bytes:
 # ---------------------------------------------------------------------------
 # Pagos / mora -> Excel
 # ---------------------------------------------------------------------------
-def pagos_xlsx(db: Session) -> bytes:
+def pagos_xlsx(db: Session, id_conjunto: int = None) -> bytes:
     wb = Workbook()
     ws = wb.active
     ws.title = "Pagos"
@@ -91,8 +99,9 @@ def pagos_xlsx(db: Session) -> bytes:
 
     concepto = {c.id: c for c in db.query(models.ConceptoFinanciero).all()}
     movs = (
-        db.query(models.MovimientoFinanciero)
-        .filter(models.MovimientoFinanciero.estado.in_(["pendiente", "vencido"]))
+        _por_conjunto(db.query(models.MovimientoFinanciero).filter(
+            models.MovimientoFinanciero.estado.in_(["pendiente", "vencido"])
+        ), models.MovimientoFinanciero, id_conjunto)
         .order_by(models.MovimientoFinanciero.fecha_vencimiento)
         .all()
     )
@@ -116,7 +125,7 @@ def pagos_xlsx(db: Session) -> bytes:
 # ---------------------------------------------------------------------------
 # Mantenimiento -> Excel
 # ---------------------------------------------------------------------------
-def mantenimiento_xlsx(db: Session) -> bytes:
+def mantenimiento_xlsx(db: Session, id_conjunto: int = None) -> bytes:
     wb = Workbook()
     ws = wb.active
     ws.title = "Mantenimiento"
@@ -124,7 +133,7 @@ def mantenimiento_xlsx(db: Session) -> bytes:
     _encabezado(ws, [])
     _autoancho(ws, [24, 30, 10, 12, 14, 14])
 
-    tareas = db.query(models.TareaMantenimiento).order_by(models.TareaMantenimiento.fecha_creacion).all()
+    tareas = _por_conjunto(db.query(models.TareaMantenimiento), models.TareaMantenimiento, id_conjunto).order_by(models.TareaMantenimiento.fecha_creacion).all()
     for t in tareas:
         ws.append([
             t.titulo,
@@ -140,7 +149,7 @@ def mantenimiento_xlsx(db: Session) -> bytes:
 # ---------------------------------------------------------------------------
 # PDF: resumen financiero por mes (reporte ejecutivo)
 # ---------------------------------------------------------------------------
-def reporte_finanzas_pdf(db: Session) -> bytes:
+def reporte_finanzas_pdf(db: Session, id_conjunto: int = None) -> bytes:
     buf = BytesIO()
     doc = SimpleDocTemplate(
         buf, pagesize=A4, rightMargin=18 * mm, leftMargin=18 * mm,
@@ -152,9 +161,10 @@ def reporte_finanzas_pdf(db: Session) -> bytes:
     normal = ParagraphStyle("normal", parent=estilos["Normal"], fontSize=9)
 
     concepto = {c.id: c for c in db.query(models.ConceptoFinanciero).all()}
-    movs = db.query(models.MovimientoFinanciero).filter(
+    movs = _por_conjunto(db.query(models.MovimientoFinanciero).filter(
         models.MovimientoFinanciero.estado == "pagado"
-    ).order_by(models.MovimientoFinanciero.fecha_vencimiento).all()
+    ), models.MovimientoFinanciero, id_conjunto).order_by(
+        models.MovimientoFinanciero.fecha_vencimiento).all()
 
     # Agregar por mes (ingresos/gastos)
     por_mes = {}
@@ -209,7 +219,7 @@ def reporte_finanzas_pdf(db: Session) -> bytes:
     return buf.getvalue()
 
 
-def pagos_pdf(db: Session) -> bytes:
+def pagos_pdf(db: Session, id_conjunto: int = None) -> bytes:
     buf = BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=18 * mm, leftMargin=18 * mm,
                             topMargin=15 * mm, bottomMargin=15 * mm)
@@ -219,9 +229,10 @@ def pagos_pdf(db: Session) -> bytes:
     normal = ParagraphStyle("normal", parent=estilos["Normal"], fontSize=9)
 
     concepto = {c.id: c for c in db.query(models.ConceptoFinanciero).all()}
-    movs = db.query(models.MovimientoFinanciero).filter(
+    movs = _por_conjunto(db.query(models.MovimientoFinanciero).filter(
         models.MovimientoFinanciero.estado.in_(["pendiente", "vencido"])
-    ).order_by(models.MovimientoFinanciero.fecha_vencimiento).all()
+    ), models.MovimientoFinanciero, id_conjunto).order_by(
+        models.MovimientoFinanciero.fecha_vencimiento).all()
 
     filas = [["Concepto", "Vencimiento", "Monto", "Estado"]]
     for m in movs:

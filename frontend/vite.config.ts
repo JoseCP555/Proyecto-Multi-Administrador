@@ -17,7 +17,8 @@ export default defineConfig({
     // Proxy de desarrollo: /api -> backend (solo en dev; en Docker se usan URLs directas).
     proxy: {
       "/api": {
-        target: process.env.VITE_API_PROXY || "http://localhost:8041",
+        // El backend local (uvicorn) corre en 8000; 8041 era un puerto viejo.
+        target: process.env.VITE_API_PROXY || "http://localhost:8000",
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, "")
       }

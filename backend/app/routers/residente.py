@@ -3,9 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import schemas
+from app import notificaciones_servicio as notif
 from app.models import Residente, Usuario
 from app.database import get_db
 from app.deps import require_permiso
+from app.conjunto_ctx import conjunto_activo, filtrar
 
 router = APIRouter(prefix="/residentes", tags=["Residentes"], dependencies=[Depends(require_permiso("residentes.ver"))])
 
@@ -29,14 +31,15 @@ def _serializar(r: Residente, db: Session) -> dict:
 
 
 @router.get("", response_model=list[schemas.ResidenteResponse])
-def listar(db: Session = Depends(get_db)):
-    return [_serializar(r, db) for r in db.query(Residente).all()]
+def listar(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    q = filtrar(db.query(Residente), Residente, cid)
+    return [_serializar(r, db) for r in q.all()]
 
 
 @router.post("", response_model=schemas.ResidenteResponse, status_code=201, dependencies=[Depends(require_permiso("residentes.crear"))])
-def crear(data: schemas.ResidenteCreate, db: Session = Depends(get_db)):
+def crear(data: schemas.ResidenteCreate, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     r = Residente(
-        usuario_id=data.usuario_id, tipo=data.tipo,
+        usuario_id=data.usuario_id, tipo=data.tipo, id_conjunto=cid,
         identificacion=data.identificacion,
         telefono_adicional=data.telefono_adicional,
         contacto_emergencia=data.contacto_emergencia,
@@ -46,13 +49,19 @@ def crear(data: schemas.ResidenteCreate, db: Session = Depends(get_db)):
     db.add(r)
     db.commit()
     db.refresh(r)
+    notif.notificar_seguro(
+        db=db, id_conjunto=cid, tipo="residente",
+        titulo="Nuevo residente registrado",
+        mensaje=f"Se registró el residente con identificación {r.identificacion}.",
+        clave=f"creado:{r.id}",
+    )
     return _serializar(r, db)
 
 
 @router.put("/{residente_id}", response_model=schemas.ResidenteResponse, dependencies=[Depends(require_permiso("residentes.editar"))])
-def actualizar(residente_id: int, data: schemas.ResidenteCreate, db: Session = Depends(get_db)):
+def actualizar(residente_id: int, data: schemas.ResidenteCreate, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     r = db.query(Residente).get(residente_id)
-    if not r:
+    if not r or (cid is not None and r.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Residente no encontrado.")
     r.tipo = data.tipo
     r.identificacion = data.identificacion
@@ -66,9 +75,9 @@ def actualizar(residente_id: int, data: schemas.ResidenteCreate, db: Session = D
 
 
 @router.delete("/{residente_id}", status_code=204, dependencies=[Depends(require_permiso("residentes.eliminar"))])
-def eliminar(residente_id: int, db: Session = Depends(get_db)):
+def eliminar(residente_id: int, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     r = db.query(Residente).get(residente_id)
-    if not r:
+    if not r or (cid is not None and r.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Residente no encontrado.")
     r.activo = False
     db.commit()

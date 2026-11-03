@@ -13,6 +13,18 @@ from sqlalchemy.orm import Session
 from app import models
 
 # Catálogo de intents (palabras clave). Se normaliza a minúsculas y sin tildes.
+# Conjunto activo mientras se genera la respuesta (None = todos los datos).
+_CONJUNTO_ACTIVO: int | None = None
+
+
+def _ctx(consulta, modelo):
+    """Aplica el filtro del conjunto activo si el modelo lo soporta."""
+    if _CONJUNTO_ACTIVO is None:
+        return consulta
+    columna = getattr(modelo, "id_conjunto", None)
+    return consulta.filter(columna == _CONJUNTO_ACTIVO) if columna is not None else consulta
+
+
 def _norm(t: str) -> str:
     import unicodedata
     t = unicodedata.normalize("NFD", t)
@@ -63,9 +75,20 @@ SIN_PERMISO = (
 )
 
 
-def responder(db: Session, mensaje: str, permisos: list[str] | None = None) -> str:
+def responder(
+    db: Session,
+    mensaje: str,
+    permisos: list[str] | None = None,
+    id_conjunto: int | None = None,
+) -> str:
     """Genera la respuesta. Si se pasan `permisos` (códigos RBAC del rol),
-    los intents con datos de un módulo se responden solo si el rol puede verlo."""
+    los intents con datos de un módulo se responden solo si el rol puede verlo.
+
+    `id_conjunto` limita las consultas al conjunto activo del usuario
+    (multi-copropiedad). None = comportamiento histórico (todos los datos).
+    """
+    global _CONJUNTO_ACTIVO
+    _CONJUNTO_ACTIVO = id_conjunto
     intent = detectar_intent(mensaje)
 
     modulo = INTENT_MODULO.get(intent)
@@ -130,13 +153,13 @@ def responder(db: Session, mensaje: str, permisos: list[str] | None = None) -> s
 # ---- Intents específicos ---------------------------------------------------
 def _responder_finanzas(db: Session, intent: str) -> str:
     ingresos = (
-        db.query(models.MovimientoFinanciero)
+        _ctx(db.query(models.MovimientoFinanciero), models.MovimientoFinanciero)
         .join(models.ConceptoFinanciero)
         .filter(models.ConceptoFinanciero.tipo == "ingreso", models.MovimientoFinanciero.estado == "pagado")
         .all()
     )
     gastos = (
-        db.query(models.MovimientoFinanciero)
+        _ctx(db.query(models.MovimientoFinanciero), models.MovimientoFinanciero)
         .join(models.ConceptoFinanciero)
         .filter(models.ConceptoFinanciero.tipo == "gasto", models.MovimientoFinanciero.estado == "pagado")
         .all()
@@ -146,7 +169,7 @@ def _responder_finanzas(db: Session, intent: str) -> str:
     saldo = total_ing - total_gas
 
     pendientes = (
-        db.query(models.MovimientoFinanciero)
+        _ctx(db.query(models.MovimientoFinanciero), models.MovimientoFinanciero)
         .filter(models.MovimientoFinanciero.estado.in_(["pendiente", "vencido"]))
         .all()
     )
@@ -182,13 +205,13 @@ def _responder_finanzas(db: Session, intent: str) -> str:
 
 
 def _responder_mantenimiento(db: Session) -> str:
-    pendientes = db.query(models.TareaMantenimiento).filter(
+    pendientes = _ctx(db.query(models.TareaMantenimiento), models.TareaMantenimiento).filter(
         models.TareaMantenimiento.estado.in_(["pendiente", "en_proceso"])
     ).count()
-    completadas = db.query(models.TareaMantenimiento).filter(
+    completadas = _ctx(db.query(models.TareaMantenimiento), models.TareaMantenimiento).filter(
         models.TareaMantenimiento.estado == "completada"
     ).count()
-    criticas = db.query(models.TareaMantenimiento).filter(
+    criticas = _ctx(db.query(models.TareaMantenimiento), models.TareaMantenimiento).filter(
         models.TareaMantenimiento.prioridad == "critica",
         models.TareaMantenimiento.estado != "completada",
     ).count()
@@ -202,9 +225,9 @@ def _responder_mantenimiento(db: Session) -> str:
 
 
 def _responder_propiedades(db: Session) -> str:
-    total = db.query(models.Propiedad).count()
-    ocupadas = db.query(models.Propiedad).filter(models.Propiedad.estado == "ocupado").count()
-    vacias = db.query(models.Propiedad).filter(models.Propiedad.estado == "vacio").count()
+    total = _ctx(db.query(models.Propiedad), models.Propiedad).count()
+    ocupadas = _ctx(db.query(models.Propiedad), models.Propiedad).filter(models.Propiedad.estado == "ocupado").count()
+    vacias = _ctx(db.query(models.Propiedad), models.Propiedad).filter(models.Propiedad.estado == "vacio").count()
     return (
         f"🏢 El conjunto cuenta con {total} propiedades: "
         f"{ocupadas} ocupadas y {vacias} vacías. "
@@ -213,10 +236,10 @@ def _responder_propiedades(db: Session) -> str:
 
 
 def _responder_residentes(db: Session) -> str:
-    total = db.query(models.Residente).count()
-    activos = db.query(models.Residente).filter(models.Residente.activo == True).count()
-    propietarios = db.query(models.Residente).filter(models.Residente.tipo == "propietario").count()
-    inquilinos = db.query(models.Residente).filter(models.Residente.tipo == "inquilino").count()
+    total = _ctx(db.query(models.Residente), models.Residente).count()
+    activos = _ctx(db.query(models.Residente), models.Residente).filter(models.Residente.activo == True).count()
+    propietarios = _ctx(db.query(models.Residente), models.Residente).filter(models.Residente.tipo == "propietario").count()
+    inquilinos = _ctx(db.query(models.Residente), models.Residente).filter(models.Residente.tipo == "inquilino").count()
     return (
         f"👥 Hay {total} residentes registrados ({activos} activos).\n"
         f"• Propietarios: {propietarios}\n"
@@ -226,8 +249,8 @@ def _responder_residentes(db: Session) -> str:
 
 
 def _responder_documentos(db: Session) -> str:
-    total = db.query(models.Documento).count()
-    publicos = db.query(models.Documento).filter(models.Documento.publico == True).count()
+    total = _ctx(db.query(models.Documento), models.Documento).count()
+    publicos = _ctx(db.query(models.Documento), models.Documento).filter(models.Documento.publico == True).count()
     return (
         f"📄 Hay {total} documentos cargados, de los cuales {publicos} son de acceso público "
         "(reglamentos, actas, manuales). Consulta el módulo de Documentos."
@@ -236,7 +259,8 @@ def _responder_documentos(db: Session) -> str:
 
 def _responder_eventos(db: Session) -> str:
     hoy = date.today()
-    eventos = db.query(models.Evento).filter(models.Evento.fecha >= hoy).order_by(models.Evento.fecha).all()
+    eventos = _ctx(db.query(models.Evento), models.Evento).filter(
+        models.Evento.fecha >= hoy).order_by(models.Evento.fecha).all()
     if not eventos:
         return "No hay eventos próximos programados. 📅"
     lineas = "\n".join(f"• {e.titulo} — {e.fecha.strftime('%d/%m/%Y')} ({e.lugar})" for e in eventos[:5])
@@ -258,8 +282,8 @@ def _sugerir_intent(mensaje: str) -> str:
     return mejor
 
 
-def crear_sesion(db: Session, usuario_id=None) -> models.SesionChat:
-    s = models.SesionChat(usuario_id=usuario_id, titulo="Chat asistente")
+def crear_sesion(db: Session, usuario_id=None, id_conjunto: int | None = None) -> models.SesionChat:
+    s = models.SesionChat(usuario_id=usuario_id, titulo="Chat asistente", id_conjunto=id_conjunto)
     db.add(s)
     db.commit()
     db.refresh(s)

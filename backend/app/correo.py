@@ -63,7 +63,11 @@ def _plantilla(titulo: str, saludo: str, cuerpo: str, boton: str, link: str, pie
 
 
 # Dominios reservados para pruebas automáticas: no se envían (evita rebotes en la cuenta remitente).
-DOMINIOS_PRUEBA = {"x.com", "test.com", "example.com", "example.org", "localhost"}
+DOMINIOS_PRUEBA = {
+    "x.com", "test.com", "example.com", "example.org", "localhost",
+    # Variantes en español que también se usan para probar el registro.
+    "ejemplo.com", "ejemplo.es", "prueba.com", "correo.com",
+}
 
 
 async def _enviar(destinatario: str, asunto: str, html: str, texto: str) -> dict:

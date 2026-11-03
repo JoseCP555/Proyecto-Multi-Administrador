@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import AuthShell from "@/components/ui/AuthShell";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +11,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
+  const [verPassword, setVerPassword] = useState(false);
   const [error, setError] = useState("");
   const [noVerificado, setNoVerificado] = useState(false);
   const [reenviado, setReenviado] = useState("");
@@ -48,6 +50,11 @@ export default function Login() {
           <Link to="/register" className="text-primary-600 font-medium hover:underline">
             Regístrate
           </Link>
+          <br />
+          ¿Administras una copropiedad?{" "}
+          <Link to="/registro-administrador" className="text-primary-600 font-medium hover:underline">
+            Regístrate como administrador
+          </Link>
         </>
       }
     >
@@ -70,14 +77,27 @@ export default function Login() {
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input"
-            placeholder="••••••••"
-            required
-          />
+          <div className="relative">
+            <input
+              type={verPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input"
+              style={{ paddingRight: 44 }}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setVerPassword((v) => !v)}
+              aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              title={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            >
+              {verPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {noVerificado && (

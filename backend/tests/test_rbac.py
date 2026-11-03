@@ -22,23 +22,24 @@ ROLES = {"super_admin": 1, "admin": 2, "residente": 3, "tesoreria": 4, "segurida
 # Matriz esperada (espejo de app/permisos.py). Si cambia la matriz, cambia aquí.
 ESPERADO = {
     "super_admin": None,  # todos
-    "admin": None,        # todos menos SOLO_SUPER
+    "admin": None,        # todos: ahora es idéntico a super_admin
     "tesoreria": {
-        "dashboard.ver", "reportes.ver", "finanzas.ver", "finanzas.crear", "finanzas.editar",
+        "dashboard.ver", "reportes.ver", "conjuntos.ver", "finanzas.ver", "finanzas.crear", "finanzas.editar",
         "finanzas.eliminar", "propiedades.ver", "residentes.ver", "documentos.ver",
         "documentos.descargar", "chat.usar",
     },
     "residente": {
-        "dashboard.ver", "propiedades.ver", "documentos.ver", "documentos.descargar",
+        "dashboard.ver", "conjuntos.ver", "propiedades.ver", "documentos.ver", "documentos.descargar",
         "eventos.ver", "mantenimiento.ver", "mantenimiento.crear", "chat.usar",
     },
     "seguridad": {
-        "dashboard.ver", "propiedades.ver", "residentes.ver", "mantenimiento.ver",
+        "dashboard.ver", "conjuntos.ver", "propiedades.ver", "residentes.ver", "mantenimiento.ver",
         "mantenimiento.crear", "mantenimiento.editar", "eventos.ver", "documentos.ver",
         "documentos.descargar", "chat.usar",
     },
 }
-SOLO_SUPER = {"usuarios.eliminar", "sistema.respaldar"}
+# Ya no hay permisos exclusivos del super_admin: admin tiene acceso total.
+SOLO_SUPER = set()
 
 
 # ---------------------------------------------------------------------------
@@ -84,7 +85,13 @@ def _db_url() -> str:
     que otros tests —test_unit— pueden sobrescribir con sqlite)."""
     from dotenv import dotenv_values
     valores = dotenv_values(os.path.join(os.path.dirname(__file__), "..", ".env"))
-    url = valores.get("DATABASE_URL") or os.getenv("DATABASE_URL", "")
+    # MULTIADMIN_TEST_DB_URL la guarda conftest.py antes de que test_unit.py
+    # reemplace DATABASE_URL por sqlite:///./unit.db.
+    url = (
+        valores.get("DATABASE_URL")
+        or os.getenv("MULTIADMIN_TEST_DB_URL")
+        or os.getenv("DATABASE_URL", "")
+    )
     assert url.startswith("postgresql"), f"DATABASE_URL no es PostgreSQL: {url}"
     return url
 
@@ -184,8 +191,8 @@ CASOS = [
     ("admin", "GET", "/reportes/dashboard", None, True),
     ("admin", "GET", "/configuracion", None, True),
     ("admin", "PUT", "/configuracion", [], True),
-    ("admin", "GET", "/admin/backup", None, False),          # solo super_admin
-    ("admin", "DELETE", "/usuarios/999999", None, False),    # solo super_admin
+    ("admin", "GET", "/admin/backup", None, True),            # admin = super_admin
+    ("admin", "DELETE", "/usuarios/999999", None, True),      # 404, pero autorizado
     # --- super_admin -----------------------------------------------------
     ("super_admin", "GET", "/usuarios", None, True),
     ("super_admin", "DELETE", "/usuarios/999999", None, True),   # 404, autorizado
@@ -232,32 +239,47 @@ def test_residente_autenticado_no_puede_crear_admins(sesiones):
     assert r.status_code == 403
 
 
-def test_admin_crea_tesoreria_pero_no_super_admin(sesiones):
+def test_admin_crea_cualquier_rol_incluido_super_admin(sesiones):
     ok = c.post("/register", headers=h(sesiones, "admin"), json={
         "nombre": "Teso", "correo": f"teso.{int(time.time())}@x.com", "contrasena": "12345678", "rol_id": 4,
     })
     assert ok.status_code == 200, ok.text
-    no = c.post("/register", headers=h(sesiones, "admin"), json={
+    # Antes esto daba 403. Ahora admin y super_admin tienen acceso total.
+    si = c.post("/register", headers=h(sesiones, "admin"), json={
         "nombre": "Super", "correo": f"sup.{int(time.time())}@x.com", "contrasena": "12345678", "rol_id": 1,
     })
-    assert no.status_code == 403
+    assert si.status_code == 200, si.text
+    assert si.json()["rol_id"] == 1
 
 
 # ---------------------------------------------------------------------------
 # 4. Reglas de gestión de usuarios
 # ---------------------------------------------------------------------------
-def test_admin_no_puede_editar_ni_eliminar_super_admin(sesiones):
-    super_id = sesiones["super_admin"][1]["id"]
-    r = c.put(f"/usuarios/{super_id}", headers=h(sesiones, "admin"), json={"activo": False})
-    assert r.status_code == 403
-    r = c.delete(f"/usuarios/{super_id}", headers=h(sesiones, "admin"))
-    assert r.status_code == 403
+def test_admin_puede_editar_y_eliminar_super_admin(sesiones):
+    # Se usa una cuenta temporal: no se desactiva al super_admin del fixture
+    # porque su sesión la necesitan las demás pruebas.
+    r = c.post("/register", headers=h(sesiones, "admin"), json={
+        "nombre": "Super temporal", "correo": f"supertemp.{int(time.time())}@x.com",
+        "contrasena": "12345678", "rol_id": 1,
+    })
+    assert r.status_code == 200, r.text
+    sid = r.json()["id"]
+    r = c.put(f"/usuarios/{sid}", headers=h(sesiones, "admin"), json={"telefono": "3000000000"})
+    assert r.status_code == 200, r.text
+    r = c.delete(f"/usuarios/{sid}", headers=h(sesiones, "admin"))
+    assert r.status_code == 204, r.text
 
 
-def test_admin_no_puede_ascender_a_nadie_a_super_admin(sesiones):
-    res_id = sesiones["residente"][1]["id"]
-    r = c.put(f"/usuarios/{res_id}", headers=h(sesiones, "admin"), json={"rol_id": 1})
-    assert r.status_code == 403
+def test_admin_puede_ascender_a_super_admin(sesiones):
+    # Usuario temporal para no alterar el rol del fixture "residente".
+    nuevo = c.post("/register", headers=h(sesiones, "admin"), json={
+        "nombre": "Ascendido", "correo": f"ascender.{int(time.time())}@x.com",
+        "contrasena": "12345678", "rol_id": 3,
+    }).json()
+    r = c.put(f"/usuarios/{nuevo['id']}", headers=h(sesiones, "admin"), json={"rol_id": 1})
+    assert r.status_code == 200, r.text
+    assert r.json()["rol_id"] == 1
+    c.delete(f"/usuarios/{nuevo['id']}", headers=h(sesiones, "admin"))
 
 
 def test_nadie_cambia_su_propio_rol_ni_se_desactiva(sesiones):
@@ -269,14 +291,17 @@ def test_nadie_cambia_su_propio_rol_ni_se_desactiva(sesiones):
     assert c.delete(f"/usuarios/{yo}", headers=h(sesiones, "super_admin")).status_code == 400
 
 
-def test_super_admin_elimina_usuario_y_admin_no(sesiones):
-    correo = f"borrable.{int(time.time())}@x.com"
-    nuevo = c.post("/register", headers=h(sesiones, "super_admin"), json={
-        "nombre": "Borrable", "correo": correo, "contrasena": "12345678", "rol_id": 3,
-    }).json()
-    assert c.delete(f"/usuarios/{nuevo['id']}", headers=h(sesiones, "admin")).status_code == 403
-    assert c.delete(f"/usuarios/{nuevo['id']}", headers=h(sesiones, "super_admin")).status_code == 204
-    assert c.get(f"/usuarios/{nuevo['id']}", headers=h(sesiones, "super_admin")).status_code == 404
+def test_admin_y_super_admin_eliminan_usuario(sesiones):
+    def crear(tag):
+        return c.post("/register", headers=h(sesiones, "super_admin"), json={
+            "nombre": "Borrable", "correo": f"borrable.{tag}.{int(time.time())}@x.com",
+            "contrasena": "12345678", "rol_id": 3,
+        }).json()
+
+    a, b = crear("a"), crear("b")
+    assert c.delete(f"/usuarios/{a['id']}", headers=h(sesiones, "admin")).status_code == 204
+    assert c.delete(f"/usuarios/{b['id']}", headers=h(sesiones, "super_admin")).status_code == 204
+    assert c.get(f"/usuarios/{a['id']}", headers=h(sesiones, "super_admin")).status_code == 404
 
 
 def test_usuario_desactivado_pierde_acceso(sesiones):

@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  /* Color principal por defecto (azul de siempre). Al abrir un conjunto,
+     DashboardLayout sobrescribe estas variables con el color del conjunto. */
+  :root {
+    --pc-50: 239 246 255;
+    --pc-100: 219 234 254;
+    --pc-200: 191 219 254;
+    --pc-300: 147 197 253;
+    --pc-500: 37 99 235;
+    --pc-600: 29 78 216;
+    --pc-700: 30 64 175;
+  }
   html {
     scroll-behavior: smooth;
   }

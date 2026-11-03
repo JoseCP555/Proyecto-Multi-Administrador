@@ -58,21 +58,38 @@ CATALOGO = [
     ("eventos.eliminar", "eventos", "eliminar", "Eliminar eventos"),
     ("config.ver", "config", "ver", "Ver configuración del sistema"),
     ("config.editar", "config", "editar", "Editar configuración"),
+    ("conjuntos.ver", "conjuntos", "ver", "Ver el panel de conjuntos / copropiedades"),
+    ("conjuntos.crear", "conjuntos", "crear", "Crear conjuntos"),
+    ("conjuntos.editar", "conjuntos", "editar", "Editar conjuntos"),
+    ("conjuntos.eliminar", "conjuntos", "eliminar", "Desactivar conjuntos"),
+    ("conjuntos.gestionar", "conjuntos", "gestionar", "Administrar TODOS los conjuntos del sistema"),
     ("chat.usar", "chat", "usar", "Usar el chatbot / asistente"),
     ("sistema.respaldar", "sistema", "respaldar", "Generar respaldo de la base de datos"),
 ]
 
 TODOS = [c[0] for c in CATALOGO]
 
-# Exclusivos del super_admin (el admin del conjunto no los tiene).
-SOLO_SUPER_ADMIN = {"usuarios.eliminar", "sistema.respaldar"}
+# Históricamente el rol admin no podía eliminar usuarios, respaldar la BD ni
+# gestionar todos los conjuntos. Ahora **admin y super_admin son equivalentes**:
+# el conjunto queda vacío para que la matriz le asigne TODOS los permisos.
+SOLO_SUPER_ADMIN: set[str] = set()
+
+# Roles con acceso total (se usan en comprobaciones puntuales donde no basta
+# mirar un permiso, p. ej. "¿puede tocar cuentas super_admin?").
+ROLES_ACCESO_TOTAL = {SUPER_ADMIN, ADMIN}
+
+
+def tiene_acceso_total(usuario) -> bool:
+    """¿El usuario pertenece a un rol con acceso total (super_admin o admin)?"""
+    return getattr(usuario, "rol_id", None) in ROLES_ACCESO_TOTAL
+
 
 MATRIZ: dict[int, set[str]] = {
     SUPER_ADMIN: set(TODOS),
-    ADMIN: set(TODOS) - SOLO_SUPER_ADMIN,
+    ADMIN: set(TODOS) - SOLO_SUPER_ADMIN,  # = TODOS: igual que super_admin
     # Tesorería: finanzas completas, reportes, documentos (lectura), chatbot.
     TESORERIA: {
-        "dashboard.ver", "reportes.ver",
+        "dashboard.ver", "reportes.ver", "conjuntos.ver",
         "finanzas.ver", "finanzas.crear", "finanzas.editar", "finanzas.eliminar",
         "propiedades.ver", "residentes.ver",
         "documentos.ver", "documentos.descargar",
@@ -80,7 +97,7 @@ MATRIZ: dict[int, set[str]] = {
     },
     # Residente: lectura de su conjunto, crear solicitudes de mantenimiento, chatbot.
     RESIDENTE: {
-        "dashboard.ver",
+        "dashboard.ver", "conjuntos.ver",
         "propiedades.ver",
         "documentos.ver", "documentos.descargar",
         "eventos.ver",
@@ -89,7 +106,7 @@ MATRIZ: dict[int, set[str]] = {
     },
     # Seguridad: lectura operativa + puede actualizar estado de mantenimientos.
     SEGURIDAD: {
-        "dashboard.ver",
+        "dashboard.ver", "conjuntos.ver",
         "propiedades.ver", "residentes.ver",
         "mantenimiento.ver", "mantenimiento.crear", "mantenimiento.editar",
         "eventos.ver",

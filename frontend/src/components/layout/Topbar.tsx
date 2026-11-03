@@ -5,9 +5,12 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { tienePermiso } from "@/lib/permisos";
 import Notificaciones from "@/components/layout/Notificaciones";
+import SelectorConjunto from "@/components/layout/SelectorConjunto";
+import { useConjunto } from "@/context/ConjuntoContext";
 
 const TITULOS: Record<string, string> = {
   "/dashboard": "Dashboard",
+  "/dashboard/inicio": "Inicio",
   "/dashboard/usuarios": "Usuarios",
   "/dashboard/residentes": "Residentes",
   "/dashboard/propiedades": "Propiedades",
@@ -22,8 +25,15 @@ const TITULOS: Record<string, string> = {
 export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { usuario } = useAuth();
   const { pathname } = useLocation();
+  const { activo: conjunto, conjuntos } = useConjunto();
   const [buscar, setBuscar] = useState("");
   const titulo = TITULOS[pathname] ?? "Panel";
+  const subtitulo =
+    pathname === "/dashboard"
+      ? "Panel Multi-Administrador"
+      : conjunto
+        ? `Gestionando ${conjunto.nombre}`
+        : undefined;
 
   return (
     <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-4 sm:px-6 lg:px-8 pt-5 pb-4 flex items-center justify-between gap-4">
@@ -38,7 +48,9 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
         </button>
         <div className="min-w-0">
           <h2 className="text-xl font-bold text-gray-900 truncate">{titulo}</h2>
-          <p className="text-xs text-gray-400 hidden sm:block">Bienvenido de nuevo, {usuario?.nombre?.split(" ")[0]}</p>
+          <p className="text-xs text-gray-400 hidden sm:block">
+            {subtitulo ?? `Bienvenido de nuevo, ${usuario?.nombre?.split(" ")[0] ?? ""}`}
+          </p>
         </div>
       </div>
 
@@ -72,6 +84,12 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
           <Home className="w-5 h-5" />
         </Link>
         <Notificaciones />
+        {conjuntos.length > 0 && (
+          <>
+            <span className="hidden md:block w-px h-7 bg-gray-200 mx-1" />
+            <SelectorConjunto variante="topbar" />
+          </>
+        )}
         <span className="hidden md:block w-px h-7 bg-gray-200 mx-1" />
         <div className="flex items-center gap-2 pl-1">
           <div className="hidden md:block text-right">

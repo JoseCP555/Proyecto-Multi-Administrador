@@ -2,10 +2,56 @@
 from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, Text, ForeignKey,
-    Numeric, Date,
+    Numeric, Date, UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
+
+
+# ---------------------------------------------------------------------------
+# CONJUNTOS (COPROPIEDADES) Y USUARIOS DE CADA CONJUNTO
+# ---------------------------------------------------------------------------
+class Conjunto(Base):
+    """Cada copropiedad / conjunto residencial gestionado por la plataforma.
+
+    Todos los datos operativos (residentes, propiedades, finanzas,
+    mantenimientos, documentos y eventos) quedan ligados a un conjunto
+    mediante la columna `id_conjunto`, de modo que cambiar de conjunto
+    cambia el contexto de trabajo sin cerrar sesión (HU-07).
+    """
+
+    __tablename__ = "conjuntos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(150), unique=True, nullable=False)
+    nit = Column(String(30))
+    direccion = Column(String(200))
+    ciudad = Column(String(80))
+    telefono = Column(String(30))
+    correo = Column(String(255))
+    administrador = Column(String(150))
+    # "habitantes" es el dato declarado por el conjunto (no se calcula).
+    habitantes = Column(Integer, default=0)
+    cuota = Column(Numeric(12, 2), default=0)
+    dia_cobro = Column(Integer)
+    reunion = Column(String(120))     # ej: "solo propietarios" | "todos los residentes"
+    silencio = Column(String(60))     # ej: "22:00 - 06:00"
+    logo = Column(String(500))
+    # Color del tema: id de paleta ("azul", "verde", ...) o hexadecimal
+    # "#RRGGBB". NULL = automático según la posición en la lista.
+    color = Column(String(20))
+    activo = Column(Boolean, default=True, nullable=False, server_default="true")
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class UsuarioConjunto(Base):
+    """Asignación de un usuario a los conjuntos que tiene a su cargo."""
+
+    __tablename__ = "usuario_conjuntos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
+    conjunto_id = Column(Integer, ForeignKey("conjuntos.id", ondelete="CASCADE"), nullable=False, index=True)
 
 
 # ---------------------------------------------------------------------------
@@ -34,6 +80,8 @@ class Usuario(Base):
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
     ultimo_acceso = Column(DateTime, nullable=True)
     id_copropiedad = Column(Integer, nullable=True)
+    # Conjunto al que pertenece el usuario (contexto por defecto).
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
 
     # Token de recuperación de contraseña
     token_recuperacion = Column(String(255), nullable=True)
@@ -45,6 +93,11 @@ class Usuario(Base):
     token_verificacion = Column(String(255), nullable=True)
     expira_verificacion = Column(DateTime, nullable=True)
     codigo_verificacion = Column(String(6), nullable=True)
+
+    # Preferencias de entrega de notificaciones (se pueden cambiar desde la
+    # campana del dashboard). Por defecto ambos canales activados.
+    notificaciones_correo = Column(Boolean, default=True, nullable=False, server_default="true")
+    notificaciones_push = Column(Boolean, default=True, nullable=False, server_default="true")
 
     rol = relationship("Rol", back_populates="usuarios")
 
@@ -83,6 +136,7 @@ class Residente(Base):
     contacto_emergencia = Column(String(150))
     telefono_emergencia = Column(String(30))
     activo = Column(Boolean, default=True)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
 
@@ -102,6 +156,7 @@ class Propiedad(Base):
     estado = Column(String(30), default="ocupado")  # ocupado | vacio | mantenimiento | arrendado
     estrato = Column(Integer)
     residente_id = Column(Integer, ForeignKey("residentes.id"), nullable=True)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
 
@@ -135,6 +190,7 @@ class MovimientoFinanciero(Base):
     referencia = Column(String(100))
     notas = Column(Text)
     creado_por = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
 
@@ -155,6 +211,7 @@ class TareaMantenimiento(Base):
     costo_estimado = Column(Numeric(12, 2))
     fecha_programada = Column(Date)
     fecha_completada = Column(DateTime)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
 
@@ -175,6 +232,7 @@ class Documento(Base):
     subido_por = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     publico = Column(Boolean, default=False)
     version = Column(Integer, default=1)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
 
@@ -190,6 +248,7 @@ class Evento(Base):
     fecha = Column(Date, nullable=False)
     lugar = Column(String(150))
     creado_por = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
 
@@ -216,6 +275,7 @@ class SesionChat(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     titulo = Column(String(255), default="Nueva conversación")
     estado = Column(String(20), default="activa")  # activa | cerrada
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
 
@@ -226,4 +286,54 @@ class MensajeChat(Base):
     sesion_id = Column(Integer, ForeignKey("sesiones_chat.id"), nullable=False)
     rol = Column(String(20), nullable=False)  # usuario | asistente | sistema
     contenido = Column(Text, nullable=False)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+# ---------------------------------------------------------------------------
+# NOTIFICACIONES REALES
+# ---------------------------------------------------------------------------
+class Notificacion(Base):
+    """Aviso persistente para un usuario concreto.
+
+    A diferencia de los recordatorios calculados al vuelo, estas filas nacen
+    cuando ocurre algo real en el sistema (o cuando el generador detecta una
+    mora / vencimiento), se pueden marcar como leídas o descartar y registran
+    por qué canal ya se entregaron. `referencia` evita duplicados: un mismo
+    evento nunca genera dos avisos para la misma persona.
+    """
+
+    __tablename__ = "notificaciones"
+    __table_args__ = (
+        UniqueConstraint("usuario_id", "referencia", name="uq_notificacion_usuario_referencia"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="CASCADE"), nullable=True, index=True)
+    tipo = Column(String(40), nullable=False, index=True)  # mora | proximo | evento | mantenimiento | ...
+    severidad = Column(String(10), default="media", nullable=False)  # alta | media | baja
+    titulo = Column(String(200), nullable=False)
+    mensaje = Column(Text)
+    url = Column(String(200))            # ruta del frontend al hacer clic
+    fecha = Column(Date)                 # fecha del hecho (opcional)
+    referencia = Column(String(160), nullable=False)  # deduplicación
+    leida = Column(Boolean, default=False, nullable=False, server_default="false")
+    descartada = Column(Boolean, default=False, nullable=False, server_default="false")
+    fecha_lectura = Column(DateTime)
+    enviada_correo = Column(Boolean, default=False, nullable=False, server_default="false")
+    enviada_push = Column(Boolean, default=False, nullable=False, server_default="false")
+    fecha_creacion = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class PushSuscripcion(Base):
+    """Suscripción Web Push (VAPID) de un navegador para un usuario."""
+
+    __tablename__ = "push_suscripciones"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
+    endpoint = Column(Text, nullable=False, unique=True)
+    p256dh = Column(Text, nullable=False)
+    auth = Column(Text, nullable=False)
+    activa = Column(Boolean, default=True, nullable=False, server_default="true")
     fecha_creacion = Column(DateTime, default=datetime.utcnow)

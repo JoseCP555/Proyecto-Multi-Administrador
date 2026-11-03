@@ -3,12 +3,15 @@ import { AnimatePresence } from "framer-motion";
 import LandingPage from "@/pages/LandingPage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import RegistroAdmin from "@/pages/RegistroAdmin";
 import Recuperar from "@/pages/Recuperar";
 import RestablecerPassword from "@/pages/RestablecerPassword";
 import VerificarCorreo from "@/pages/VerificarCorreo";
 import VerificarCodigo from "@/pages/VerificarCodigo";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Inicio from "@/pages/Dashboard/Inicio";
+import Conjuntos from "@/pages/Dashboard/Conjuntos";
+import { useConjunto } from "@/context/ConjuntoContext";
 import Usuarios from "@/pages/Dashboard/Usuarios";
 import Residentes from "@/pages/Dashboard/Residentes";
 import Propiedades from "@/pages/Dashboard/Propiedades";
@@ -48,6 +51,22 @@ function ConPermiso({ modulo, children }: { modulo: string; children: React.Reac
   return <>{children}</>;
 }
 
+/**
+ * Ruta inicial del dashboard:
+ * · Si el usuario administra VARIOS conjuntos → Panel Multi-Administrador
+ *   (selector de conjuntos, como en la maqueta).
+ * · Si sólo tiene uno → entra directo al Inicio de ese conjunto, que es el
+ *   comportamiento que ya tenía la app.
+ */
+function RutaInicial() {
+  const { conjuntos, cargando } = useConjunto();
+  if (cargando && !conjuntos.length) {
+    return <div className="h-64 animate-pulse rounded-3xl bg-gray-100" />;
+  }
+  if (conjuntos.length === 1) return <Navigate to="/dashboard/inicio" replace />;
+  return <Conjuntos />;
+}
+
 export default function App() {
   const location = useLocation();
 
@@ -59,6 +78,7 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/registro-administrador" element={<RegistroAdmin />} />
           <Route path="/recuperar" element={<Recuperar />} />
           <Route path="/restablecer/:token" element={<RestablecerPassword />} />
           <Route path="/verificar/:token" element={<VerificarCorreo />} />
@@ -76,7 +96,16 @@ export default function App() {
               </Protegida>
             }
           >
-            <Route index element={<ConPermiso modulo="dashboard"><Inicio /></ConPermiso>} />
+            <Route index element={<ConPermiso modulo="dashboard"><RutaInicial /></ConPermiso>} />
+            <Route path="inicio" element={<ConPermiso modulo="dashboard"><Inicio /></ConPermiso>} />
+            <Route
+              path="conjuntos"
+              element={
+                <RequierePermiso codigo="conjuntos.ver">
+                  <Conjuntos />
+                </RequierePermiso>
+              }
+            />
             <Route path="usuarios" element={<ConPermiso modulo="usuarios"><Usuarios /></ConPermiso>} />
             <Route path="residentes" element={<ConPermiso modulo="residentes"><Residentes /></ConPermiso>} />
             <Route path="propiedades" element={<ConPermiso modulo="propiedades"><Propiedades /></ConPermiso>} />

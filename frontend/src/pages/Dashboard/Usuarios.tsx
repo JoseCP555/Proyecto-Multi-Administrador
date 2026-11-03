@@ -14,11 +14,12 @@ import type { Usuario } from "@/types";
 const emptyForm = { nombre: "", correo: "", contrasena: "", telefono: "", rol_id: 3 };
 
 export default function Usuarios() {
-  const { puede, esSuper, usuario: yo } = usePermisos();
+  const { puede, esAdmin, usuario: yo } = usePermisos();
   const { data: usuarios, cargar, cargando } = useFetch<Usuario[]>("/usuarios");
   const roles = rolesAsignables(yo);
-  // Un admin normal no puede tocar cuentas super_admin; nadie se elimina a sí mismo.
-  const puedeGestionar = (u: Usuario) => esSuper() || u.rol_id !== ROL_SUPER_ADMIN;
+  // admin y super_admin tienen acceso total: ambos pueden gestionar cuentas
+  // super_admin. Los demás roles no.
+  const puedeGestionar = (u: Usuario) => esAdmin() || u.rol_id !== ROL_SUPER_ADMIN;
   const [abierto, setAbierto] = useState(false);
   const [editando, setEditando] = useState<Usuario | null>(null);
   const [eliminando, setEliminando] = useState<Usuario | null>(null);

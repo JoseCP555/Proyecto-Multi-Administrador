@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import {
   LayoutDashboard,
+  Home,
   Users,
   UserRound,
   Building2,
@@ -16,6 +17,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { puedeVerModulo, tienePermiso } from "@/lib/permisos";
 import logoUrl from "@/lib/logo";
+import { useConjunto } from "@/context/ConjuntoContext";
 
 // Ítems del menú (estilo exacto del dashboard). Cada uno declara el permiso
 // (módulo) necesario para VERLO; se filtran según el rol del usuario (RBAC).
@@ -28,6 +30,7 @@ interface ItemMenu {
 }
 const items: ItemMenu[] = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard, end: true, modulo: "dashboard" as const },
+  { label: "Inicio", path: "/dashboard/inicio", icon: Home, end: true, modulo: "dashboard" as const },
   { label: "Usuarios", path: "/dashboard/usuarios", icon: Users, modulo: "usuarios" as const },
   { label: "Residentes", path: "/dashboard/residentes", icon: UserRound, modulo: "residentes" as const },
   { label: "Propiedades", path: "/dashboard/propiedades", icon: Building2, modulo: "propiedades" as const },
@@ -39,10 +42,19 @@ const items: ItemMenu[] = [
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
   const { usuario, logout } = useAuth();
+  const { conjuntos } = useConjunto();
   const navigate = useNavigate();
 
   // Solo se muestran los módulos para los que el rol tiene el permiso <modulo>.ver.
-  const itemsVisibles: ItemMenu[] = items.filter((i) => i.modulo && puedeVerModulo(usuario, i.modulo));
+  const itemsVisibles: ItemMenu[] = items.filter(
+    (i) =>
+      i.modulo &&
+      puedeVerModulo(usuario, i.modulo) &&
+      // El panel "Dashboard" (selector de conjuntos) sólo aporta cuando el
+      // usuario administra más de un conjunto; con uno solo se entra directo
+      // al "Inicio" de ese conjunto.
+      (i.path !== "/dashboard" || conjuntos.length > 1),
+  );
 
   // El historial de chat solo es visible si el rol tiene el permiso chat.usar.
   if (tienePermiso(usuario, "chat.usar")) {

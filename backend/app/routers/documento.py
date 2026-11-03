@@ -9,9 +9,11 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app import schemas
+from app import notificaciones_servicio as notif
 from app.models import Documento
 from app.database import get_db
 from app.deps import require_permiso
+from app.conjunto_ctx import conjunto_activo, filtrar
 
 router = APIRouter(prefix="/documentos", tags=["Documentos"], dependencies=[Depends(require_permiso("documentos.ver"))])
 
@@ -32,15 +34,16 @@ TIPO_POR_EXT = {
 
 
 @router.get("", response_model=list[schemas.DocumentoResponse])
-def listar(db: Session = Depends(get_db)):
-    return db.query(Documento).order_by(Documento.fecha_creacion.desc()).all()
+def listar(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    q = filtrar(db.query(Documento), Documento, cid)
+    return q.order_by(Documento.fecha_creacion.desc()).all()
 
 
 @router.get("/{documento_id}/descargar", dependencies=[Depends(require_permiso("documentos.descargar"))])
-def descargar(documento_id: int, db: Session = Depends(get_db)):
+def descargar(documento_id: int, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     """Descarga el archivo físico asociado al documento."""
     d = db.query(Documento).get(documento_id)
-    if not d:
+    if not d or (cid is not None and d.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Documento no encontrado.")
 
     ruta = d.ruta_archivo
@@ -54,15 +57,21 @@ def descargar(documento_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=schemas.DocumentoResponse, status_code=201, dependencies=[Depends(require_permiso("documentos.crear"))])
-def crear(data: schemas.DocumentoCreate, db: Session = Depends(get_db)):
+def crear(data: schemas.DocumentoCreate, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     d = Documento(
         titulo=data.titulo, descripcion=data.descripcion, ruta_archivo=data.ruta_archivo,
         tipo_documento=data.tipo_documento, mime=data.mime, tamano=data.tamano,
-        propiedad_id=data.propiedad_id, publico=data.publico,
+        propiedad_id=data.propiedad_id, publico=data.publico, id_conjunto=cid,
     )
     db.add(d)
     db.commit()
     db.refresh(d)
+    notif.notificar_seguro(
+        db=db, id_conjunto=cid, tipo="documento",
+        titulo="Nuevo documento disponible",
+        mensaje=f"Se publicó «{d.titulo}» en la biblioteca de documentos.",
+        clave=f"creado:{d.id}",
+    )
     return d
 
 
@@ -74,6 +83,7 @@ def subir(
     publico: bool = Form(False),
     archivo: UploadFile = File(...),
     db: Session = Depends(get_db),
+    cid: int = Depends(conjunto_activo),
 ):
     """Recibe un archivo real, lo guarda en disco y registra el documento."""
     nombre_original = os.path.basename(archivo.filename or "documento")
@@ -98,17 +108,24 @@ def subir(
         tamano=tamano,
         publico=publico,
         version=1,
+        id_conjunto=cid,
     )
     db.add(d)
     db.commit()
     db.refresh(d)
+    notif.notificar_seguro(
+        db=db, id_conjunto=cid, tipo="documento",
+        titulo="Nuevo documento disponible",
+        mensaje=f"Se publicó «{d.titulo}» en la biblioteca de documentos.",
+        clave=f"creado:{d.id}",
+    )
     return d
 
 
 @router.put("/{documento_id}", response_model=schemas.DocumentoResponse, dependencies=[Depends(require_permiso("documentos.editar"))])
-def actualizar(documento_id: int, data: schemas.DocumentoCreate, db: Session = Depends(get_db)):
+def actualizar(documento_id: int, data: schemas.DocumentoCreate, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     d = db.query(Documento).get(documento_id)
-    if not d:
+    if not d or (cid is not None and d.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Documento no encontrado.")
     d.titulo = data.titulo
     d.descripcion = data.descripcion
@@ -124,9 +141,9 @@ def actualizar(documento_id: int, data: schemas.DocumentoCreate, db: Session = D
 
 
 @router.delete("/{documento_id}", status_code=204, dependencies=[Depends(require_permiso("documentos.eliminar"))])
-def eliminar(documento_id: int, db: Session = Depends(get_db)):
+def eliminar(documento_id: int, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     d = db.query(Documento).get(documento_id)
-    if not d:
+    if not d or (cid is not None and d.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Documento no encontrado.")
     # Borrar el archivo físico si existe.
     ruta = d.ruta_archivo

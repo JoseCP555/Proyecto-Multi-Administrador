@@ -1,0 +1,23 @@
+# Evita meter en la imagen el entorno local (venv de Windows/Linux, .env con
+# DATABASE_URL apuntando a localhost, cachés y bases SQLite de pruebas).
+.git
+.gitignore
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tests/
+*.db
+*.sqlite
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Archivos subidos en desarrollo (en Docker son un volumen)
+archivos_documentos/

@@ -3,6 +3,98 @@ from datetime import datetime, date
 from typing import Optional, List
 from pydantic import BaseModel, Field, EmailStr, field_validator
 
+from app.colores import normalizar_color
+
+
+# ---------------------------------------------------------------------------
+# CONJUNTOS (COPROPIEDADES)
+# ---------------------------------------------------------------------------
+class ConjuntoBase(BaseModel):
+    nombre: str
+    nit: Optional[str] = None
+    direccion: Optional[str] = None
+    ciudad: Optional[str] = None
+    telefono: Optional[str] = None
+    correo: Optional[str] = None
+    administrador: Optional[str] = None
+    habitantes: Optional[int] = 0
+    cuota: Optional[float] = 0
+    dia_cobro: Optional[int] = None
+    reunion: Optional[str] = None
+    silencio: Optional[str] = None
+    logo: Optional[str] = None
+    # Id de paleta o #RRGGBB. None / "" = color automático.
+    color: Optional[str] = None
+    activo: bool = True
+
+    @field_validator("color")
+    @classmethod
+    def validar_color(cls, v):
+        return normalizar_color(v, estricto=True)
+
+
+class ConjuntoCreate(ConjuntoBase):
+    pass
+
+
+class ConjuntoUpdate(BaseModel):
+    """Actualización parcial de un conjunto (todos los campos opcionales)."""
+
+    nombre: Optional[str] = None
+    nit: Optional[str] = None
+    direccion: Optional[str] = None
+    ciudad: Optional[str] = None
+    telefono: Optional[str] = None
+    correo: Optional[str] = None
+    administrador: Optional[str] = None
+    habitantes: Optional[int] = None
+    cuota: Optional[float] = None
+    dia_cobro: Optional[int] = None
+    reunion: Optional[str] = None
+    silencio: Optional[str] = None
+    logo: Optional[str] = None
+    color: Optional[str] = None
+    activo: Optional[bool] = None
+
+    @field_validator("color")
+    @classmethod
+    def validar_color(cls, v):
+        return normalizar_color(v, estricto=True)
+
+
+class ConjuntoSimple(BaseModel):
+    """Conjunto reducido (id + nombre) para listados públicos (registro)."""
+
+    id: int
+    nombre: str
+
+
+class ConjuntoResponse(BaseModel):
+    id: int
+    nombre: str
+    nit: Optional[str] = None
+    direccion: Optional[str] = None
+    ciudad: Optional[str] = None
+    telefono: Optional[str] = None
+    correo: Optional[str] = None
+    administrador: Optional[str] = None
+    habitantes: Optional[int] = 0
+    cuota: Optional[float] = 0
+    dia_cobro: Optional[int] = None
+    reunion: Optional[str] = None
+    silencio: Optional[str] = None
+    logo: Optional[str] = None
+    color: Optional[str] = None
+    activo: bool = True
+    fecha_creacion: Optional[datetime] = None
+    # Métricas calculadas (no son columnas).
+    propiedades: int = 0
+    residentes: int = 0
+    saldo: float = 0
+
+    class Config:
+        from_attributes = True
+
 
 # ---------------------------------------------------------------------------
 # USUARIOS
@@ -14,6 +106,7 @@ class UsuarioCreate(BaseModel):
     contrasena: str
     rol_id: int = 3  # por defecto 'residente'
     id_copropiedad: Optional[int] = None
+    id_conjunto: Optional[int] = None
 
     @field_validator("contrasena")
     @classmethod
@@ -32,6 +125,7 @@ class UsuarioResponse(BaseModel):
     nombre_rol: Optional[str] = None
     activo: bool
     id_copropiedad: Optional[int] = None
+    id_conjunto: Optional[int] = None
     correo_verificado: bool = True
     permisos: Optional[List[str]] = []
 
@@ -350,3 +444,45 @@ class DashboardStats(BaseModel):
     mantenimientos_pendientes: int
     mantenimientos_completados: int
     documentos: int
+
+
+# ---------------------------------------------------------------------------
+# NOTIFICACIONES
+# ---------------------------------------------------------------------------
+class NotificacionResponse(BaseModel):
+    id: int
+    tipo: str
+    severidad: str
+    titulo: str
+    mensaje: Optional[str] = None
+    url: Optional[str] = None
+    fecha: Optional[date] = None
+    fecha_creacion: Optional[datetime] = None
+    leida: bool = False
+    id_conjunto: Optional[int] = None
+    nombre_conjunto: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PreferenciasNotificacionResponse(BaseModel):
+    correo: bool = True
+    push: bool = True
+    correo_configurado: bool = False
+    push_configurado: bool = False
+    vapid_publico: Optional[str] = None
+
+
+class PreferenciasNotificacionUpdate(BaseModel):
+    correo: Optional[bool] = None
+    push: Optional[bool] = None
+
+
+class PushSuscripcionCreate(BaseModel):
+    endpoint: str
+    keys: dict
+
+
+class NotificacionPruebaCreate(BaseModel):
+    canal: str = "todos"  # todos | correo | push | ninguno

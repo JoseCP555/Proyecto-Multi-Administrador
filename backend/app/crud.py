@@ -49,6 +49,7 @@ def crear_usuario(db: Session, datos, verificado: bool = False) -> Usuario:
         activo=True,
         fecha_creacion=datetime.utcnow(),
         id_copropiedad=datos.id_copropiedad,
+        id_conjunto=getattr(datos, "id_conjunto", None),
         correo_verificado=verificado,
         token_verificacion=None if verificado else secrets.token_urlsafe(32),
         codigo_verificacion=None if verificado else generar_codigo(),
@@ -77,6 +78,11 @@ def obtener_permisos_rol(db: Session, rol_id: int) -> list[str]:
 
 def listar_usuarios(db: Session):
     return db.query(Usuario).all()
+
+
+def listar_usuarios_query(db: Session):
+    """Query de usuarios (permite filtrarla por conjunto antes de ejecutarla)."""
+    return db.query(Usuario)
 
 
 def obtener_usuario_por_id(db: Session, usuario_id: int):

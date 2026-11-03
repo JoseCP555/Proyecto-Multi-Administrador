@@ -11,5 +11,7 @@ python-jose[cryptography]==3.3.0
 python-multipart==0.0.9
 redis==5.0.8
 httpx==0.27.2
+# Notificaciones push del navegador (Web Push / VAPID).
+pywebpush==1.14.0
 openpyxl
 reportlab

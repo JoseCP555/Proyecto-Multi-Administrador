@@ -2,17 +2,21 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Habilitar pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
-
-COPY package.json ./
-RUN pnpm install --no-frozen-lockfile --prod=false
+# Usamos npm + package-lock.json (ya está en el repo y está sincronizado).
+# Antes se usaba pnpm con `--no-frozen-lockfile` y SIN copiar el lockfile:
+# cada build resolvía versiones distintas y podía romper `tsc`/Vite.
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
 COPY . .
-ARG VITE_API_URL=http://localhost:8000
+
+# Vacío por defecto -> el frontend usa rutas relativas /api y nginx las
+# reenvía al backend. Si necesitas apuntar a la API directamente, define
+# VITE_API_URL=https://tu-api  (y añade el origen a ALLOWED_ORIGINS).
+ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 
-RUN pnpm build
+RUN npm run build
 
 # ---------- Runtime (nginx) ----------
 FROM nginx:1.27-alpine

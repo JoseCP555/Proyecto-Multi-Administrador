@@ -1,18 +1,40 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import ChatWidget from "./ChatWidget";
+import { useConjunto } from "@/context/ConjuntoContext";
+import { temaConjunto } from "@/lib/coloresConjunto";
 
 /**
  * Shell del dashboard: fondo degradado lila, contenedor blanco con esquinas
  * muy redondeadas, sidebar negra fija a la izquierda y contenido a la derecha.
+ *
+ * Al abrir un conjunto, todo el interior adopta el color de ese conjunto
+ * (mismo color de su tarjeta en el panel): menú activo, barra de búsqueda,
+ * botones, tarjetas destacadas, gráficas, etc. En el panel de conjuntos
+ * (y fuera de un conjunto) se mantiene el azul de siempre.
  */
 export default function DashboardLayout() {
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const { conjuntos, activo } = useConjunto();
+  const { pathname } = useLocation();
+
+  const enPanel = pathname === "/dashboard" || pathname === "/dashboard/conjuntos";
+  // Dentro de un conjunto: sus colores como variables CSS y un fondo suave
+  // del mismo tono, para que se note de inmediato qué conjunto está abierto.
+  const tema =
+    !enPanel && activo
+      ? {
+          ...temaConjunto(conjuntos, activo.id),
+          background:
+            "linear-gradient(135deg, rgb(var(--pc-100)) 0%, rgb(var(--pc-200)) 55%, rgb(var(--pc-300)) 100%)",
+          backgroundAttachment: "fixed",
+        }
+      : undefined;
 
   return (
-    <div className="min-h-screen p-3 sm:p-5 lg:p-7">
+    <div className="min-h-screen p-3 sm:p-5 lg:p-7" style={tema}>
       <div className="mx-auto max-w-[1600px] min-h-[calc(100vh-3.5rem)] bg-white rounded-4xl shadow-shell overflow-hidden flex">
         {/* Sidebar escritorio */}
         <div className="hidden lg:flex shrink-0 self-stretch">

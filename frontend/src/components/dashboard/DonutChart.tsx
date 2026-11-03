@@ -15,7 +15,7 @@ export default function DonutChart({ segmentos, total, etiquetaTotal }: { segmen
             const dash = `${frac * C} ${C}`;
             const offset = -acumulado * C;
             acumulado += frac;
-            return <circle key={s.label} cx="70" cy="70" r={R} fill="none" stroke={s.color} strokeWidth="16" strokeDasharray={dash} strokeDashoffset={offset} strokeLinecap="butt" />;
+            return <circle key={s.label} cx="70" cy="70" r={R} fill="none" style={{ stroke: s.color }} strokeWidth="16" strokeDasharray={dash} strokeDashoffset={offset} strokeLinecap="butt" />;
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">

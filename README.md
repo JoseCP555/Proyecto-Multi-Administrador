@@ -4,6 +4,10 @@
   <strong>Sistema web para la administración integral de conjuntos residenciales y propiedades horizontales.</strong>
 </p>
 
+> 🚀 **¿Solo quieres que la base de datos funcione?** Empieza por
+> [`ARRANQUE_RAPIDO.md`](ARRANQUE_RAPIDO.md) y
+> [`INFORME_ARREGLOS_BD.md`](INFORME_ARREGLOS_BD.md).
+
 **Multi-Administrador** es una plataforma web profesional que centraliza los procesos administrativos, financieros y documentales de una copropiedad: residentes, propiedades, pagos, mantenimientos, documentos, reportes y un **asistente virtual (chatbot)** que responde con datos reales del sistema.
 
 ## Stack
@@ -17,6 +21,17 @@
 | Asistente virtual | Motor local (RAG sobre la BD) u OpenAI (opcional) |
 | Orquestación | Docker Compose |
 | Paquete | PNPM |
+
+## Módulo multi-conjunto
+
+El sistema administra **varios conjuntos desde un solo panel**: el *Panel Multi-Administrador*
+(`/dashboard`) lista las copropiedades a tu cargo y, al abrir una, trabajas dentro de ella con su
+propia información. Desde el botón **"Cambiar conjunto"** (en el bloque *Gestionando conjunto* y en
+la barra superior) se despliegan **todos los conjuntos** y se cambia de uno a otro **sin cerrar sesión**.
+Cada conjunto tiene sus residentes, propiedades, finanzas, mantenimientos, documentos y eventos
+completamente separados.
+
+Detalles técnicos en [`docs/MULTI_CONJUNTO.md`](docs/MULTI_CONJUNTO.md).
 
 ## Módulos
 
@@ -55,22 +70,58 @@ Cliente (navegador)  ──►  Frontend (:3000)  ──►  Backend FastAPI (:8
                                                        caché/sesiones
 ```
 
+## Novedades de la interfaz
+
+- **Logo y color por conjunto**: el modal *Agregar conjunto / Editar conjunto*
+  permite subir una imagen (PNG/JPG/WEBP, máx. 2 MB) con vista previa y elegir
+  el **color** del conjunto (6 tonos de paleta o un hexadecimal libre). El
+  logo, el color y su vista previa se muestran en las tarjetas, en el selector
+  "Cambiar conjunto" y en todo el tema del conjunto.
+- **Crear cuenta**: desplegable **Usuario / Administrador**, botón de **ojito**
+  para ver u ocultar la contraseña y **requisitos en verde/rojo** (longitud,
+  mayúscula, minúscula, número y coincidencia de las contraseñas) con barra de
+  fortaleza.
+- **Iniciar sesión**: el campo de contraseña también tiene su **ojito** para
+  mostrarla u ocultarla.
+- **Admin = Super Admin**: el rol `admin` tiene los mismos 40 permisos, ve el
+  mismo menú y puede hacer lo mismo que `super_admin` (respaldos, gestión de
+  usuarios y de todos los conjuntos). Los demás roles no cambian.
+- **Notificaciones reales**: la campana guarda avisos persistentes generados
+  por pagos, eventos, mantenimientos, documentos y residentes; se pueden marcar
+  como leídas, descartar y abrir el módulo correspondiente. Se entregan por
+  **correo** y por **push del navegador** (Web Push/VAPID), con preferencias por
+  usuario y botón de prueba.
+
+Detalles, seguridad del alta de administradores y archivos cambiados en
+[`NUEVAS_FUNCIONES.md`](NUEVAS_FUNCIONES.md).
+
 ## Ejecución con Docker Compose (recomendado)
 
-Requisitos: Docker + Docker Compose instalados.
+Requisitos: Docker Desktop (Windows/macOS) o Docker Engine + **Compose v2** (Linux), con el daemon en marcha.
+Guía completa y solución de problemas: **[`GUIA_DOCKER.md`](GUIA_DOCKER.md)**.
 
 ```bash
-# 1. Copiar variables de entorno
-cp .env.example .env
-#    Edita .env y agrega las credenciales SMTP si quieres correo real.
+# 1. Copiar variables de entorno (opcional: todos los valores tienen default)
+cp .env.example .env          # Windows: copy .env.example .env
 
 # 2. Levantar todos los servicios (DB + Redis + Backend + Frontend)
 docker compose up --build -d
+#   Windows también puedes ejecutar:  levantar.bat
+#   Linux/macOS:                     bash levantar.sh
 
 # 3. Acceder
 #    Frontend : http://localhost:3000
-#    API      : http://localhost:8000  (documentación en /docs)
+#    API      : http://localhost:3000/api/health  (proxy de nginx, sin CORS)
+#    API      : http://localhost:8000/docs       (acceso directo, Swagger)
 ```
+
+El frontend llama a la API por `/api` y **nginx la reenvía a `backend:8000`**, así que funciona
+desde `localhost`, desde otra IP o desde un túnel. Si prefieres que el navegador ataque
+directamente al puerto 8000, define `VITE_API_URL` en `.env` y **recompila** el frontend
+(`docker compose up --build -d frontend`).
+
+Puertos por defecto en el host: `3000` (web), `8000` (API), `5433` (PostgreSQL) y `6380` (Redis);
+todos se cambian en `.env`. Los puertos internos siguen siendo `5432` y `6379`.
 
 > El backend **crea la base de datos y siembra datos demo** automáticamente al arrancar (roles, admin, propiedades, finanzas, etc.). Es 100 % funcional desde el primer arranque.
 
@@ -108,6 +159,11 @@ La app espera un PostgreSQL y Redis en ejecución (o usa Docker para `db` y `red
 docker compose up -d db redis
 ```
 
+Sin PostgreSQL la API **también arranca**: cae automáticamente a SQLite
+(`backend/multiadmin.db`) y lo indica en el log y en `/health`.
+Para crear la base manualmente: `./db/crear_bd.sh` (Windows: `db\crear_bd.bat --recrear`).
+Todo el detalle está en [`ARRANQUE_RAPIDO.md`](ARRANQUE_RAPIDO.md).
+
 ## Recuperación de contraseña (SMTP)
 
 Para que el correo se envíe de verdad, configura en `.env`:
@@ -128,8 +184,11 @@ Si no hay SMTP configurado, el sistema igual guarda el token en la BD y responde
 
 ## Base de datos y Redis
 
-### Base de datos (PostgreSQL)
-- El script `db/init.sql` define el **esquema completo** (extensiones `uuid-ossp`, `pgcrypto`, y `vector` de forma **opcional**; 12 tablas; índices estratégicos; trigger de `updated_at`).
+### Base de datos (PostgreSQL o SQLite)
+- El script `db/init.sql` define el **esquema completo** (18 tablas, índices estratégicos, trigger de `updated_at` y el RBAC). Las extensiones (`uuid-ossp`, `pgcrypto`, `vector`) son **opcionales**: si el servidor no las tiene, el script avisa y continúa en vez de abortar.
+- **SQLite de respaldo**: si `DATABASE_URL` no está definida o PostgreSQL no responde, la API arranca en SQLite (`backend/multiadmin.db`) en lugar de fallar. Ver [`ARRANQUE_RAPIDO.md`](ARRANQUE_RAPIDO.md).
+- **Diagnóstico**: `cd backend && python verificar_bd.py` revisa (y repara) tablas, columnas, roles, permisos y el usuario admin.
+- **Crear la base sin Docker**: `./db/crear_bd.sh` (Windows: `db\crear_bd.bat`).
 - En **Docker**, se ejecuta automáticamente desde `/docker-entrypoint-initdb.d` cuando el volumen es nuevo, como el usuario `POSTGRES_USER` (dueño), así que los permisos quedan correctos.
 - Los datos iniciales (roles, admin, propiedades, finanzas, etc.) los siembra el backend al arrancar (`app/seed.py`), que es **idempotente**: solo pobla si la BD está vacía.
 
@@ -205,6 +264,5 @@ multi-admin/
 ---
 
 Desarrollado con React, FastAPI y PostgreSQL. Proyecto académico.
-#   M u l t i . A d m i n 
- 
- 
+# Multi.Admin
+

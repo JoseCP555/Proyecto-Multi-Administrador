@@ -6,6 +6,7 @@ from app import schemas, chatbot, crud
 from app.models import SesionChat, MensajeChat
 from app.database import get_db
 from app.deps import require_permiso, get_current_user, usuario_tiene_permiso
+from app.conjunto_ctx import conjunto_activo, filtrar
 
 router = APIRouter(prefix="/chat", tags=["Chatbot"], dependencies=[Depends(require_permiso("chat.usar"))])
 
@@ -27,8 +28,9 @@ def listar_sesiones(
     usuario_id: int = None,
     usuario=Depends(get_current_user),
     db: Session = Depends(get_db),
+    cid: int = Depends(conjunto_activo),
 ):
-    q = db.query(SesionChat)
+    q = filtrar(db.query(SesionChat), SesionChat, cid)
     if usuario_tiene_permiso(db, usuario, "usuarios.ver"):
         if usuario_id:
             q = q.filter(SesionChat.usuario_id == usuario_id)
@@ -54,6 +56,7 @@ def ask(
     data: schemas.ChatRequest,
     usuario=Depends(get_current_user),
     db: Session = Depends(get_db),
+    cid: int = Depends(conjunto_activo),
 ):
     """Recibe un mensaje, lo guarda y devuelve la respuesta del asistente."""
     if not data.mensaje.strip():
@@ -66,13 +69,17 @@ def ask(
         if not _puede_ver_sesion(db, usuario, sesion):
             raise HTTPException(status_code=403, detail="No puedes escribir en esta conversación.")
     else:
-        sesion = chatbot.crear_sesion(db, usuario_id=usuario.id)
+        sesion = chatbot.crear_sesion(db, usuario_id=usuario.id, id_conjunto=cid)
 
     # Guardar mensaje del usuario
     chatbot.guardar_mensaje(db, sesion.id, "usuario", data.mensaje)
 
     # Generar respuesta (motor local basado en la BD)
-    respuesta = chatbot.responder(db, data.mensaje, permisos=crud.obtener_permisos_rol(db, usuario.rol_id))
+    respuesta = chatbot.responder(
+        db, data.mensaje,
+        permisos=crud.obtener_permisos_rol(db, usuario.rol_id),
+        id_conjunto=cid,
+    )
     chatbot.cambiar_titulo_si_necesario(db, sesion.id, data.mensaje)
 
     # Guardar respuesta del asistente

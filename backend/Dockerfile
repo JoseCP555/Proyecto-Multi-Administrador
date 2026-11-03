@@ -5,9 +5,11 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Dependencias del sistema para psycopg2 / compilación
+# Dependencias del sistema para psycopg2 / compilación.
+# postgresql-client aporta `pg_dump`, que usa el respaldo de la base de datos
+# (GET /admin/backup). Sin él, el respaldo cae al generador en Python.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc libpq-dev build-essential && \
+    gcc libpq-dev build-essential postgresql-client curl && \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

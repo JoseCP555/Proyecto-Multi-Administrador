@@ -9,8 +9,36 @@
 -- ============================================================================
 
 -- 1) Extensiones -------------------------------------------------------------
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";   -- UUIDs
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";    -- funciones criptográficas (bcrypt)
+--  IMPORTANTE: aquí NINGUNA extensión es obligatoria. Antes se hacía
+--  `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"` sin protección y en servidores
+--  donde esa extensión no está compilada (PostgreSQL "slim", RDS, Supabase,
+--  algunos hosting, o un Postgres instalado a mano) el script ABORTABA en la
+--  primera línea y la base quedaba SIN NINGUNA TABLA: el backend arrancaba
+--  pero todo fallaba ("la base de datos no funciona").
+--  Ahora cada extensión se intenta dentro de un bloque que captura el error.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'uuid-ossp') THEN
+        EXECUTE 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"';
+        RAISE NOTICE 'Extensión "uuid-ossp" habilitada.';
+    ELSE
+        RAISE NOTICE 'Extensión "uuid-ossp" no disponible: se omite (no es obligatoria).';
+    END IF;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'No se pudo habilitar "uuid-ossp" (%): se omite.', SQLERRM;
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pgcrypto') THEN
+        EXECUTE 'CREATE EXTENSION IF NOT EXISTS "pgcrypto"';
+        RAISE NOTICE 'Extensión "pgcrypto" habilitada.';
+    ELSE
+        RAISE NOTICE 'Extensión "pgcrypto" no disponible: se omite (las contraseñas se hashean en Python con bcrypt).';
+    END IF;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'No se pudo habilitar "pgcrypto" (%): se omite.', SQLERRM;
+END $$;
 
 -- La extensión "vector" (pgvector) es OPCIONAL: solo se habilita si está instalada
 -- en el servidor. Es necesaria únicamente si usas el chatbot con RAG vectorial;
@@ -28,6 +56,30 @@ END $$;
 -- 2) Esquema y tablas --------------------------------------------------------
 
 -- Roles
+-- ---------------------------------------------------------------------------
+-- CONJUNTOS / COPROPIEDADES (multi-administración, HU-07)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS conjuntos (
+    id              SERIAL PRIMARY KEY,
+    nombre          VARCHAR(150) UNIQUE NOT NULL,
+    nit             VARCHAR(30),
+    direccion       VARCHAR(200),
+    ciudad          VARCHAR(80),
+    telefono        VARCHAR(30),
+    correo          VARCHAR(255),
+    administrador   VARCHAR(150),
+    habitantes      INTEGER DEFAULT 0,
+    cuota           NUMERIC(12,2) DEFAULT 0,
+    dia_cobro       INTEGER,
+    reunion         VARCHAR(120),
+    silencio        VARCHAR(60),
+    logo            VARCHAR(500),
+    -- Id de paleta ("azul", ...) o hexadecimal #RRGGBB. NULL = automático.
+    color           VARCHAR(20),
+    activo          BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion  TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS roles (
     id          SERIAL PRIMARY KEY,
     nombre      VARCHAR(60) UNIQUE NOT NULL,
@@ -47,16 +99,34 @@ CREATE TABLE IF NOT EXISTS usuarios (
     fecha_creacion     TIMESTAMP DEFAULT NOW(),
     ultimo_acceso      TIMESTAMP,
     id_copropiedad     INTEGER,
+    id_conjunto        INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
     token_recuperacion VARCHAR(255),
     expira_token       TIMESTAMP,
+    codigo_recuperacion VARCHAR(6),
     correo_verificado  BOOLEAN NOT NULL DEFAULT FALSE,
     token_verificacion VARCHAR(255),
-    expira_verificacion TIMESTAMP
+    expira_verificacion TIMESTAMP,
+    codigo_verificacion VARCHAR(6),
+    notificaciones_correo BOOLEAN NOT NULL DEFAULT TRUE,
+    notificaciones_push   BOOLEAN NOT NULL DEFAULT TRUE
 );
--- Migración idempotente para bases creadas antes de la verificación de correo.
+-- Migración idempotente para bases creadas antes de la verificación de correo
+-- o antes del código de 6 dígitos (los modelos ya las declaran; si la tabla
+-- venía de una versión anterior, se agregan aquí para no romper el registro).
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS correo_verificado  BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS token_verificacion VARCHAR(255);
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS expira_verificacion TIMESTAMP;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_verificacion VARCHAR(6);
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_recuperacion VARCHAR(6);
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS notificaciones_correo BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS notificaciones_push   BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS id_conjunto INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL;
+
+CREATE TABLE IF NOT EXISTS usuario_conjuntos (
+    id           SERIAL PRIMARY KEY,
+    usuario_id   INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    conjunto_id  INTEGER NOT NULL REFERENCES conjuntos(id) ON DELETE CASCADE
+);
 
 -- Residentes
 CREATE TABLE IF NOT EXISTS residentes (
@@ -68,6 +138,7 @@ CREATE TABLE IF NOT EXISTS residentes (
     contacto_emergencia VARCHAR(150),
     telefono_emergencia VARCHAR(30),
     activo              BOOLEAN DEFAULT TRUE,
+    id_conjunto     INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
     fecha_creacion      TIMESTAMP DEFAULT NOW()
 );
 
@@ -86,6 +157,7 @@ CREATE TABLE IF NOT EXISTS propiedades (
     estado        VARCHAR(30) DEFAULT 'ocupado',
     estrato       INTEGER,
     residente_id  INTEGER REFERENCES residentes(id) ON DELETE SET NULL,
+    id_conjunto     INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
     fecha_creacion TIMESTAMP DEFAULT NOW()
 );
 
@@ -114,6 +186,7 @@ CREATE TABLE IF NOT EXISTS movimientos_financieros (
     referencia     VARCHAR(100),
     notas          TEXT,
     creado_por     INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    id_conjunto     INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
     fecha_creacion TIMESTAMP DEFAULT NOW()
 );
 
@@ -130,6 +203,7 @@ CREATE TABLE IF NOT EXISTS tareas_mantenimiento (
     costo_estimado  NUMERIC(12,2),
     fecha_programada DATE,
     fecha_completada TIMESTAMP,
+    id_conjunto     INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
     fecha_creacion  TIMESTAMP DEFAULT NOW()
 );
 
@@ -146,6 +220,7 @@ CREATE TABLE IF NOT EXISTS documentos (
     subido_por   INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
     publico      BOOLEAN DEFAULT FALSE,
     version      INTEGER DEFAULT 1,
+    id_conjunto     INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
     fecha_creacion TIMESTAMP DEFAULT NOW()
 );
 
@@ -157,6 +232,7 @@ CREATE TABLE IF NOT EXISTS eventos (
     fecha       DATE NOT NULL,
     lugar       VARCHAR(150),
     creado_por  INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    id_conjunto     INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
     fecha_creacion TIMESTAMP DEFAULT NOW()
 );
 
@@ -175,6 +251,7 @@ CREATE TABLE IF NOT EXISTS sesiones_chat (
     usuario_id   INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
     titulo       VARCHAR(255) DEFAULT 'Nueva conversación',
     estado       VARCHAR(20) DEFAULT 'activa',
+    id_conjunto     INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
     fecha_creacion TIMESTAMP DEFAULT NOW()
 );
 
@@ -198,6 +275,31 @@ CREATE INDEX IF NOT EXISTS idx_mant_estado         ON tareas_mantenimiento(estad
 CREATE INDEX IF NOT EXISTS idx_docs_publico        ON documentos(publico);
 CREATE INDEX IF NOT EXISTS idx_chat_sesion_usuario ON sesiones_chat(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_chat_msg_sesion     ON mensajes_chat(sesion_id, fecha_creacion);
+CREATE INDEX IF NOT EXISTS idx_conj_activo         ON conjuntos(activo);
+CREATE INDEX IF NOT EXISTS idx_usuario_conjunto    ON usuario_conjuntos(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_prop_conjunto       ON propiedades(id_conjunto);
+CREATE INDEX IF NOT EXISTS idx_res_conjunto        ON residentes(id_conjunto);
+CREATE INDEX IF NOT EXISTS idx_mov_conjunto        ON movimientos_financieros(id_conjunto);
+CREATE INDEX IF NOT EXISTS idx_mant_conjunto       ON tareas_mantenimiento(id_conjunto);
+CREATE INDEX IF NOT EXISTS idx_doc_conjunto        ON documentos(id_conjunto);
+CREATE INDEX IF NOT EXISTS idx_evento_conjunto     ON eventos(id_conjunto);
+CREATE INDEX IF NOT EXISTS idx_usuario_conjunto_ref ON usuario_conjuntos(conjunto_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_conjunto   ON usuarios(id_conjunto);
+CREATE INDEX IF NOT EXISTS idx_conjuntos_nombre    ON conjuntos(nombre);
+-- Índice único tolerante: si la base vieja trae pares duplicados, se limpia
+-- antes en lugar de abortar el script.
+DO $$
+BEGIN
+    DELETE FROM usuario_conjuntos a
+     USING usuario_conjuntos b
+     WHERE a.ctid < b.ctid
+       AND a.usuario_id = b.usuario_id
+       AND a.conjunto_id = b.conjunto_id;
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_usuario_conjunto
+        ON usuario_conjuntos(usuario_id, conjunto_id);
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'No se pudo crear uq_usuario_conjunto (%): se omite.', SQLERRM;
+END $$;
 
 -- (Opcional) Índice vectorial para RAG cuando se use la extensión pgvector
 -- CREATE INDEX IF NOT EXISTS idx_doc_chunks_embedding
@@ -228,22 +330,32 @@ END $$;
 --    1 = super_admin · 2 = admin · 3 = residente · 4 = tesoreria · 5 = seguridad
 
 -- Garantiza que los roles existan (idempotente) para poder asignar permisos.
+--  OJO: antes era `ON CONFLICT (id) DO NOTHING`, que fallaba con
+--  "duplicate key value violates unique constraint roles_nombre_key" si en la
+--  base ya existía un rol con el mismo nombre pero otro id. Sin destino, el
+--  conflicto se resuelve por cualquier restricción única (id o nombre).
 INSERT INTO roles (id, nombre, descripcion) VALUES
     (1, 'super_admin', 'Acceso total al sistema'),
     (2, 'admin',       'Administrador del conjunto'),
     (3, 'residente',   'Residente propietario o inquilino'),
     (4, 'tesoreria',   'Encargado de finanzas'),
     (5, 'seguridad',   'Personal de vigilancia')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Catálogo de permisos (módulo + acción).
 CREATE TABLE IF NOT EXISTS permisos (
     id          SERIAL PRIMARY KEY,
-    codigo      VARCHAR(60) UNIQUE NOT NULL,
-    modulo      VARCHAR(40) NOT NULL,
+    codigo      VARCHAR(120) UNIQUE NOT NULL,
+    modulo      VARCHAR(60) NOT NULL,
     accion      VARCHAR(30) NOT NULL,
     descripcion VARCHAR(255)
 );
+
+-- Bases creadas con versiones anteriores tenían codigo VARCHAR(60)/modulo
+-- VARCHAR(40): se amplían para que coincidan con el modelo (evita errores de
+-- "value too long for type character varying(60)" al sincronizar permisos.
+ALTER TABLE permisos ALTER COLUMN codigo TYPE VARCHAR(120);
+ALTER TABLE permisos ALTER COLUMN modulo TYPE VARCHAR(60);
 
 -- Asignación N:M rol <-> permiso.
 CREATE TABLE IF NOT EXISTS rol_permisos (
@@ -302,10 +414,10 @@ BEGIN
     INSERT INTO rol_permisos (rol_id, permiso_id)
     SELECT 1, id FROM permisos ON CONFLICT DO NOTHING;
 
-    -- admin: gestión completa del conjunto, salvo eliminar usuarios y respaldar BD.
+    -- admin: ACCESO TOTAL, exactamente igual que el super_admin.
+    -- (Antes se excluían 'usuarios.eliminar' y 'sistema.respaldar'.)
     INSERT INTO rol_permisos (rol_id, permiso_id)
-    SELECT 2, id FROM permisos WHERE codigo NOT IN ('usuarios.eliminar','sistema.respaldar')
-    ON CONFLICT DO NOTHING;
+    SELECT 2, id FROM permisos ON CONFLICT DO NOTHING;
 
     -- tesoreria: finanzas completas, reportes, lectura de propiedades/residentes/documentos y chatbot.
     INSERT INTO rol_permisos (rol_id, permiso_id)
@@ -337,6 +449,73 @@ END $$;
 -- Índice para acelerar la consulta de permisos de un rol.
 CREATE INDEX IF NOT EXISTS idx_rol_permisos_rol  ON rol_permisos(rol_id);
 CREATE INDEX IF NOT EXISTS idx_permisos_modulo   ON permisos(modulo);
+
+-- ============================================================================
+--  NOTIFICACIONES REALES
+--  Avisos persistentes por usuario + suscripciones Web Push (VAPID).
+--  SQLAlchemy también las crea con create_all; están aquí para que una base
+--  nueva tenga los índices y restricciones desde el principio.
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS notificaciones (
+    id              SERIAL PRIMARY KEY,
+    usuario_id      INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    id_conjunto     INTEGER REFERENCES conjuntos(id) ON DELETE CASCADE,
+    tipo            VARCHAR(40) NOT NULL,
+    severidad       VARCHAR(10) NOT NULL DEFAULT 'media',
+    titulo          VARCHAR(200) NOT NULL,
+    mensaje         TEXT,
+    url             VARCHAR(200),
+    fecha           DATE,
+    referencia      VARCHAR(160) NOT NULL,
+    leida           BOOLEAN NOT NULL DEFAULT FALSE,
+    descartada      BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_lectura   TIMESTAMP,
+    enviada_correo  BOOLEAN NOT NULL DEFAULT FALSE,
+    enviada_push    BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_creacion  TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT uq_notificacion_usuario_referencia UNIQUE (usuario_id, referencia)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario ON notificaciones(usuario_id, leida, descartada);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_fecha   ON notificaciones(fecha_creacion);
+
+CREATE TABLE IF NOT EXISTS push_suscripciones (
+    id              SERIAL PRIMARY KEY,
+    usuario_id      INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    endpoint        TEXT NOT NULL UNIQUE,
+    p256dh          TEXT NOT NULL,
+    auth            TEXT NOT NULL,
+    activa          BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion  TIMESTAMP DEFAULT NOW()
+);
+
+-- ============================================================================
+--  VERIFICACIÓN FINAL
+--  Comprueba que TODAS las tablas quedaron creadas. Si algo falta, el script
+--  termina con un error explícito (y PostgreSQL hará rollback de todo) en vez
+--  de dejar una base a medias que hace fallar al backend sin explicación.
+-- ============================================================================
+DO $$
+DECLARE
+    faltantes TEXT;
+BEGIN
+    SELECT string_agg(t.nombre, ', ')
+      INTO faltantes
+      FROM (VALUES
+            ('conjuntos'), ('roles'), ('usuarios'), ('usuario_conjuntos'),
+            ('residentes'), ('propiedades'), ('conceptos_financieros'),
+            ('movimientos_financieros'), ('tareas_mantenimiento'), ('documentos'),
+            ('eventos'), ('configuraciones'), ('sesiones_chat'), ('mensajes_chat'),
+            ('permisos'), ('rol_permisos'), ('notificaciones'), ('push_suscripciones')
+           ) AS t(nombre)
+     WHERE to_regclass('public.' || t.nombre) IS NULL;
+
+    IF faltantes IS NOT NULL THEN
+        RAISE EXCEPTION 'Base de datos incompleta: faltan las tablas %', faltantes;
+    END IF;
+
+    RAISE NOTICE '✔ Base de datos Multi-Administrador lista: 18 tablas, permisos y RBAC.';
+END $$;
 
 -- ============================================================================
 --  FIN DEL SCRIPT

@@ -1,4 +1,6 @@
 """Autenticación: registro, login, recuperación y restablecimiento de contraseña."""
+import os
+
 from fastapi import APIRouter, Depends, Request, HTTPException, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -11,7 +13,7 @@ from app.models import Rol
 from app.deps import get_current_user, usuario_tiene_permiso
 from app.models import Usuario
 from app.auth_jwt import verificar_token
-from app.permisos import RESIDENTE
+from app.permisos import RESIDENTE, ADMIN, SUPER_ADMIN, tiene_acceso_total
 from app.redis_client import revocar_token
 from app import correo as correo_svc
 
@@ -39,6 +41,48 @@ def _usuario_opcional(authorization: str | None, db: Session) -> Usuario | None:
     return u if u and u.activo else None
 
 
+def _flag_activado(valor: str | None) -> bool:
+    return (valor or "").strip().lower() in ("1", "true", "yes", "si", "sí")
+
+
+def _registro_admin_habilitado() -> bool:
+    """Interruptor para el selector 'Administrador' del formulario de registro.
+
+    Activado por defecto (modo demo/desarrollo) para que funcione incluso si
+    no hay .env o si se aplicó solo el parche. Para producción basta con
+    definir PERMITIR_REGISTRO_ADMIN=false: entonces las cuentas de
+    administrador solo las crea un usuario autenticado con `usuarios.crear`.
+    """
+    valor = os.getenv("PERMITIR_REGISTRO_ADMIN")
+    if valor is None or valor.strip() == "":
+        return True
+    return _flag_activado(valor)
+
+
+async def _respuesta_registro_publico(nuevo: Usuario, db: Session) -> dict:
+    """Serializa el usuario y dispara el correo de verificación de cuenta."""
+    respuesta = crud.serializar_usuario(nuevo, db)
+    envio = await correo_svc.enviar_verificacion(
+        nuevo.correo, nuevo.nombre, nuevo.token_verificacion, nuevo.codigo_verificacion
+    )
+    respuesta["verificacion"] = {
+        "requerida": True,
+        "enviado": bool(envio.get("enviado")),
+        "mensaje": (
+            "Te enviamos un correo para verificar tu cuenta. Revisa tu bandeja de entrada (y el spam)."
+            if envio.get("enviado")
+            else (
+                "El servidor no tiene correo configurado (EMAIL_USER / EMAIL_PASSWORD en backend/.env). "
+                "Configúralo y usa 'Reenviar verificación' desde el inicio de sesión."
+                if envio.get("error") == "SMTP no configurado"
+                else "No se pudo enviar el correo de verificación (revisa el log del servidor). "
+                     "Usa la opción 'Reenviar verificación' desde el inicio de sesión."
+            )
+        ),
+    }
+    return respuesta
+
+
 @router.post("/register")
 async def registrar(
     request: Request,
@@ -46,11 +90,13 @@ async def registrar(
     authorization: str = Header(None),
     db: Session = Depends(get_db),
 ):
-    """Registro público: siempre crea un *residente* y envía un correo de
-    verificación; la cuenta no puede iniciar sesión hasta confirmarlo.
+    """Registro público: crea un *residente* y envía un correo de verificación;
+    la cuenta no puede iniciar sesión hasta confirmarlo.
+
     Solo un usuario autenticado con `usuarios.crear` puede asignar otro rol
     (y únicamente el super_admin puede crear otros super_admin); las cuentas
-    creadas por un administrador quedan verificadas de inmediato."""
+    creadas por un administrador quedan verificadas de inmediato.
+    """
     actual = _usuario_opcional(authorization, db)
     # Anti-abuso solo para el registro público (los administradores no se limitan).
     if not actual:
@@ -61,10 +107,12 @@ async def registrar(
                 status_code=403,
                 detail="No tienes permiso para crear usuarios con ese rol.",
             )
-        if usuario.rol_id == 1 and actual.rol_id != 1:
+        # admin y super_admin tienen acceso total: ambos pueden crear
+        # super_admin. El resto de roles sigue sin poder hacerlo.
+        if usuario.rol_id == SUPER_ADMIN and not tiene_acceso_total(actual):
             raise HTTPException(
                 status_code=403,
-                detail="Solo un super administrador puede crear otro super administrador.",
+                detail="Solo un administrador con acceso total puede crear otro super administrador.",
             )
     creado_por_admin = bool(actual and usuario_tiene_permiso(db, actual, "usuarios.crear"))
     try:
@@ -72,25 +120,41 @@ async def registrar(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    respuesta = crud.serializar_usuario(nuevo, db)
-    if not creado_por_admin:
-        envio = await correo_svc.enviar_verificacion(nuevo.correo, nuevo.nombre, nuevo.token_verificacion, nuevo.codigo_verificacion)
-        respuesta["verificacion"] = {
-            "requerida": True,
-            "enviado": bool(envio.get("enviado")),
-            "mensaje": (
-                "Te enviamos un correo para verificar tu cuenta. Revisa tu bandeja de entrada (y el spam)."
-                if envio.get("enviado")
-                else (
-                    "El servidor no tiene correo configurado (EMAIL_USER / EMAIL_PASSWORD en backend/.env). "
-                    "Configúralo y usa 'Reenviar verificación' desde el inicio de sesión."
-                    if envio.get("error") == "SMTP no configurado"
-                    else "No se pudo enviar el correo de verificación (revisa el log del servidor). "
-                         "Usa la opción 'Reenviar verificación' desde el inicio de sesión."
-                )
+    if creado_por_admin:
+        return crud.serializar_usuario(nuevo, db)
+    return await _respuesta_registro_publico(nuevo, db)
+
+
+@router.post("/register/admin")
+async def registrar_admin(
+    request: Request,
+    usuario: schemas.UsuarioCreate,
+    db: Session = Depends(get_db),
+):
+    """Registro público de una cuenta **administrador** para el selector
+    "Tipo de cuenta" de la pantalla de crear cuenta.
+
+    Es una ruta aparte (no relaja `/register`) y solo está disponible cuando
+    `PERMITIR_REGISTRO_ADMIN=true` en el entorno (modo demo/desarrollo). La
+    cuenta sigue exigiendo verificación de correo, igual que la de un residente.
+    """
+    if not _registro_admin_habilitado():
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "El registro de administradores está desactivado. Activa "
+                "PERMITIR_REGISTRO_ADMIN=true en el entorno o pide a un "
+                "administrador que cree tu cuenta."
             ),
-        }
-    return respuesta
+        )
+    limitar(request, "register_admin", max_intentos=5, ventana_segundos=300)
+    # Ignoramos cualquier rol enviado: esta ruta SIEMPRE crea rol admin (2).
+    usuario.rol_id = ADMIN
+    try:
+        nuevo = crud.crear_usuario(db, usuario, verificado=False)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return await _respuesta_registro_publico(nuevo, db)
 
 
 @router.get("/verificar-correo/{token}")

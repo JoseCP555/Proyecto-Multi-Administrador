@@ -1,7 +1,11 @@
 node_modules
 dist
 .pnpm-store
+.git
+.gitignore
 .env
 .env.*
 !.env.example
-.git
+*.log
+.DS_Store
+tests_ui_rbac.py

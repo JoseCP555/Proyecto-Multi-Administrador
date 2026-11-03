@@ -1,5 +1,31 @@
 // --- Tipos de dominio del sistema (coinciden con los schemas del backend) ---
 
+/** Conjunto / copropiedad gestionada por la plataforma (HU-07). */
+export interface Conjunto {
+  id: number;
+  nombre: string;
+  nit?: string;
+  direccion?: string;
+  ciudad?: string;
+  telefono?: string;
+  correo?: string;
+  administrador?: string;
+  habitantes: number;
+  cuota: number;
+  dia_cobro?: number;
+  reunion?: string;
+  silencio?: string;
+  logo?: string;
+  /** Id de paleta ("azul", ...) o hexadecimal #RRGGBB. null = automático. */
+  color?: string | null;
+  activo: boolean;
+  fecha_creacion?: string;
+  /** Métricas calculadas por el backend. */
+  propiedades: number;
+  residentes: number;
+  saldo: number;
+}
+
 export interface Usuario {
   id: number;
   nombre: string;
@@ -123,12 +149,28 @@ export interface DashboardStats {
   documentos: number;
 }
 
+/** Aviso persistente generado por un hecho real del sistema. */
 export interface Notificacion {
-  tipo: "mora" | "proximo" | "evento" | "mantenimiento";
+  id: number;
+  tipo: string;
   severidad: "alta" | "media" | "baja";
   titulo: string;
   mensaje: string;
+  /** Fecha del hecho (YYYY-MM-DD), no de creación del aviso. */
   fecha: string | null;
+  fecha_creacion?: string | null;
+  leida?: boolean;
+  url?: string | null;
+  id_conjunto?: number | null;
+  nombre_conjunto?: string | null;
+}
+
+export interface PreferenciasNotificacion {
+  correo: boolean;
+  push: boolean;
+  correo_configurado: boolean;
+  push_configurado: boolean;
+  vapid_publico: string | null;
 }
 
 export interface ChatRespuesta {

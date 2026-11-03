@@ -11,6 +11,7 @@ from app.database import get_db
 from app.deps import require_permiso, require_alguno, usuario_tiene_permiso
 from app.models import Evento
 from app.redis_client import cache_get, cache_set, cache_del
+from app.conjunto_ctx import conjunto_activo, filtrar
 
 # Los reportes generales exigen `reportes.ver`; las exportaciones de un módulo
 # concreto se autorizan además con el permiso `<modulo>.ver` correspondiente.
@@ -21,20 +22,21 @@ _MANTENIMIENTO = [Depends(require_alguno("reportes.ver", "mantenimiento.ver"))]
 
 
 @router.get("/dashboard", response_model=schemas.DashboardStats, dependencies=_REPORTES)
-def dashboard(db: Session = Depends(get_db)):
+def dashboard(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     """Estadísticas agregadas del dashboard (cacheadas en Redis 60s)."""
-    cacheado = cache_get("dashboard_stats")
+    # La caché se guarda por conjunto: cada uno tiene sus propias cifras.
+    cacheado = cache_get(f"dashboard_stats:{cid}")
     if cacheado:
         return cacheado
 
-    usuarios = db.query(Usuario).count()
-    residentes = db.query(Residente).filter(Residente.activo == True).count()
-    propiedades = db.query(Propiedad).count()
+    usuarios = filtrar(db.query(Usuario), Usuario, cid).count()
+    residentes = filtrar(db.query(Residente).filter(Residente.activo == True), Residente, cid).count()
+    propiedades = filtrar(db.query(Propiedad), Propiedad, cid).count()
 
     concepto = {c.id: c for c in db.query(ConceptoFinanciero).all()}
     ingresos = gastos = 0.0
     pagos_pendientes = pagos_pagados = 0
-    for m in db.query(MovimientoFinanciero).all():
+    for m in filtrar(db.query(MovimientoFinanciero), MovimientoFinanciero, cid).all():
         c = concepto.get(m.concepto_id)
         tipo = c.tipo if c else "gasto"
         if m.estado == "pagado":
@@ -46,13 +48,13 @@ def dashboard(db: Session = Depends(get_db)):
         elif m.estado in ("pendiente", "vencido"):
             pagos_pendientes += 1
 
-    mant_pend = db.query(TareaMantenimiento).filter(
+    mant_pend = filtrar(db.query(TareaMantenimiento).filter(
         TareaMantenimiento.estado.in_(["pendiente", "en_proceso"])
-    ).count()
-    mant_comp = db.query(TareaMantenimiento).filter(
+    ), TareaMantenimiento, cid).count()
+    mant_comp = filtrar(db.query(TareaMantenimiento).filter(
         TareaMantenimiento.estado == "completada"
-    ).count()
-    documentos = db.query(Documento).count()
+    ), TareaMantenimiento, cid).count()
+    documentos = filtrar(db.query(Documento), Documento, cid).count()
 
     resultado = {
         "usuarios": usuarios, "residentes": residentes, "propiedades": propiedades,
@@ -62,7 +64,7 @@ def dashboard(db: Session = Depends(get_db)):
         "mantenimientos_pendientes": mant_pend, "mantenimientos_completados": mant_comp,
         "documentos": documentos,
     }
-    cache_set("dashboard_stats", resultado, ttl=60)
+    cache_set(f"dashboard_stats:{cid}", resultado, ttl=60)
     return resultado
 
 
@@ -70,6 +72,7 @@ def dashboard(db: Session = Depends(get_db)):
 def resumen_basico(
     usuario=Depends(require_permiso("dashboard.ver")),
     db: Session = Depends(get_db),
+    cid: int = Depends(conjunto_activo),
 ):
     """Contadores NO financieros para el panel de roles sin `reportes.ver`.
     Solo incluye los módulos que el rol puede ver (RBAC)."""
@@ -77,33 +80,33 @@ def resumen_basico(
     ve = lambda m: usuario_tiene_permiso(db, usuario, f"{m}.ver")  # noqa: E731
     out: dict = {}
     if ve("propiedades"):
-        out["propiedades"] = db.query(Propiedad).count()
+        out["propiedades"] = filtrar(db.query(Propiedad), Propiedad, cid).count()
     if ve("residentes"):
-        out["residentes"] = db.query(Residente).filter(Residente.activo == True).count()
+        out["residentes"] = filtrar(db.query(Residente).filter(Residente.activo == True), Residente, cid).count()
     if ve("mantenimiento"):
-        out["mantenimientos_pendientes"] = db.query(TareaMantenimiento).filter(
+        out["mantenimientos_pendientes"] = filtrar(db.query(TareaMantenimiento).filter(
             TareaMantenimiento.estado.in_(["pendiente", "en_proceso"])
-        ).count()
+        ), TareaMantenimiento, cid).count()
     if ve("documentos"):
-        out["documentos"] = db.query(Documento).count()
+        out["documentos"] = filtrar(db.query(Documento), Documento, cid).count()
     if ve("eventos"):
-        out["eventos_proximos"] = db.query(Evento).filter(Evento.fecha >= date.today()).count()
+        out["eventos_proximos"] = filtrar(db.query(Evento).filter(Evento.fecha >= date.today()), Evento, cid).count()
     return out
 
 
 @router.get("/finanzas-por-mes", dependencies=_REPORTES)
-def finanzas_por_mes(db: Session = Depends(get_db)):
+def finanzas_por_mes(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     """Ingresos y gastos agrupados por mes (para las gráficas)."""
-    cacheado = cache_get("finanzas_por_mes")
+    cacheado = cache_get(f"finanzas_por_mes:{cid}")
     if cacheado:
         return cacheado
 
     desde = None
     from datetime import date
     # Tomar los últimos 6 meses
-    movs = db.query(MovimientoFinanciero, ConceptoFinanciero).join(
+    movs = filtrar(db.query(MovimientoFinanciero, ConceptoFinanciero).join(
         ConceptoFinanciero, MovimientoFinanciero.concepto_id == ConceptoFinanciero.id
-    ).filter(MovimientoFinanciero.estado == "pagado").all()
+    ).filter(MovimientoFinanciero.estado == "pagado"), MovimientoFinanciero, cid).all()
 
     meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
     por_mes = {}
@@ -120,7 +123,7 @@ def finanzas_por_mes(db: Session = Depends(get_db)):
         y, mo = clave.split("-")
         series.append({"mes": f"{meses[int(mo) - 1]}", "valor": round(por_mes[clave], 2)})
 
-    cache_set("finanzas_por_mes", series, ttl=60)
+    cache_set(f"finanzas_por_mes:{cid}", series, ttl=60)
     return series
 
 
@@ -128,8 +131,8 @@ def finanzas_por_mes(db: Session = Depends(get_db)):
 # EXPORTACIÓN DE REPORTES (Excel / PDF)
 # ---------------------------------------------------------------------------
 @router.get("/exportar/finanzas.xlsx", dependencies=_FINANZAS)
-def exportar_finanzas(db: Session = Depends(get_db)):
-    contenido = exportar.finanzas_xlsx(db)
+def exportar_finanzas(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    contenido = exportar.finanzas_xlsx(db, cid)
     return Response(
         content=contenido,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -138,8 +141,8 @@ def exportar_finanzas(db: Session = Depends(get_db)):
 
 
 @router.get("/exportar/pagos.xlsx", dependencies=_FINANZAS)
-def exportar_pagos(db: Session = Depends(get_db)):
-    contenido = exportar.pagos_xlsx(db)
+def exportar_pagos(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    contenido = exportar.pagos_xlsx(db, cid)
     return Response(
         content=contenido,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -148,8 +151,8 @@ def exportar_pagos(db: Session = Depends(get_db)):
 
 
 @router.get("/exportar/mantenimiento.xlsx", dependencies=_MANTENIMIENTO)
-def exportar_mantenimiento(db: Session = Depends(get_db)):
-    contenido = exportar.mantenimiento_xlsx(db)
+def exportar_mantenimiento(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    contenido = exportar.mantenimiento_xlsx(db, cid)
     return Response(
         content=contenido,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -158,8 +161,8 @@ def exportar_mantenimiento(db: Session = Depends(get_db)):
 
 
 @router.get("/exportar/finanzas.pdf", dependencies=_FINANZAS)
-def exportar_finanzas_pdf(db: Session = Depends(get_db)):
-    contenido = exportar.reporte_finanzas_pdf(db)
+def exportar_finanzas_pdf(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    contenido = exportar.reporte_finanzas_pdf(db, cid)
     return Response(
         content=contenido,
         media_type="application/pdf",
@@ -168,8 +171,8 @@ def exportar_finanzas_pdf(db: Session = Depends(get_db)):
 
 
 @router.get("/exportar/pagos.pdf", dependencies=_FINANZAS)
-def exportar_pagos_pdf(db: Session = Depends(get_db)):
-    contenido = exportar.pagos_pdf(db)
+def exportar_pagos_pdf(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    contenido = exportar.pagos_pdf(db, cid)
     return Response(
         content=contenido,
         media_type="application/pdf",

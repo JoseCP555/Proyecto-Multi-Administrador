@@ -17,12 +17,17 @@ import Badge, { estadoColor } from "@/components/ui/Badge";
 import { useFetch } from "@/hooks/useFetch";
 import { moneda, fecha } from "@/lib/format";
 import { useAuth } from "@/context/AuthContext";
+import { useConjunto } from "@/context/ConjuntoContext";
+import SelectorConjunto from "@/components/layout/SelectorConjunto";
+import { MapPin, Phone, Mail, UserCog, DollarSign, CalendarClock, Moon } from "lucide-react";
 import { tienePermiso } from "@/lib/permisos";
 import type { DashboardStats, Movimiento } from "@/types";
 import logoUrl from "@/lib/logo";
 
 export default function Inicio() {
   const { usuario } = useAuth();
+  const { activo: conjunto } = useConjunto();
+  const idConjunto = conjunto?.id ?? null;
 
   // RBAC: los reportes/finanzas solo se consultan si el rol lo permite.
   const puedeVerReportes = tienePermiso(usuario, "reportes.ver");
@@ -30,16 +35,20 @@ export default function Inicio() {
 
   const { data: stats, cargando } = useFetch<DashboardStats>(
     puedeVerReportes ? "/reportes/dashboard" : null,
+    [idConjunto],
   );
   const { data: serie } = useFetch<{ mes: string; valor: number }[]>(
     puedeVerReportes ? "/reportes/finanzas-por-mes" : null,
+    [idConjunto],
   );
   const { data: movs } = useFetch<Movimiento[]>(
     puedeVerFinanzas ? "/finanzas" : null,
+    [idConjunto],
   );
   // Contadores no financieros para roles sin reportes (filtrados por permisos en el backend).
   const { data: basico } = useFetch<Partial<DashboardStats> & { eventos_proximos?: number }>(
     !puedeVerReportes ? "/reportes/resumen-basico" : null,
+    [idConjunto],
   );
   const ve = (m: string) => tienePermiso(usuario, `${m}.ver`);
 
@@ -60,7 +69,7 @@ export default function Inicio() {
   }, {});
   const totalMovs = movs?.length ?? 0;
   const segmentos = [
-    { label: "Pagados", valor: porEstado.pagado ?? 0, color: "#2563EB" },
+    { label: "Pagados", valor: porEstado.pagado ?? 0, color: "rgb(var(--pc-500))" },
     { label: "Pendientes", valor: porEstado.pendiente ?? 0, color: "#111111" },
     { label: "Vencidos", valor: porEstado.vencido ?? 0, color: "#9CA3AF" },
   ];
@@ -86,6 +95,83 @@ export default function Inicio() {
   if (!puedeVerReportes) {
     return (
       <div className="space-y-6">
+      {/* Conjunto en el que se está trabajando */}
+      {conjunto && (
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 to-primary-700 p-5 sm:p-6 shadow-pill text-white">
+          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10" />
+          <div className="relative">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">
+              Gestionando conjunto
+            </p>
+
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                {conjunto.nombre}
+              </h2>
+              <Badge color={conjunto.activo ? "success" : "neutral"}>
+                {conjunto.activo ? "Activo" : "Inactivo"}
+              </Badge>
+              <SelectorConjunto variante="banner" />
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/85">
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-white" />
+                {[conjunto.direccion, conjunto.ciudad].filter(Boolean).join(", ") || "Sin dirección"}
+              </span>
+              <span className="text-white/40">•</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-white" />
+                {conjunto.telefono || "Sin teléfono"}
+              </span>
+              <span className="text-white/40">•</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-white" />
+                {(conjunto.habitantes || 0).toLocaleString("es-CO")} habitantes registrados
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl bg-white/80 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Contacto</p>
+                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <Mail className="w-4 h-4 text-primary-500" />
+                  <span className="truncate">{conjunto.correo || "—"}</span>
+                </p>
+                <p className="mt-1.5 flex items-center gap-2 text-sm text-gray-500">
+                  <UserCog className="w-4 h-4 text-primary-500" />
+                  Admin: {conjunto.administrador || "—"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/80 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Finanzas</p>
+                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <DollarSign className="w-4 h-4 text-primary-500" />
+                  Cuota: {moneda(conjunto.cuota)}
+                </p>
+                <p className="mt-1.5 flex items-center gap-2 text-sm text-gray-500">
+                  <CalendarClock className="w-4 h-4 text-primary-500" />
+                  Día de cobro: día {conjunto.dia_cobro ?? "—"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/80 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Reglas</p>
+                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <Users className="w-4 h-4 text-primary-500" />
+                  Reuniones: {conjunto.reunion || "—"}
+                </p>
+                <p className="mt-1.5 flex items-center gap-2 text-sm text-gray-500">
+                  <Moon className="w-4 h-4 text-primary-500" />
+                  Silencio: {conjunto.silencio || "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
         <div className="rounded-3xl bg-primary-500 text-white p-8 sm:p-10 shadow-pill relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-56 h-56 rounded-full bg-white/10" />
           <div className="absolute right-24 -bottom-16 w-40 h-40 rounded-full bg-white/10" />
@@ -152,6 +238,83 @@ export default function Inicio() {
 
   return (
     <div className="space-y-6">
+      {/* Conjunto en el que se está trabajando */}
+      {conjunto && (
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 to-primary-700 p-5 sm:p-6 shadow-pill text-white">
+          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10" />
+          <div className="relative">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">
+              Gestionando conjunto
+            </p>
+
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                {conjunto.nombre}
+              </h2>
+              <Badge color={conjunto.activo ? "success" : "neutral"}>
+                {conjunto.activo ? "Activo" : "Inactivo"}
+              </Badge>
+              <SelectorConjunto variante="banner" />
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/85">
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-white" />
+                {[conjunto.direccion, conjunto.ciudad].filter(Boolean).join(", ") || "Sin dirección"}
+              </span>
+              <span className="text-white/40">•</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-white" />
+                {conjunto.telefono || "Sin teléfono"}
+              </span>
+              <span className="text-white/40">•</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-white" />
+                {(conjunto.habitantes || 0).toLocaleString("es-CO")} habitantes registrados
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl bg-white/80 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Contacto</p>
+                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <Mail className="w-4 h-4 text-primary-500" />
+                  <span className="truncate">{conjunto.correo || "—"}</span>
+                </p>
+                <p className="mt-1.5 flex items-center gap-2 text-sm text-gray-500">
+                  <UserCog className="w-4 h-4 text-primary-500" />
+                  Admin: {conjunto.administrador || "—"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/80 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Finanzas</p>
+                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <DollarSign className="w-4 h-4 text-primary-500" />
+                  Cuota: {moneda(conjunto.cuota)}
+                </p>
+                <p className="mt-1.5 flex items-center gap-2 text-sm text-gray-500">
+                  <CalendarClock className="w-4 h-4 text-primary-500" />
+                  Día de cobro: día {conjunto.dia_cobro ?? "—"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/80 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Reglas</p>
+                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <Users className="w-4 h-4 text-primary-500" />
+                  Reuniones: {conjunto.reunion || "—"}
+                </p>
+                <p className="mt-1.5 flex items-center gap-2 text-sm text-gray-500">
+                  <Moon className="w-4 h-4 text-primary-500" />
+                  Silencio: {conjunto.silencio || "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
         <StatCard titulo="Residentes" valor={`${stats?.residentes ?? 0}`} icono={Users} color="primary" indicador={`${stats?.propiedades ?? 0} propiedades registradas`} />
@@ -166,7 +329,9 @@ export default function Inicio() {
             <div className="flex items-center justify-between mb-2">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Ingresos por mes</h3>
-                <p className="text-xs text-gray-400">Recaudo mensual del conjunto</p>
+                <p className="text-xs text-gray-400">
+                Recaudo mensual de {conjunto?.nombre ?? "conjunto"}
+              </p>
               </div>
               <Badge color="info">Últimos meses</Badge>
             </div>

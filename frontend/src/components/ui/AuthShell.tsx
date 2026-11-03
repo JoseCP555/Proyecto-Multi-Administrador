@@ -15,9 +15,12 @@ export default function AuthShell({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  // `my-auto` centra la tarjeta cuando cabe en pantalla, pero permite hacer
+  // scroll sin recortar la parte superior cuando el formulario es alto
+  // (p. ej. el registro con el checklist de contraseña).
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex justify-center px-4 py-10">
+      <div className="w-full max-w-md my-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

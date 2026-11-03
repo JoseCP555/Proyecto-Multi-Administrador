@@ -4,14 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta idéntica a la del dashboard
+        // Paleta idéntica a la del dashboard.
+        // `primary` se lee de variables CSS (--pc-*): por defecto son el azul
+        // de siempre (ver :root en index.css) y, al abrir un conjunto, el
+        // layout las cambia por el color de ese conjunto.
         primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          500: "#2563eb",
-          600: "#1d4ed8",
-          700: "#1e40af"
+          50: "rgb(var(--pc-50) / <alpha-value>)",
+          100: "rgb(var(--pc-100) / <alpha-value>)",
+          200: "rgb(var(--pc-200) / <alpha-value>)",
+          300: "rgb(var(--pc-300) / <alpha-value>)",
+          500: "rgb(var(--pc-500) / <alpha-value>)",
+          600: "rgb(var(--pc-600) / <alpha-value>)",
+          700: "rgb(var(--pc-700) / <alpha-value>)"
         },
         dark: {
           100: "#111111",
@@ -41,9 +45,9 @@ export default {
       },
       boxShadow: {
         card: "0 2px 12px rgba(17,24,39,0.05)",
-        "card-hover": "0 10px 30px rgba(37,99,235,0.10)",
+        "card-hover": "0 10px 30px rgb(var(--pc-500) / 0.10)",
         shell: "0 30px 80px rgba(76,29,149,0.18)",
-        pill: "0 6px 18px rgba(37,99,235,0.30)"
+        pill: "0 6px 18px rgb(var(--pc-500) / 0.30)"
       },
       borderRadius: {
         DEFAULT: "14px",

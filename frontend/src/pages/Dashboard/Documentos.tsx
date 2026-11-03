@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { FileText, Download, Plus, Pencil, Trash2, Upload } from "lucide-react";
+import { FileText, Download, Plus, Pencil, Trash2, Upload, ChevronDown } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -183,25 +183,25 @@ export default function Documentos() {
       {/* Modal subir */}
       <Modal abierto={abierto} onCerrar={() => setAbierto(false)} titulo="Subir documento">
         <form onSubmit={crear} className="space-y-4">
-          <div>
-            <label className="label">Título</label>
-            <input className="input" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required />
-          </div>
-          <div>
-            <label className="label">Descripción</label>
-            <textarea className="input" rows={2} value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
-          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Tipo</label>
-              <select className="input" value={form.tipo_documento} onChange={(e) => setForm({ ...form, tipo_documento: e.target.value })}>
-                <option value="">—</option>
-                <option value="reglamento">Reglamento</option>
-                <option value="acta">Acta</option>
-                <option value="manual">Manual</option>
-                <option value="contrato">Contrato</option>
-                <option value="financiero">Financiero</option>
-              </select>
+              <div className="relative">
+                <select
+                  className="input appearance-none pr-10 cursor-pointer"
+                  value={form.tipo_documento}
+                  onChange={(e) => setForm({ ...form, tipo_documento: e.target.value })}
+                  aria-label="Tipo de documento"
+                >
+                  <option value="">Seleccionar tipo…</option>
+                  <option value="reglamento">Reglamento</option>
+                  <option value="acta">Acta</option>
+                  <option value="manual">Manual</option>
+                  <option value="contrato">Contrato</option>
+                  <option value="financiero">Financiero</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 w-4 h-4 -translate-y-1/2 text-gray-400" />
+              </div>
             </div>
             <div className="flex items-end">
               <label className="flex items-center gap-2 text-sm text-gray-600">
@@ -209,6 +209,14 @@ export default function Documentos() {
                 Público
               </label>
             </div>
+          </div>
+          <div>
+            <label className="label">Título</label>
+            <input className="input" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required />
+          </div>
+          <div>
+            <label className="label">Descripción</label>
+            <textarea className="input" rows={2} value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
           </div>
           <div>
             <label className="label">Archivo</label>

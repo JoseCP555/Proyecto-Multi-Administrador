@@ -16,7 +16,7 @@ export default function BarrasProgreso({ items, vacio = "Sin datos." }: { items:
           <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
             <motion.div
               className="h-full rounded-full"
-              style={{ background: it.color === "gradient" ? "linear-gradient(90deg,#60A5FA,#2563EB)" : it.color }}
+              style={{ background: it.color === "gradient" ? "linear-gradient(90deg, rgb(var(--pc-200)), rgb(var(--pc-500)))" : it.color }}
               initial={{ width: 0 }}
               animate={{ width: `${it.porcentaje}%` }}
               transition={{ duration: 0.8 }}

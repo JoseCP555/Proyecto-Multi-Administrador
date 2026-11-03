@@ -3,10 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import schemas
+from app import notificaciones_servicio as notif
 from app.models import ConceptoFinanciero, MovimientoFinanciero, Propiedad, Usuario
 from app.database import get_db
 from app.deps import require_permiso
 from app.redis_client import cache_get, cache_set, cache_del
+from app.conjunto_ctx import conjunto_activo, filtrar
 from app.chatbot import responder
 
 router = APIRouter(prefix="/finanzas", tags=["Finanzas"], dependencies=[Depends(require_permiso("finanzas.ver"))])
@@ -35,8 +37,8 @@ def _serializar(m: MovimientoFinanciero, db: Session) -> dict:
 
 
 @router.get("", response_model=list[schemas.MovimientoResponse])
-def listar_movimientos(estado: str = None, db: Session = Depends(get_db)):
-    q = db.query(MovimientoFinanciero)
+def listar_movimientos(estado: str = None, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    q = filtrar(db.query(MovimientoFinanciero), MovimientoFinanciero, cid)
     if estado:
         q = q.filter(MovimientoFinanciero.estado == estado)
     movs = q.order_by(MovimientoFinanciero.fecha_vencimiento.desc()).all()
@@ -44,24 +46,31 @@ def listar_movimientos(estado: str = None, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=schemas.MovimientoResponse, status_code=201, dependencies=[Depends(require_permiso("finanzas.crear"))])
-def crear(data: schemas.MovimientoCreate, db: Session = Depends(get_db)):
+def crear(data: schemas.MovimientoCreate, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     m = MovimientoFinanciero(
         propiedad_id=data.propiedad_id, concepto_id=data.concepto_id, monto=data.monto,
         fecha_vencimiento=data.fecha_vencimiento, fecha_pago=data.fecha_pago,
         estado=data.estado, numero_recibo=data.numero_recibo, metodo_pago=data.metodo_pago,
-        referencia=data.referencia, notas=data.notas,
+        referencia=data.referencia, notas=data.notas, id_conjunto=cid,
     )
     db.add(m)
     db.commit()
     db.refresh(m)
+    notif.notificar_seguro(
+        db=db, id_conjunto=cid, tipo="pago",
+        titulo="Nuevo movimiento financiero",
+        mensaje=f"Se registró un movimiento por ${float(m.monto or 0):,.0f} (estado: {m.estado}).",
+        clave=f"creado:{m.id}", fecha=m.fecha_vencimiento,
+        severidad="alta" if m.estado == "vencido" else "media",
+    )
     cache_del("dashboard_stats")
     return _serializar(m, db)
 
 
 @router.put("/{movimiento_id}", response_model=schemas.MovimientoResponse, dependencies=[Depends(require_permiso("finanzas.editar"))])
-def actualizar(movimiento_id: int, data: schemas.MovimientoCreate, db: Session = Depends(get_db)):
+def actualizar(movimiento_id: int, data: schemas.MovimientoCreate, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     m = db.query(MovimientoFinanciero).get(movimiento_id)
-    if not m:
+    if not m or (cid is not None and m.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Movimiento no encontrado.")
     for campo in ("propiedad_id", "concepto_id", "monto", "fecha_vencimiento", "fecha_pago",
                   "estado", "numero_recibo", "metodo_pago", "referencia", "notas"):
@@ -73,9 +82,9 @@ def actualizar(movimiento_id: int, data: schemas.MovimientoCreate, db: Session =
 
 
 @router.delete("/{movimiento_id}", status_code=204, dependencies=[Depends(require_permiso("finanzas.eliminar"))])
-def eliminar(movimiento_id: int, db: Session = Depends(get_db)):
+def eliminar(movimiento_id: int, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     m = db.query(MovimientoFinanciero).get(movimiento_id)
-    if not m:
+    if not m or (cid is not None and m.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Movimiento no encontrado.")
     db.delete(m)
     db.commit()
@@ -84,9 +93,9 @@ def eliminar(movimiento_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/resumen")
-def resumen_financiero(db: Session = Depends(get_db)):
+def resumen_financiero(db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     """Resumen de ingresos/gastos/pendientes (cacheado en Redis 60s)."""
-    cacheado = cache_get("finanzas_resumen")
+    cacheado = cache_get(f"finanzas_resumen:{cid}")
     if cacheado:
         return cacheado
     concepto = {c.id: c for c in db.query(ConceptoFinanciero).all()}
@@ -94,7 +103,7 @@ def resumen_financiero(db: Session = Depends(get_db)):
     pendiente = 0.0
     pagados = 0
     pend_count = 0
-    for m in db.query(MovimientoFinanciero).all():
+    for m in filtrar(db.query(MovimientoFinanciero), MovimientoFinanciero, cid).all():
         c = concepto.get(m.concepto_id)
         tipo = c.tipo if c else "gasto"
         if m.estado == "pagado":
@@ -111,5 +120,5 @@ def resumen_financiero(db: Session = Depends(get_db)):
         "saldo": round(ingresos - gastos, 2), "pendiente": round(pendiente, 2),
         "movimientos_pagados": pagados, "movimientos_pendientes": pend_count,
     }
-    cache_set("finanzas_resumen", resultado, ttl=60)
+    cache_set(f"finanzas_resumen:{cid}", resultado, ttl=60)
     return resultado

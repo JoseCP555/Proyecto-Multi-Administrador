@@ -1,5 +1,12 @@
 # Multi-Administrador - Orquestación completa (PostgreSQL + Redis + Backend + Frontend)
-# El frontend queda disponible en el puerto 3000.
+#
+#   docker compose up --build -d      ->  http://localhost:3000
+#   docker compose logs -f backend    ->  ver el arranque de la API
+#   docker compose down -v            ->  borrar TODO (incluida la BD) y empezar limpio
+#
+# El frontend NO habla directamente con el puerto 8000: usa /api y nginx
+# (dentro del contenedor frontend) reenvía a backend:8000. Así funciona desde
+# localhost, desde otra IP de la LAN o desde un túnel, sin problemas de CORS.
 
 services:
   # ------------------------------------------------------------------ DB
@@ -12,30 +19,35 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-multiadmin_db}
     volumes:
       - db_data:/var/lib/postgresql/data
-      # Script de creación del esquema (se ejecuta en la primera creación del volumen).
+      # Script de creación del esquema. SOLO se ejecuta la primera vez que se
+      # crea el volumen (si ya existía, usa `docker compose down -v`).
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "5432:5432"
+      # 5433 en el host para no chocar con un PostgreSQL instalado localmente.
+      - "${POSTGRES_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-multiadmin} -d ${POSTGRES_DB:-multiadmin_db}"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 10s
 
   # -------------------------------------------------------------- Redis
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      # 6380 en el host para no chocar con un Redis instalado localmente.
+      - "${REDIS_PORT:-6380}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 5s
 
   # ------------------------------------------------------------ Backend
   backend:
@@ -50,42 +62,53 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-multiadmin}:${POSTGRES_PASSWORD:-multiadmin}@db:5432/${POSTGRES_DB:-multiadmin_db}
       SECRET_KEY: ${SECRET_KEY:-cambia-esto-por-un-valor-secreto-largo-y-aleatorio}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       SQL_ECHO: ${SQL_ECHO:-false}
       REDIS_URL: redis://redis:6379/0
-      # ---- SMTP (correo real) ----
+      # Modo demo: habilita el selector "Administrador" en Crear cuenta.
+      # true por defecto para que funcione sin configurar nada; en producción
+      # define PERMITIR_REGISTRO_ADMIN=false en el .env.
+      PERMITIR_REGISTRO_ADMIN: ${PERMITIR_REGISTRO_ADMIN:-true}
+      # ---- SMTP (opcional: verificación de cuenta y recuperación) ----
       EMAIL_USER: ${EMAIL_USER:-}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
       MAIL_FROM: ${MAIL_FROM:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_SERVER: ${MAIL_SERVER:-}
+      # ---- Notificaciones reales (correo + Web Push / VAPID) ----
+      NOTIFICACIONES_CORREO: ${NOTIFICACIONES_CORREO:-true}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:no-reply@multiadmin.com}
       # ---- Chatbot ----
       CHATBOT_ENGINE: ${CHATBOT_ENGINE:-local}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - documentos_data:/app/archivos_documentos
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:8000/health\", timeout=3)'"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 12
+      start_period: 20s
 
   # ----------------------------------------------------------- Frontend
   frontend:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        # Vacío = el bundle usa /api (proxy de nginx). Ver GUIA_DOCKER.md.
+        VITE_API_URL: ${VITE_API_URL:-}
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
-      # El requisito es exponer la app en el puerto 3000.
-      - "3000:80"
+      - "${FRONTEND_PORT:-3000}:80"
 
 volumes:
   db_data:

@@ -38,8 +38,8 @@ export default function AreaChart({ datos, etiqueta, cargando }: { datos: Punto[
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto min-w-[480px]">
         <defs>
           <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2563EB" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#2563EB" stopOpacity="0" />
+            <stop offset="0%" style={{ stopColor: "rgb(var(--pc-500))" }} stopOpacity="0.35" />
+            <stop offset="100%" style={{ stopColor: "rgb(var(--pc-500))" }} stopOpacity="0" />
           </linearGradient>
         </defs>
         {ticks.map((t) => (
@@ -51,13 +51,13 @@ export default function AreaChart({ datos, etiqueta, cargando }: { datos: Punto[
           </g>
         ))}
         <motion.path d={area} fill="url(#areaFill)" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} />
-        <motion.path d={path} fill="none" stroke="#2563EB" strokeWidth="3" strokeLinecap="round"
+        <motion.path d={path} fill="none" style={{ stroke: "rgb(var(--pc-500))" }} strokeWidth="3" strokeLinecap="round"
           initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1 }} />
         {datos.map((d, i) => (
           <text key={d.mes} x={x(i)} y={H - 8} textAnchor="middle" fontSize="11" fill="#94A3B8">{d.mes}</text>
         ))}
         {/* Punto y etiqueta en el pico */}
-        <circle cx={x(picoIdx)} cy={y(datos[picoIdx].valor)} r="6" fill="#fff" stroke="#2563EB" strokeWidth="3" />
+        <circle cx={x(picoIdx)} cy={y(datos[picoIdx].valor)} r="6" fill="#fff" style={{ stroke: "rgb(var(--pc-500))" }} strokeWidth="3" />
         {etiqueta && (
           <g transform={`translate(${Math.min(Math.max(x(picoIdx), PL + 40), W - PR - 40)}, ${Math.max(y(datos[picoIdx].valor) - 22, 14)})`}>
             <rect x="-34" y="-12" width="68" height="24" rx="12" fill="#111111" />

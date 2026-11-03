@@ -52,11 +52,12 @@ export function esSuperAdmin(usuario: Usuario | null): boolean {
 }
 
 /**
- * Roles que el usuario actual puede asignar al crear/editar otros usuarios:
- * super_admin → todos; el resto (con usuarios.crear/editar) → todos menos super_admin.
+ * Roles que el usuario actual puede asignar al crear/editar otros usuarios.
+ * `super_admin` y `admin` tienen acceso total: ambos pueden asignar CUALQUIER
+ * rol, incluido super_admin. Los demás roles no pueden otorgar super_admin.
  */
 export function rolesAsignables(usuario: Usuario | null) {
-  return esSuperAdmin(usuario) ? ROLES_UI : ROLES_UI.filter((r) => r.id !== ROL_SUPER_ADMIN);
+  return rolEsAdmin(usuario) ? ROLES_UI : ROLES_UI.filter((r) => r.id !== ROL_SUPER_ADMIN);
 }
 
 /**

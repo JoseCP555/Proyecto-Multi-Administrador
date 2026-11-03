@@ -3,9 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import schemas
+from app import notificaciones_servicio as notif
 from app.models import Propiedad, Residente
 from app.database import get_db
 from app.deps import require_permiso
+from app.conjunto_ctx import conjunto_activo, filtrar
 
 router = APIRouter(prefix="/propiedades", tags=["Propiedades"], dependencies=[Depends(require_permiso("propiedades.ver"))])
 
@@ -29,31 +31,38 @@ def _serializar(p: Propiedad, db: Session) -> dict:
 
 
 @router.get("", response_model=list[schemas.PropiedadResponse])
-def listar(estado: str = None, db: Session = Depends(get_db)):
-    q = db.query(Propiedad)
+def listar(estado: str = None, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
+    q = filtrar(db.query(Propiedad), Propiedad, cid)
     if estado:
         q = q.filter(Propiedad.estado == estado)
     return [_serializar(p, db) for p in q.all()]
 
 
 @router.post("", response_model=schemas.PropiedadResponse, status_code=201, dependencies=[Depends(require_permiso("propiedades.crear"))])
-def crear(data: schemas.PropiedadCreate, db: Session = Depends(get_db)):
+def crear(data: schemas.PropiedadCreate, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     p = Propiedad(
         residencial=data.residencial, bloque=data.bloque, torre=data.torre,
         apartamento=data.apartamento, piso=data.piso, area=data.area,
         habitaciones=data.habitaciones, banos=data.banos, parqueaderos=data.parqueaderos,
         estado=data.estado, estrato=data.estrato, residente_id=data.residente_id,
+        id_conjunto=cid,
     )
     db.add(p)
     db.commit()
     db.refresh(p)
+    notif.notificar_seguro(
+        db=db, id_conjunto=cid, tipo="propiedad",
+        titulo="Nueva propiedad registrada",
+        mensaje=f"Se registró la propiedad {p.apartamento} ({p.residencial}).",
+        clave=f"creado:{p.id}",
+    )
     return _serializar(p, db)
 
 
 @router.put("/{propiedad_id}", response_model=schemas.PropiedadResponse, dependencies=[Depends(require_permiso("propiedades.editar"))])
-def actualizar(propiedad_id: int, data: schemas.PropiedadCreate, db: Session = Depends(get_db)):
+def actualizar(propiedad_id: int, data: schemas.PropiedadCreate, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     p = db.query(Propiedad).get(propiedad_id)
-    if not p:
+    if not p or (cid is not None and p.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Propiedad no encontrada.")
     for campo in ("residencial", "bloque", "torre", "apartamento", "piso", "area",
                   "habitaciones", "banos", "parqueaderos", "estado", "estrato", "residente_id"):
@@ -64,9 +73,9 @@ def actualizar(propiedad_id: int, data: schemas.PropiedadCreate, db: Session = D
 
 
 @router.delete("/{propiedad_id}", status_code=204, dependencies=[Depends(require_permiso("propiedades.eliminar"))])
-def eliminar(propiedad_id: int, db: Session = Depends(get_db)):
+def eliminar(propiedad_id: int, db: Session = Depends(get_db), cid: int = Depends(conjunto_activo)):
     p = db.query(Propiedad).get(propiedad_id)
-    if not p:
+    if not p or (cid is not None and p.id_conjunto not in (None, cid)):
         raise HTTPException(status_code=404, detail="Propiedad no encontrada.")
     db.delete(p)
     db.commit()
