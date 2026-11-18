@@ -4,7 +4,12 @@
 esta matriz (idempotente): crea los permisos que falten y ajusta `rol_permisos`
 de los 5 roles del sistema. Así `db/init.sql` y el backend nunca divergen.
 
-Roles (IDs fijos): 1 = super_admin · 2 = admin · 3 = residente · 4 = tesoreria · 5 = seguridad
+Roles (IDs fijos): 1 = super_admin · 2 = admin · 3 = residente · 4 = tesoreria
+· 5 = seguridad · 6 = consejo
+
+Los permisos de los módulos nuevos (PQRS, reservas, comunicados, visitantes,
+comprobantes de pago, votaciones, aprobaciones y auditoría) corresponden a las
+historias UH-09 a UH-32.
 """
 import logging
 from sqlalchemy.orm import Session
@@ -13,7 +18,7 @@ from app.models import Rol, Permiso, RolPermiso
 
 logger = logging.getLogger(__name__)
 
-SUPER_ADMIN, ADMIN, RESIDENTE, TESORERIA, SEGURIDAD = 1, 2, 3, 4, 5
+SUPER_ADMIN, ADMIN, RESIDENTE, TESORERIA, SEGURIDAD, CONSEJO = 1, 2, 3, 4, 5, 6
 
 ROLES = {
     SUPER_ADMIN: ("super_admin", "Acceso total al sistema"),
@@ -21,6 +26,7 @@ ROLES = {
     RESIDENTE: ("residente", "Residente propietario o inquilino"),
     TESORERIA: ("tesoreria", "Encargado de finanzas"),
     SEGURIDAD: ("seguridad", "Personal de vigilancia"),
+    CONSEJO: ("consejo", "Miembro del consejo de administración"),
 }
 
 # (codigo, modulo, accion, descripcion)
@@ -65,6 +71,52 @@ CATALOGO = [
     ("conjuntos.gestionar", "conjuntos", "gestionar", "Administrar TODOS los conjuntos del sistema"),
     ("chat.usar", "chat", "usar", "Usar el chatbot / asistente"),
     ("sistema.respaldar", "sistema", "respaldar", "Generar respaldo de la base de datos"),
+    # --- UH-09 / UH-16 / UH-32: PQRS -------------------------------------
+    ("pqrs.ver", "pqrs", "ver", "Ver las PQRS del conjunto"),
+    ("pqrs.crear", "pqrs", "crear", "Radicar una PQRS"),
+    ("pqrs.responder", "pqrs", "responder", "Responder / poner en proceso una PQRS"),
+    ("pqrs.cerrar", "pqrs", "cerrar", "Cerrar una PQRS"),
+    ("pqrs.eliminar", "pqrs", "eliminar", "Eliminar una PQRS"),
+    # --- UH-10 / UH-14: zonas comunes y reservas --------------------------
+    ("zonas.ver", "zonas", "ver", "Ver las zonas comunes"),
+    ("zonas.crear", "zonas", "crear", "Crear zonas comunes"),
+    ("zonas.editar", "zonas", "editar", "Editar zonas comunes"),
+    ("zonas.eliminar", "zonas", "eliminar", "Eliminar zonas comunes"),
+    ("reservas.ver", "reservas", "ver", "Ver las reservas de zonas comunes"),
+    ("reservas.crear", "reservas", "crear", "Solicitar una reserva"),
+    ("reservas.gestionar", "reservas", "gestionar", "Aprobar, rechazar o cancelar reservas"),
+    # --- UH-11 / UH-18: comunicados ---------------------------------------
+    ("comunicados.ver", "comunicados", "ver", "Ver comunicados y circulares"),
+    ("comunicados.crear", "comunicados", "crear", "Publicar comunicados"),
+    ("comunicados.editar", "comunicados", "editar", "Editar comunicados"),
+    ("comunicados.eliminar", "comunicados", "eliminar", "Eliminar comunicados"),
+    # --- UH-12: visitantes ------------------------------------------------
+    ("visitantes.ver", "visitantes", "ver", "Ver el historial de visitantes"),
+    ("visitantes.crear", "visitantes", "crear", "Registrar el ingreso de visitantes"),
+    ("visitantes.editar", "visitantes", "editar", "Registrar la salida / editar visitantes"),
+    ("visitantes.eliminar", "visitantes", "eliminar", "Eliminar registros de visitantes"),
+    # --- UH-13 / UH-17: comprobantes y estado de cuenta -------------------
+    ("pagos.ver", "pagos", "ver", "Ver comprobantes de pago y estados de cuenta"),
+    ("pagos.crear", "pagos", "crear", "Subir un comprobante de pago"),
+    ("pagos.revisar", "pagos", "revisar", "Aprobar o rechazar comprobantes de pago"),
+    # --- UH-25: votaciones del consejo ------------------------------------
+    ("votaciones.ver", "votaciones", "ver", "Ver las votaciones"),
+    ("votaciones.crear", "votaciones", "crear", "Crear votaciones"),
+    ("votaciones.votar", "votaciones", "votar", "Votar en una votación abierta"),
+    ("votaciones.cerrar", "votaciones", "cerrar", "Cerrar una votación"),
+    # --- UH-24: aprobaciones del consejo ----------------------------------
+    ("aprobaciones.ver", "aprobaciones", "ver", "Ver las solicitudes enviadas al consejo"),
+    ("aprobaciones.crear", "aprobaciones", "crear", "Enviar una solicitud al consejo"),
+    ("aprobaciones.decidir", "aprobaciones", "decidir", "Aprobar o rechazar solicitudes"),
+    # --- UH-29: auditoría --------------------------------------------------
+    ("auditoria.ver", "auditoria", "ver", "Consultar el historial de auditoría"),
+    # --- UH-20: perfil propio ---------------------------------------------
+    ("perfil.ver", "perfil", "ver", "Ver el perfil propio"),
+    ("perfil.editar", "perfil", "editar", "Actualizar los datos personales"),
+    # --- Chat directo residente <-> administrador -------------------------
+    ("mensajes.ver", "mensajes", "ver", "Ver conversaciones del chat con la administración"),
+    ("mensajes.enviar", "mensajes", "enviar", "Enviar mensajes en el chat con la administración"),
+    ("mensajes.gestionar", "mensajes", "gestionar", "Ver y responder conversaciones de todos los residentes"),
 ]
 
 TODOS = [c[0] for c in CATALOGO]
@@ -94,6 +146,9 @@ MATRIZ: dict[int, set[str]] = {
         "propiedades.ver", "residentes.ver",
         "documentos.ver", "documentos.descargar",
         "chat.usar",
+        "pagos.ver", "pagos.revisar",
+        "comunicados.ver", "pqrs.ver",
+        "perfil.ver", "perfil.editar",
     },
     # Residente: lectura de su conjunto, crear solicitudes de mantenimiento, chatbot.
     RESIDENTE: {
@@ -103,8 +158,18 @@ MATRIZ: dict[int, set[str]] = {
         "eventos.ver",
         "mantenimiento.ver", "mantenimiento.crear",
         "chat.usar",
+        # Módulos de autoservicio del residente (UH-13, UH-14, UH-16,
+        # UH-17, UH-18, UH-20, UH-21, UH-25).
+        "pqrs.ver", "pqrs.crear",
+        "zonas.ver", "reservas.ver", "reservas.crear",
+        "comunicados.ver",
+        "pagos.ver", "pagos.crear",
+        "votaciones.ver", "votaciones.votar",
+        "perfil.ver", "perfil.editar",
+        "mensajes.ver", "mensajes.enviar",
     },
-    # Seguridad: lectura operativa + puede actualizar estado de mantenimientos.
+    # Seguridad: lectura operativa + puede actualizar estado de mantenimientos
+    # y gestionar el control de acceso de visitantes (UH-12).
     SEGURIDAD: {
         "dashboard.ver", "conjuntos.ver",
         "propiedades.ver", "residentes.ver",
@@ -112,6 +177,24 @@ MATRIZ: dict[int, set[str]] = {
         "eventos.ver",
         "documentos.ver", "documentos.descargar",
         "chat.usar",
+        "visitantes.ver", "visitantes.crear", "visitantes.editar",
+        "zonas.ver", "reservas.ver", "comunicados.ver", "pqrs.ver",
+        "perfil.ver", "perfil.editar",
+    },
+    # Consejo de administración (UH-22 a UH-26, UH-32): lectura amplia del
+    # conjunto, votaciones, aprobación de solicitudes y alertas de gasto.
+    CONSEJO: {
+        "dashboard.ver", "conjuntos.ver", "reportes.ver",
+        "propiedades.ver", "residentes.ver",
+        "finanzas.ver", "pagos.ver",
+        "documentos.ver", "documentos.descargar",
+        "eventos.ver", "mantenimiento.ver",
+        "pqrs.ver", "zonas.ver", "reservas.ver",
+        "comunicados.ver", "visitantes.ver",
+        "votaciones.ver", "votaciones.crear", "votaciones.votar", "votaciones.cerrar",
+        "aprobaciones.ver", "aprobaciones.crear", "aprobaciones.decidir",
+        "auditoria.ver", "chat.usar",
+        "perfil.ver", "perfil.editar",
     },
 }
 

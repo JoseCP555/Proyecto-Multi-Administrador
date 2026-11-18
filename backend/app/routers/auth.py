@@ -19,6 +19,86 @@ from app import correo as correo_svc
 
 router = APIRouter(tags=["Autenticación"])
 
+# ---------------------------------------------------------------------------
+# UH-27: bloqueo de la cuenta tras 5 intentos fallidos (10 minutos)
+# ---------------------------------------------------------------------------
+MAX_INTENTOS_LOGIN = 5
+BLOQUEO_MINUTOS = 10
+
+_mem_cuenta: dict[str, dict] = {}
+
+
+def _clave_cuenta(correo: str) -> str:
+    return f"lock:{(correo or '').strip().lower()}"
+
+
+def _estado_bloqueo(correo: str) -> tuple[bool, int, int]:
+    """(bloqueado, segundos_restantes, intentos) para un correo."""
+    from app.redis_client import redis as _redis
+
+    clave = _clave_cuenta(correo)
+    r = _redis()
+    if r is not None:
+        try:
+            hasta = r.get(f"{clave}:hasta")
+            if hasta:
+                ttl = r.ttl(f"{clave}:hasta")
+                return True, max(0, int(ttl)), MAX_INTENTOS_LOGIN
+            intentos = int(r.get(clave) or 0)
+            return False, 0, intentos
+        except Exception:  # noqa: BLE001 - Redis caído: se usa la memoria
+            pass
+    datos = _mem_cuenta.get(clave)
+    if not datos:
+        return False, 0, 0
+    import time as _time
+    if datos.get("hasta") and datos["hasta"] > _time.time():
+        return True, int(datos["hasta"] - _time.time()), datos.get("intentos", 0)
+    return False, 0, int(datos.get("intentos", 0))
+
+
+def _registrar_fallo(correo: str) -> tuple[bool, int]:
+    """Suma un intento fallido. Devuelve (bloqueado, intentos)."""
+    from app.redis_client import redis as _redis
+
+    clave = _clave_cuenta(correo)
+    r = _redis()
+    if r is not None:
+        try:
+            intentos = r.incr(clave)
+            r.expire(clave, BLOQUEO_MINUTOS * 60)
+            if intentos >= MAX_INTENTOS_LOGIN:
+                r.set(f"{clave}:hasta", "1", ex=BLOQUEO_MINUTOS * 60)
+                r.delete(clave)
+                return True, MAX_INTENTOS_LOGIN
+            return False, int(intentos)
+        except Exception:  # noqa: BLE001
+            pass
+
+    import time as _time
+    datos = _mem_cuenta.setdefault(clave, {"intentos": 0, "hasta": 0})
+    datos["intentos"] += 1
+    if datos["hasta"] and datos["hasta"] < _time.time():
+        datos["hasta"] = 0
+        datos["intentos"] = 1
+    if datos["intentos"] >= MAX_INTENTOS_LOGIN:
+        datos["hasta"] = _time.time() + BLOQUEO_MINUTOS * 60
+        return True, MAX_INTENTOS_LOGIN
+    return False, datos["intentos"]
+
+
+def _limpiar_cuenta(correo: str) -> None:
+    from app.redis_client import redis as _redis
+
+    clave = _clave_cuenta(correo)
+    r = _redis()
+    if r is not None:
+        try:
+            r.delete(clave, f"{clave}:hasta")
+        except Exception:  # noqa: BLE001
+            pass
+    _mem_cuenta.pop(clave, None)
+
 
 class LoginRequest(BaseModel):
     correo: str
@@ -199,7 +279,21 @@ async def reenviar_verificacion(
 
 @router.post("/login")
 def login(request: Request, datos: LoginRequest, db: Session = Depends(get_db)):
-    limitar(request, "login", max_intentos=5, ventana_segundos=60)
+    limitar(request, "login", max_intentos=20, ventana_segundos=60)
+
+    # UH-27: cuenta bloqueada por 5 intentos fallidos → 10 minutos de espera.
+    bloqueado, restantes, _ = _estado_bloqueo(datos.correo)
+    if bloqueado:
+        minutos = max(1, (restantes + 59) // 60)
+        return {
+            "ok": False,
+            "codigo": "cuenta_bloqueada",
+            "segundos_restantes": restantes,
+            "mensaje": (
+                f"Cuenta bloqueada por demasiados intentos fallidos. "
+                f"Intenta de nuevo en {minutos} minuto(s) o recupera tu contraseña."
+            ),
+        }
 
     try:
         usuario = crud.login_usuario(db, datos.correo, datos.password)
@@ -210,8 +304,27 @@ def login(request: Request, datos: LoginRequest, db: Session = Depends(get_db)):
             "mensaje": "Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.",
         }
     if not usuario:
-        return {"ok": False, "mensaje": "Correo o contraseña incorrectos."}
+        quedo_bloqueado, intentos = _registrar_fallo(datos.correo)
+        if quedo_bloqueado:
+            return {
+                "ok": False,
+                "codigo": "cuenta_bloqueada",
+                "segundos_restantes": BLOQUEO_MINUTOS * 60,
+                "mensaje": (
+                    f"Superaste los {MAX_INTENTOS_LOGIN} intentos fallidos. "
+                    f"La cuenta quedó bloqueada por {BLOQUEO_MINUTOS} minutos."
+                ),
+            }
+        restantes_intentos = MAX_INTENTOS_LOGIN - intentos
+        return {
+            "ok": False,
+            "intentos_restantes": max(0, restantes_intentos),
+            "mensaje": (
+                f"Correo o contraseña incorrectos. Te quedan {max(0, restantes_intentos)} intento(s)."
+            ),
+        }
 
+    _limpiar_cuenta(datos.correo)
     resetear(request, "login")
 
     token = crear_token({"sub": str(usuario.id), "rol": usuario.rol_id})

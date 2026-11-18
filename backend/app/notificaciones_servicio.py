@@ -46,6 +46,20 @@ PERMISO_POR_TIPO: dict[str, str | None] = {
     "conjunto": "conjuntos.ver",
     "sistema": None,
     "prueba": None,
+    # --- Historias UH-01 a UH-32 -----------------------------------------
+    "asamblea": "eventos.ver",
+    "pqrs": "pqrs.ver",
+    "pqrs_consejo": "pqrs.ver",
+    "reserva": "reservas.ver",
+    "comunicado": "comunicados.ver",
+    "visitante": "visitantes.ver",
+    "comprobante": "pagos.ver",
+    "comprobante_revision": "pagos.ver",
+    "votacion": "votaciones.ver",
+    "aprobacion": "aprobaciones.ver",
+    "aprobacion_decision": "aprobaciones.ver",
+    "alerta_gasto": "finanzas.ver",
+    "mensaje_chat": "mensajes.ver",
 }
 
 URL_POR_TIPO: dict[str, str] = {
@@ -61,6 +75,19 @@ URL_POR_TIPO: dict[str, str] = {
     "conjunto": "/dashboard",
     "sistema": "/dashboard/inicio",
     "prueba": "/dashboard/inicio",
+    "asamblea": "/dashboard/eventos",
+    "pqrs": "/dashboard/pqrs",
+    "pqrs_consejo": "/dashboard/pqrs",
+    "reserva": "/dashboard/reservas",
+    "comunicado": "/dashboard/comunicados",
+    "visitante": "/dashboard/visitantes",
+    "comprobante": "/dashboard/pagos",
+    "comprobante_revision": "/dashboard/pagos",
+    "votacion": "/dashboard/votaciones",
+    "aprobacion": "/dashboard/aprobaciones",
+    "aprobacion_decision": "/dashboard/aprobaciones",
+    "alerta_gasto": "/dashboard/finanzas",
+    "mensaje_chat": "/dashboard/mensajes",
 }
 
 # Hechos discretos que merecen correo (los recordatorios diarios no, para
@@ -68,6 +95,10 @@ URL_POR_TIPO: dict[str, str] = {
 TIPOS_CON_CORREO = {
     "evento", "documento", "mantenimiento", "pago",
     "usuario", "sistema", "prueba",
+    # UH-01, UH-11, UH-13, UH-32: avisos que el residente/consejo espera
+    # recibir también por correo electrónico.
+    "asamblea", "comunicado", "pqrs_consejo", "comprobante",
+    "comprobante_revision", "votacion", "aprobacion_decision",
 }
 
 # Throttle perezoso del generador de recordatorios (por proceso).
@@ -95,10 +126,18 @@ def destinatarios(
     id_conjunto: int | None,
     tipo: str,
     excluir_usuario_id: int | None = None,
+    solo_roles: list[int] | None = None,
 ) -> list[models.Usuario]:
-    """Usuarios activos que pueden ver este tipo de aviso en ese conjunto."""
+    """Usuarios activos que pueden ver este tipo de aviso en ese conjunto.
+
+    `solo_roles` limita los destinatarios a esos roles (por ejemplo el
+    consejo en UH-26/UH-32); si es None se avisa a todos los que tienen el
+    permiso del módulo.
+    """
     permiso = permiso_para(tipo)
     usuarios = db.query(models.Usuario).filter(models.Usuario.activo.is_(True)).all()
+    if solo_roles:
+        usuarios = [u for u in usuarios if u.rol_id in set(solo_roles)]
 
     asignados: set[int] = set()
     if id_conjunto is not None:
@@ -187,7 +226,8 @@ def _entregar(
     if correo and not aviso.enviada_correo and getattr(usuario, "notificaciones_correo", True):
         try:
             r = enviar_correo_notificacion(
-                usuario.correo, usuario.nombre, aviso.titulo, aviso.mensaje or "", aviso.url
+                usuario.correo, usuario.nombre, aviso.titulo, aviso.mensaje or "", aviso.url,
+                id_conjunto=aviso.id_conjunto,
             )
             if r.get("enviado"):
                 aviso.enviada_correo = True
@@ -263,6 +303,7 @@ def notificar(
     correo: bool | None = None,
     push: bool = True,
     solo_usuario_id: int | None = None,
+    solo_roles: list[int] | None = None,
 ) -> list[models.Notificacion]:
     """Crea (una vez) el aviso para cada destinatario y lo entrega.
 
@@ -278,7 +319,9 @@ def notificar(
         u = db.query(models.Usuario).get(solo_usuario_id)
         usuarios = [u] if u else []
     else:
-        usuarios = destinatarios(db, id_conjunto, tipo, excluir_usuario_id=autor_id)
+        usuarios = destinatarios(
+            db, id_conjunto, tipo, excluir_usuario_id=autor_id, solo_roles=solo_roles
+        )
     creadas: list[tuple[models.Usuario, models.Notificacion]] = []
     try:
         for usuario in usuarios:
@@ -510,9 +553,12 @@ def enviar_prueba(db: Session, usuario: models.Usuario, canal: str = "todos") ->
     if canal in ("todos", "correo"):
         if getattr(usuario, "notificaciones_correo", True):
             r = enviar_correo_notificacion(
-                usuario.correo, usuario.nombre, aviso.titulo, aviso.mensaje or "", aviso.url
+                usuario.correo, usuario.nombre, aviso.titulo, aviso.mensaje or "", aviso.url,
+                id_conjunto=aviso.id_conjunto,
             )
             resultado["correo"] = r
+            if r.get("url"):
+                resultado["url_aplicacion"] = r["url"]
             if r.get("enviado"):
                 aviso.enviada_correo = True
         else:

@@ -1,10 +1,26 @@
 // Cliente HTTP simple sobre fetch, con manejo de token y errores.
 
-// En producción (Docker) se inyecta la URL completa de la API vía VITE_API_URL.
-// En desarrollo se usa "/api" y Vite lo redirige (proxy) al backend.
-/** Base de la API. Se exporta para que otros módulos (p. ej. imágenes de
- *  logos o subidas multipart) construyan URLs con la misma convención. */
-export const API_BASE: string = (import.meta.env.VITE_API_URL as string) || "/api";
+// Resuelve la URL base de la API de forma segura tanto en escritorio como en
+// celulares (Android / iPhone). Si el bundle se compiló con VITE_API_URL apuntando
+// a localhost/127.0.0.1 pero el usuario abre la app desde una IP de la red Wi-Fi
+// o un dominio HTTPS en su celular, se usa automáticamente "/api" (proxy de nginx).
+function resolverApiBase(): string {
+  const envUrl = ((import.meta.env.VITE_API_URL as string) || "").trim().replace(/\/+$/, "");
+  if (!envUrl) return "/api";
+  if (typeof window !== "undefined") {
+    const hostActual = window.location.hostname;
+    const esHostLocal = hostActual === "localhost" || hostActual === "127.0.0.1" || hostActual === "::1";
+    const envEsLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(envUrl);
+    if (!esHostLocal && envEsLocal) {
+      return "/api";
+    }
+  }
+  return envUrl;
+}
+
+/** Base de la API. Se exporta para que todos los módulos (subidas multipart,
+ *  descargas, logos y WebSockets) usen la misma URL compatible con móvil. */
+export const API_BASE: string = resolverApiBase();
 
 // Clave usada en localStorage para el token JWT.
 export const TOKEN_KEY = "ma_token";
@@ -100,6 +116,10 @@ async function request<T>(method: string, path: string, body?: unknown, opciones
 
   if (res.status === 401) {
     clearAuth();
+  }
+  if (res.status === 403 && !opciones?.sinAuth && typeof window !== "undefined") {
+    // UH-08: si cambiaron los permisos del rol en el backend, sincronizamos /me al instante.
+    window.dispatchEvent(new Event("ma:auth-sync"));
   }
   if (!res.ok) {
     const detail =

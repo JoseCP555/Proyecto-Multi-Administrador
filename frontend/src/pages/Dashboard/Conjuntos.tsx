@@ -80,6 +80,8 @@ export default function Conjuntos() {
         logo: datos.logo,
         // "" en color = volver al color automático por posición.
         color: datos.color ?? "",
+        // UH-26: umbral de gasto que dispara la alerta al consejo.
+        umbral_gasto: Number(datos.umbral_gasto ?? 2000000),
       };
       if (editando) await api.put(`/conjuntos/${editando.id}`, payload);
       else await api.post("/conjuntos", payload);
@@ -416,7 +418,7 @@ function FormularioConjunto({
     const datos = conjunto ?? {
       nombre: "", nit: "", direccion: "", ciudad: "", telefono: "", correo: "",
       administrador: "", habitantes: 0, cuota: 0, dia_cobro: 5, logo: "",
-      color: colorInicial,
+      color: colorInicial, umbral_gasto: 2000000,
       reunion: "todos los residentes", silencio: "22:00 - 06:00",
     };
     setF(datos);
@@ -777,6 +779,20 @@ function FormularioConjunto({
               placeholder="22:00 - 06:00"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="label">Umbral de alerta de gastos (COP)</label>
+          <input
+            className="input"
+            type="number"
+            min={0}
+            value={f.umbral_gasto ?? 2000000}
+            onChange={(e) => set("umbral_gasto", e.target.value)}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            El consejo recibirá una alerta cuando se registre un gasto superior a este monto.
+          </p>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

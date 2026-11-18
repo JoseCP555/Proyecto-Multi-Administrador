@@ -133,6 +133,8 @@ def serializar_usuario(u: Usuario, db: Session) -> dict:
         "activo": u.activo,
         "id_copropiedad": u.id_copropiedad,
         "correo_verificado": bool(u.correo_verificado),
+        "id_conjunto": getattr(u, "id_conjunto", None),
+        "foto": getattr(u, "foto", None),
         "permisos": obtener_permisos_rol(db, u.rol_id),
     }
 

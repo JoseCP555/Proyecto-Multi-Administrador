@@ -35,4 +35,5 @@ export const ROLES: Record<number, { label: string; color: string }> = {
   3: { label: "Residente", color: "bg-emerald-100 text-emerald-700" },
   4: { label: "Tesorería", color: "bg-amber-100 text-amber-700" },
   5: { label: "Seguridad", color: "bg-gray-100 text-gray-700" },
+  6: { label: "Consejo", color: "bg-indigo-100 text-indigo-700" },
 };

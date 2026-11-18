@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell, X, CalendarDays, Wallet, Wrench, AlarmClock, Check, Trash2,
-  Mail, Send, Info, Users, FileText, Building2, Home, Settings2, LucideIcon,
+  Mail, Send, Info, Users, FileText, Building2, Home, Settings2, MessageCircleMore, LucideIcon,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useConjunto } from "@/context/ConjuntoContext";
@@ -24,6 +24,7 @@ const ICONOS: Record<string, { icon: LucideIcon; color: string; badge: string }>
   propiedad: { icon: Home, color: "text-teal-600", badge: "bg-teal-100 text-teal-700" },
   usuario: { icon: Settings2, color: "text-violet-600", badge: "bg-violet-100 text-violet-700" },
   conjunto: { icon: Building2, color: "text-fuchsia-600", badge: "bg-fuchsia-100 text-fuchsia-700" },
+  mensaje_chat: { icon: MessageCircleMore, color: "text-emerald-600", badge: "bg-emerald-100 text-emerald-700" },
   prueba: { icon: Info, color: "text-sky-600", badge: "bg-sky-100 text-sky-700" },
   sistema: { icon: Info, color: "text-gray-600", badge: "bg-gray-100 text-gray-700" },
 };

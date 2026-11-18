@@ -400,7 +400,10 @@ INSERT INTO permisos (codigo, modulo, accion, descripcion) VALUES
     ('config.ver',         'config',    'ver',      'Ver configuración del sistema'),
     ('config.editar',      'config',    'editar',   'Editar configuración'),
     ('chat.usar',          'chat',      'usar',     'Usar el chatbot / asistente'),
-    ('sistema.respaldar',  'sistema',   'respaldar','Generar respaldo de la base de datos')
+    ('sistema.respaldar',  'sistema',   'respaldar','Generar respaldo de la base de datos'),
+    ('mensajes.ver',       'mensajes',  'ver',      'Ver conversaciones del chat con la administración'),
+    ('mensajes.enviar',    'mensajes',  'enviar',   'Enviar mensajes en el chat con la administración'),
+    ('mensajes.gestionar', 'mensajes',  'gestionar','Ver y responder conversaciones de todos los residentes')
 ON CONFLICT (codigo) DO NOTHING;
 
 -- Asignación de permisos por rol (congruente con cada perfil de usuario).
@@ -428,11 +431,12 @@ BEGIN
         'documentos.ver','documentos.descargar','chat.usar')
     ON CONFLICT DO NOTHING;
 
-    -- residente: lectura de su conjunto + crear solicitudes de mantenimiento + chatbot.
+    -- residente: lectura de su conjunto + crear solicitudes de mantenimiento + chatbot + chat con admin.
     INSERT INTO rol_permisos (rol_id, permiso_id)
     SELECT 3, id FROM permisos WHERE codigo IN (
         'dashboard.ver','propiedades.ver','documentos.ver','documentos.descargar',
-        'eventos.ver','mantenimiento.ver','mantenimiento.crear','chat.usar')
+        'eventos.ver','mantenimiento.ver','mantenimiento.crear','chat.usar',
+        'mensajes.ver','mensajes.enviar')
     ON CONFLICT DO NOTHING;
 
     -- seguridad: lectura operativa + reportar/actualizar mantenimientos + chatbot.
@@ -490,6 +494,42 @@ CREATE TABLE IF NOT EXISTS push_suscripciones (
 );
 
 -- ============================================================================
+--  MENSAJERÍA DIRECTA: CHAT RESIDENTE <-> ADMINISTRACIÓN
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS conversaciones_directas (
+    id                   SERIAL PRIMARY KEY,
+    residente_usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    id_conjunto          INTEGER REFERENCES conjuntos(id) ON DELETE SET NULL,
+    asunto               VARCHAR(200) NOT NULL DEFAULT 'Chat con Administración',
+    estado               VARCHAR(20) NOT NULL DEFAULT 'abierta',
+    ultimo_mensaje       TEXT,
+    ultimo_mensaje_en    TIMESTAMP,
+    ultimo_remitente_id  INTEGER,
+    ultimo_remitente_rol VARCHAR(20),
+    fecha_creacion       TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_conv_directa_residente ON conversaciones_directas(residente_usuario_id, id_conjunto);
+CREATE INDEX IF NOT EXISTS idx_conv_directa_ultimo    ON conversaciones_directas(ultimo_mensaje_en DESC);
+
+CREATE TABLE IF NOT EXISTS mensajes_directos (
+    id              SERIAL PRIMARY KEY,
+    conversacion_id INTEGER NOT NULL REFERENCES conversaciones_directas(id) ON DELETE CASCADE,
+    remitente_id    INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    rol_remitente   VARCHAR(20) NOT NULL,
+    contenido       TEXT NOT NULL,
+    adjunto         VARCHAR(500),
+    adjunto_nombre  VARCHAR(255),
+    adjunto_mime    VARCHAR(120),
+    leido           BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_lectura   TIMESTAMP,
+    fecha_creacion  TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mensajes_directos_conv  ON mensajes_directos(conversacion_id, fecha_creacion);
+CREATE INDEX IF NOT EXISTS idx_mensajes_directos_leido ON mensajes_directos(conversacion_id, rol_remitente, leido);
+
+-- ============================================================================
 --  VERIFICACIÓN FINAL
 --  Comprueba que TODAS las tablas quedaron creadas. Si algo falta, el script
 --  termina con un error explícito (y PostgreSQL hará rollback de todo) en vez
@@ -506,7 +546,8 @@ BEGIN
             ('residentes'), ('propiedades'), ('conceptos_financieros'),
             ('movimientos_financieros'), ('tareas_mantenimiento'), ('documentos'),
             ('eventos'), ('configuraciones'), ('sesiones_chat'), ('mensajes_chat'),
-            ('permisos'), ('rol_permisos'), ('notificaciones'), ('push_suscripciones')
+            ('permisos'), ('rol_permisos'), ('notificaciones'), ('push_suscripciones'),
+            ('conversaciones_directas'), ('mensajes_directos')
            ) AS t(nombre)
      WHERE to_regclass('public.' || t.nombre) IS NULL;
 
@@ -514,7 +555,7 @@ BEGIN
         RAISE EXCEPTION 'Base de datos incompleta: faltan las tablas %', faltantes;
     END IF;
 
-    RAISE NOTICE '✔ Base de datos Multi-Administrador lista: 18 tablas, permisos y RBAC.';
+    RAISE NOTICE '✔ Base de datos Multi-Administrador lista: 20 tablas, permisos y RBAC.';
 END $$;
 
 -- ============================================================================

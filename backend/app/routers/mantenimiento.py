@@ -1,6 +1,6 @@
 """Gestión de mantenimiento / órdenes de trabajo."""
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app import schemas
@@ -25,6 +25,7 @@ def _serializar(t: TareaMantenimiento, db: Session) -> dict:
         "estado": t.estado, "asignado_a": t.asignado_a, "costo_estimado": float(t.costo_estimado) if t.costo_estimado else None,
         "fecha_programada": t.fecha_programada, "fecha_completada": t.fecha_completada,
         "fecha_creacion": t.fecha_creacion, "propiedad_desc": prop_desc,
+        "categoria": t.categoria or "unidad", "evidencias": t.evidencias,
     }
 
 
@@ -41,6 +42,7 @@ def crear(data: schemas.TareaCreate, db: Session = Depends(get_db), cid: int = D
     t = TareaMantenimiento(
         propiedad_id=data.propiedad_id, residente_id=data.residente_id,
         titulo=data.titulo, descripcion=data.descripcion, prioridad=data.prioridad,
+        categoria=data.categoria, evidencias=data.evidencias,
         estado=data.estado, asignado_a=data.asignado_a, costo_estimado=data.costo_estimado,
         fecha_programada=data.fecha_programada, id_conjunto=cid,
     )
@@ -68,6 +70,8 @@ def actualizar(tarea_id: int, data: schemas.TareaCreate, db: Session = Depends(g
     t.titulo = data.titulo
     t.descripcion = data.descripcion
     t.prioridad = data.prioridad
+    t.categoria = data.categoria
+    t.evidencias = data.evidencias
     t.estado = data.estado
     t.asignado_a = data.asignado_a
     t.costo_estimado = data.costo_estimado
@@ -89,3 +93,45 @@ def eliminar(tarea_id: int, db: Session = Depends(get_db), cid: int = Depends(co
     db.commit()
     cache_del("dashboard_stats")
     return None
+
+
+# ---------------------------------------------------------------------------
+# Evidencias fotográficas de un daño / novedad (UH-21)
+# ---------------------------------------------------------------------------
+@router.post("/evidencia", dependencies=[Depends(require_permiso("mantenimiento.crear"))])
+def subir_evidencia(archivo: UploadFile = File(...)):
+    """Guarda una foto del daño y devuelve su nombre para adjuntarla al reporte."""
+    import os
+    import secrets
+
+    from fastapi import HTTPException
+
+    archivos_dir = os.getenv("ARCHIVOS_DIR", "./archivos_documentos")
+    os.makedirs(archivos_dir, exist_ok=True)
+
+    ext = os.path.splitext(os.path.basename(archivo.filename or "foto"))[1].lower()
+    if ext not in {".png", ".jpg", ".jpeg", ".webp", ".pdf"}:
+        raise HTTPException(status_code=400, detail="Adjunta una imagen (PNG/JPG/WEBP) o un PDF.")
+    nombre = f"evidencia-{secrets.token_hex(8)}{ext}"
+    destino = os.path.join(archivos_dir, nombre)
+    with open(destino, "wb") as out:
+        out.write(archivo.file.read())
+    if os.path.getsize(destino) > 10 * 1024 * 1024:
+        os.remove(destino)
+        raise HTTPException(status_code=400, detail="La imagen supera el máximo de 10 MB.")
+    return {"nombre": nombre, "url": f"/mantenimiento/evidencias/{nombre}"}
+
+
+@router.get("/evidencias/{nombre}", dependencies=[Depends(require_permiso("mantenimiento.ver"))])
+def ver_evidencia(nombre: str):
+    """Sirve una evidencia guardada (sólo usuarios con permiso de mantenimiento)."""
+    import os
+
+    from fastapi import HTTPException
+    from fastapi.responses import FileResponse
+
+    archivos_dir = os.getenv("ARCHIVOS_DIR", "./archivos_documentos")
+    ruta = os.path.join(archivos_dir, os.path.basename(nombre))
+    if not os.path.exists(ruta):
+        raise HTTPException(status_code=404, detail="La evidencia ya no existe.")
+    return FileResponse(ruta)

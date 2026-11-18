@@ -23,6 +23,18 @@ import { MapPin, Phone, Mail, UserCog, DollarSign, CalendarClock, Moon } from "l
 import { tienePermiso } from "@/lib/permisos";
 import type { DashboardStats, Movimiento } from "@/types";
 import logoUrl from "@/lib/logo";
+import { Link } from "react-router-dom";
+import {
+  MessageSquareWarning,
+  Megaphone,
+  CreditCard,
+  Vote,
+  ClipboardCheck,
+  DoorOpen,
+  ShieldCheck,
+  Scale,
+  MessageCircleMore,
+} from "lucide-react";
 
 export default function Inicio() {
   const { usuario } = useAuth();
@@ -217,6 +229,15 @@ export default function Inicio() {
         <div className="card">
           <h3 className="text-lg font-bold text-gray-900 mb-3">Dónde encontrar cada cosa</h3>
           <ul className="text-sm text-gray-500 space-y-2">
+            {ve("mensajes") && (<li className="flex items-center gap-2">
+              <MessageCircleMore className="w-4 h-4 text-primary-500 shrink-0" />
+              <span>
+                Chatea directamente con la administración en{" "}
+                <Link to="/dashboard/mensajes" className="font-semibold text-primary-600 hover:underline">
+                  Chat con Admin
+                </Link>.
+              </span>
+            </li>)}
             {ve("eventos") && (<li className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-primary-500" /> Eventos y novedades del conjunto en "Eventos".
             </li>)}

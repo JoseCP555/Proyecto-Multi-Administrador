@@ -6,7 +6,10 @@ from jose import jwt, JWTError
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 horas
+# UH-27: la sesión expira a los 30 minutos de inactividad. El frontend además
+# cierra la sesión tras 30 min sin actividad del usuario y el backend firma el
+# token con esta misma vigencia (configurable con SESSION_EXPIRE_MINUTES).
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("SESSION_EXPIRE_MINUTES", "30"))
 
 if not SECRET_KEY:
     raise Exception("❌ SECRET_KEY no cargada. Revisa tu archivo .env")

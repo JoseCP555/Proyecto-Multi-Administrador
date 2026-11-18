@@ -123,6 +123,7 @@ def serializar(db: Session, c: Conjunto, metricas: dict | None = None) -> dict:
         "silencio": c.silencio,
         "logo": c.logo,
         "color": c.color,
+        "umbral_gasto": float(c.umbral_gasto) if c.umbral_gasto is not None else 2000000.0,
         "activo": bool(c.activo),
         "fecha_creacion": c.fecha_creacion,
         "propiedades": m.get("propiedades", 0),
@@ -187,6 +188,7 @@ def crear(data: schemas.ConjuntoCreate, db: Session = Depends(get_db)):
         color=normalizar_color(data.color) or sugerir_color(
             db.query(Conjunto).count()
         ),
+        umbral_gasto=data.umbral_gasto if data.umbral_gasto is not None else 2000000,
         activo=True if data.activo is None else data.activo,
         fecha_creacion=datetime.utcnow(),
     )
@@ -224,7 +226,7 @@ def actualizar(
 
     for campo in ("nombre", "nit", "direccion", "ciudad", "telefono", "correo",
                   "administrador", "habitantes", "cuota", "dia_cobro",
-                  "reunion", "silencio", "logo", "activo"):
+                  "reunion", "silencio", "logo", "umbral_gasto", "activo"):
         valor = getattr(data, campo, None)
         # El frontend envía "" cuando el usuario quitó el logo; en ese caso
         # hay que borrarlo en vez de ignorarlo como un campo no enviado.

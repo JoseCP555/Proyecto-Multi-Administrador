@@ -16,12 +16,28 @@
   }
   html {
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
   }
   body {
     @apply text-gray-800 antialiased;
     font-family: "Inter", "Poppins", system-ui, sans-serif;
     background: linear-gradient(135deg, #E8E0FF 0%, #D6CCFA 50%, #C5B8F5 100%);
-    background-attachment: fixed;
+    min-height: 100dvh;
+    touch-action: manipulation;
+  }
+  @media (min-width: 768px) {
+    body {
+      background-attachment: fixed;
+    }
+  }
+  /* Evita el auto-zoom molesto de Safari en iPhone al tocar campos de texto. */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 }
 

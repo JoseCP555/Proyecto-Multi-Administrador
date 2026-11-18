@@ -14,6 +14,7 @@ export const ROL_ADMIN = 2;
 export const ROL_RESIDENTE = 3;
 export const ROL_TESORERIA = 4;
 export const ROL_SEGURIDAD = 5;
+export const ROL_CONSEJO = 6;
 
 /** Catálogo de roles asignables desde la UI (id → etiqueta). */
 export const ROLES_UI: { id: number; label: string }[] = [
@@ -22,6 +23,7 @@ export const ROLES_UI: { id: number; label: string }[] = [
   { id: ROL_RESIDENTE, label: "Residente" },
   { id: ROL_TESORERIA, label: "Tesorería" },
   { id: ROL_SEGURIDAD, label: "Seguridad" },
+  { id: ROL_CONSEJO, label: "Consejo de administración" },
 ];
 
 /**

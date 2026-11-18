@@ -12,12 +12,24 @@ import {
   CalendarDays,
   LogOut,
   MessagesSquare,
+  MessageCircleMore,
   Settings,
+  MessageSquareWarning,
+  CalendarClock,
+  Megaphone,
+  DoorOpen,
+  CreditCard,
+  Vote,
+  ClipboardCheck,
+  ShieldCheck,
+  UserCog,
+  Scale,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { puedeVerModulo, tienePermiso } from "@/lib/permisos";
 import logoUrl from "@/lib/logo";
 import { useConjunto } from "@/context/ConjuntoContext";
+import { useMensajesNoLeidos } from "@/hooks/useMensajesNoLeidos";
 
 // Ítems del menú (estilo exacto del dashboard). Cada uno declara el permiso
 // (módulo) necesario para VERLO; se filtran según el rol del usuario (RBAC).
@@ -27,6 +39,7 @@ interface ItemMenu {
   icon: typeof LayoutDashboard;
   end?: boolean;
   modulo?: string;
+  badge?: number;
 }
 const items: ItemMenu[] = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard, end: true, modulo: "dashboard" as const },
@@ -38,11 +51,20 @@ const items: ItemMenu[] = [
   { label: "Mantenimiento", path: "/dashboard/mantenimiento", icon: Wrench, modulo: "mantenimiento" as const },
   { label: "Documentos", path: "/dashboard/documentos", icon: FileText, modulo: "documentos" as const },
   { label: "Eventos", path: "/dashboard/eventos", icon: CalendarDays, modulo: "eventos" as const },
+  // Historias de usuario UH-09 a UH-32 (se filtran por permisos del rol).
+  { label: "PQRS", path: "/dashboard/pqrs", icon: MessageSquareWarning, modulo: "pqrs" as const },
+  { label: "Reservas", path: "/dashboard/reservas", icon: CalendarClock, modulo: "reservas" as const },
+  { label: "Comunicados", path: "/dashboard/comunicados", icon: Megaphone, modulo: "comunicados" as const },
+  { label: "Pagos", path: "/dashboard/pagos", icon: CreditCard, modulo: "pagos" as const },
+  { label: "Visitantes", path: "/dashboard/visitantes", icon: DoorOpen, modulo: "visitantes" as const },
+  { label: "Votaciones", path: "/dashboard/votaciones", icon: Vote, modulo: "votaciones" as const },
+  { label: "Aprobaciones", path: "/dashboard/aprobaciones", icon: ClipboardCheck, modulo: "aprobaciones" as const },
 ];
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
   const { usuario, logout } = useAuth();
   const { conjuntos } = useConjunto();
+  const { noLeidos: mensajesNoLeidos } = useMensajesNoLeidos();
   const navigate = useNavigate();
 
   // Solo se muestran los módulos para los que el rol tiene el permiso <modulo>.ver.
@@ -56,13 +78,35 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}
       (i.path !== "/dashboard" || conjuntos.length > 1),
   );
 
+  // Chat directo entre residentes y administración.
+  if (puedeVerModulo(usuario, "mensajes")) {
+    const esGestor = tienePermiso(usuario, "mensajes.gestionar");
+    itemsVisibles.push({
+      label: esGestor ? "Chat residentes" : "Chat con Admin",
+      path: "/dashboard/mensajes",
+      icon: MessageCircleMore,
+      badge: mensajesNoLeidos,
+    });
+  }
   // El historial de chat solo es visible si el rol tiene el permiso chat.usar.
   if (tienePermiso(usuario, "chat.usar")) {
     itemsVisibles.push({ label: "Chat asistente", path: "/dashboard/chat", icon: MessagesSquare });
   }
+  // Panel del consejo (actas + reportes) para quien puede ver reportes.
+  if (tienePermiso(usuario, "reportes.ver")) {
+    itemsVisibles.push({ label: "Consejo", path: "/dashboard/consejo", icon: Scale });
+  }
+  // Auditoría solo para quien tiene auditoria.ver (UH-29).
+  if (tienePermiso(usuario, "auditoria.ver")) {
+    itemsVisibles.push({ label: "Auditoría", path: "/dashboard/auditoria", icon: ShieldCheck });
+  }
   // Configuración solo es visible si el rol puede verla (config.ver).
   if (tienePermiso(usuario, "config.ver")) {
     itemsVisibles.push({ label: "Configuración", path: "/dashboard/configuracion", icon: Settings });
+  }
+  // Mi perfil (UH-20).
+  if (tienePermiso(usuario, "perfil.ver")) {
+    itemsVisibles.push({ label: "Mi perfil", path: "/dashboard/perfil", icon: UserCog });
   }
 
   // Cierra sesión en el backend (revoca el token en Redis) y limpia el cliente.
@@ -77,7 +121,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}
   };
 
   return (
-    <aside className="w-[250px] bg-dark-100 text-white flex flex-col min-h-screen lg:min-h-full lg:sticky lg:top-0 lg:h-screen lg:max-h-screen">
+    <aside className="w-[260px] max-w-[85vw] bg-dark-100 text-white flex flex-col h-[100dvh] lg:min-h-full lg:sticky lg:top-0 lg:h-screen lg:max-h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {/* Logo */}
       <div className="px-6 pt-7 pb-5 flex items-center gap-3">
         <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center overflow-hidden shrink-0">
@@ -106,7 +150,12 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void } = {}
             }
           >
             <item.icon className="w-5 h-5 shrink-0" />
-            <span>{item.label}</span>
+            <span className="flex-1 truncate">{item.label}</span>
+            {!!item.badge && item.badge > 0 && (
+              <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

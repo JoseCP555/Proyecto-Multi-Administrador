@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, User, Bot, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
-import type { ChatRespuesta, ChatMensaje } from "@/types";
+import type { ChatRespuesta, ChatMensaje, ChatEstado } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { usePermisos } from "@/lib/usePermisos";
 
@@ -34,11 +34,21 @@ export default function ChatWidget() {
   ]);
   const [texto, setTexto] = useState("");
   const [escribiendo, setEscribiendo] = useState(false);
+  const [estadoMotor, setEstadoMotor] = useState<ChatEstado | null>(null);
   const [sesionId, setSesionId] = useState<number | undefined>(() => {
     const raw = localStorage.getItem(SESSION_KEY);
     return raw ? Number(raw) : undefined;
   });
   const finRef = useRef<HTMLDivElement>(null);
+
+  // Al abrir el widget, consulta si Ollama está conectado y qué modelo usa.
+  useEffect(() => {
+    if (!abierto || !token) return;
+    api
+      .get<ChatEstado>("/chat/estado")
+      .then((est) => setEstadoMotor(est))
+      .catch(() => setEstadoMotor(null));
+  }, [abierto, token]);
 
   // Al abrir, si existe una sesión guardada, restaura su historial.
   useEffect(() => {
@@ -120,7 +130,7 @@ export default function ChatWidget() {
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setAbierto(true)}
-          className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary-500 text-white shadow-lg flex items-center justify-center"
+          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 w-14 h-14 rounded-full bg-primary-500 text-white shadow-lg flex items-center justify-center mb-[env(safe-area-inset-bottom)] md:mb-0"
           aria-label="Abrir chat"
         >
           <MessageCircle className="w-6 h-6" />
@@ -134,7 +144,7 @@ export default function ChatWidget() {
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-40 w-[94vw] max-w-sm h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+            className="fixed inset-x-3 bottom-3 sm:inset-auto sm:bottom-6 sm:right-6 z-50 sm:w-full sm:max-w-sm h-[min(520px,calc(100dvh-5rem))] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 pb-[env(safe-area-inset-bottom)] sm:pb-0"
           >
             {/* Encabezado */}
             <div className="bg-dark-100 text-white px-4 py-3 flex items-center justify-between">
@@ -144,9 +154,6 @@ export default function ChatWidget() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Asistente Multi-Admin</p>
-                  <p className="text-[11px] text-emerald-400 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> En línea
-                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -213,7 +220,10 @@ export default function ChatWidget() {
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                   <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2 text-sm text-gray-400">
-                    Escribiendo<span className="animate-pulse">...</span>
+                    {estadoMotor?.ollama_disponible && estadoMotor.modelo_instalado
+                      ? "Pensando con Ollama"
+                      : "Escribiendo"}
+                    <span className="animate-pulse">...</span>
                   </div>
                 </div>
               )}

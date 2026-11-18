@@ -1,4 +1,4 @@
-"""Rutas del chatbot: sesiones, historial y generación de respuestas."""
+"""Rutas del chatbot: estado de Ollama, sesiones, historial y respuestas."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -7,6 +7,7 @@ from app.models import SesionChat, MensajeChat
 from app.database import get_db
 from app.deps import require_permiso, get_current_user, usuario_tiene_permiso
 from app.conjunto_ctx import conjunto_activo, filtrar
+from app.ollama_client import estado_ollama
 
 router = APIRouter(prefix="/chat", tags=["Chatbot"], dependencies=[Depends(require_permiso("chat.usar"))])
 
@@ -21,6 +22,35 @@ def _serializar_m(m: MensajeChat) -> dict:
 def _puede_ver_sesion(db: Session, usuario, sesion: SesionChat) -> bool:
     """Cada usuario ve solo sus sesiones; quien gestiona usuarios ve todas."""
     return sesion.usuario_id == usuario.id or usuario_tiene_permiso(db, usuario, "usuarios.ver")
+
+
+@router.get("/estado")
+def estado_chatbot(db: Session = Depends(get_db)):
+    """Informa el motor configurado (`ollama` o `local`) y el estado real de Ollama."""
+    motor, modelo = chatbot.obtener_config_chatbot(db)
+    if motor == "local":
+        return {
+            "motor_configurado": "local",
+            "ollama_disponible": False,
+            "ollama_version": None,
+            "ollama_url": None,
+            "modelo": None,
+            "modelo_instalado": False,
+            "modelos_disponibles": [],
+            "detalle": "Motor local por reglas activo.",
+        }
+
+    info = estado_ollama(modelo=modelo)
+    return {
+        "motor_configurado": "ollama",
+        "ollama_disponible": info["disponible"],
+        "ollama_version": info["version"],
+        "ollama_url": info["url"],
+        "modelo": info["modelo"],
+        "modelo_instalado": info["modelo_instalado"],
+        "modelos_disponibles": info["modelos_disponibles"],
+        "detalle": info["detalle"],
+    }
 
 
 @router.get("/sesiones")
@@ -58,7 +88,7 @@ def ask(
     db: Session = Depends(get_db),
     cid: int = Depends(conjunto_activo),
 ):
-    """Recibe un mensaje, lo guarda y devuelve la respuesta del asistente."""
+    """Recibe un mensaje, lo guarda y devuelve la respuesta del asistente (Ollama + respaldo local)."""
     if not data.mensaje.strip():
         raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío.")
 
@@ -68,18 +98,30 @@ def ask(
             raise HTTPException(status_code=404, detail="Sesión no encontrada.")
         if not _puede_ver_sesion(db, usuario, sesion):
             raise HTTPException(status_code=403, detail="No puedes escribir en esta conversación.")
+        previos = (
+            db.query(MensajeChat)
+            .filter(MensajeChat.sesion_id == sesion.id)
+            .order_by(MensajeChat.fecha_creacion.asc(), MensajeChat.id.asc())
+            .all()
+        )
+        historial = [(m.rol, m.contenido) for m in previos[-10:]]
     else:
         sesion = chatbot.crear_sesion(db, usuario_id=usuario.id, id_conjunto=cid)
+        historial = []
 
     # Guardar mensaje del usuario
     chatbot.guardar_mensaje(db, sesion.id, "usuario", data.mensaje)
 
-    # Generar respuesta (motor local basado en la BD)
-    respuesta = chatbot.responder(
-        db, data.mensaje,
+    # Generar respuesta (Ollama con contexto RBAC del conjunto o respaldo local)
+    resultado = chatbot.responder_con_detalle(
+        db,
+        data.mensaje,
         permisos=crud.obtener_permisos_rol(db, usuario.rol_id),
         id_conjunto=cid,
+        historial=historial,
+        usuario=usuario,
     )
+    respuesta = resultado["respuesta"] or ""
     chatbot.cambiar_titulo_si_necesario(db, sesion.id, data.mensaje)
 
     # Guardar respuesta del asistente
@@ -88,5 +130,7 @@ def ask(
     return {
         "sesion_id": sesion.id,
         "respuesta": respuesta,
+        "motor_usado": resultado["motor_usado"],
+        "modelo": resultado["modelo"],
         "mensaje": _serializar_m(mensaje_resp),
     }

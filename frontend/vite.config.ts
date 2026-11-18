@@ -20,6 +20,7 @@ export default defineConfig({
         // El backend local (uvicorn) corre en 8000; 8041 era un puerto viejo.
         target: process.env.VITE_API_PROXY || "http://localhost:8000",
         changeOrigin: true,
+        ws: true,
         rewrite: (p) => p.replace(/^\/api/, "")
       }
     }

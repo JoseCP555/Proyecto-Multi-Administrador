@@ -1,25 +1,105 @@
 """Envío de correos transaccionales (verificación de cuenta y recuperación de contraseña).
 
-Usa fastapi-mail con las credenciales SMTP del .env. Si no hay SMTP configurado
-o el envío falla, se registra el error y se informa (nunca se expone el enlace).
+Construye el mensaje con la librería estándar (`EmailMessage`) y lo envía con
+aiosmtplib, para controlar todas las cabeceras que influyen en la entregabilidad
+(From con nombre, Reply-To, Message-ID propio del dominio, Date, Auto-Submitted,
+multipart/alternative texto+HTML). Si no hay SMTP configurado o el envío falla,
+se registra el error y se informa (nunca se expone el enlace).
 """
 import asyncio
+from contextvars import ContextVar
 import logging
 import os
+import ssl
 from datetime import datetime
+from email.message import EmailMessage
+from email.utils import formataddr, formatdate, make_msgid
+from urllib.parse import urlparse
 
-from fastapi_mail import FastMail, MessageSchema, MessageType
+import aiosmtplib
 
-from app.email_config import conf, mail_configurado
+from app.email_config import (
+    EMAIL_PASSWORD,
+    EMAIL_USER,
+    MAIL_AUTH,
+    MAIL_FROM,
+    MAIL_FROM_NAME,
+    MAIL_PORT,
+    MAIL_SERVER,
+    MAIL_SSL_CERTS,
+    MAIL_SSL_TLS,
+    MAIL_STARTTLS,
+    MAIL_TIMEOUT,
+    mail_configurado,
+)
 
 logger = logging.getLogger(__name__)
 
 APP = "Multi-Administrador"
 AZUL = "#2563EB"
 
+# Origen real detectado desde las peticiones HTTP del navegador (permite que los
+# correos abran la app aunque FRONTEND_URL siga en localhost y se use LAN/túnel).
+_origen_peticion_actual: ContextVar[str] = ContextVar("ma_origen_frontend", default="")
+_ultimo_origen_publico: str = ""
+
+
+def _normalizar_origen(url: str | None) -> str:
+    crudo = (url or "").strip()
+    if not crudo:
+        return ""
+    parsed = urlparse(crudo)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return ""
+    return f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+
+
+def es_url_local(url: str | None) -> bool:
+    parsed = urlparse((url or "").strip())
+    host = (parsed.hostname or "").lower()
+    return host in ("", "localhost", "127.0.0.1", "0.0.0.0", "::1")
+
+
+def registrar_origen_frontend(url: str | None):
+    """Guarda el origen del navegador durante la petición actual y recuerda
+    el último origen accesible desde red/Internet (IP LAN o dominio HTTPS)."""
+    global _ultimo_origen_publico
+    limpio = _normalizar_origen(url)
+    token = _origen_peticion_actual.set(limpio)
+    if limpio and not es_url_local(limpio):
+        _ultimo_origen_publico = limpio
+    return token
+
+
+def restaurar_origen_frontend(token) -> None:
+    try:
+        _origen_peticion_actual.reset(token)
+    except Exception:  # noqa: BLE001
+        pass
+
 
 def frontend_url() -> str:
-    return os.getenv("FRONTEND_URL", "http://localhost:3000").strip().rstrip("/")
+    """Devuelve la URL base del frontend para los enlaces de correo.
+
+    Prioridad:
+    1. `FRONTEND_URL` si apunta a una dirección real (IP de red o dominio HTTPS).
+    2. Origen real del navegador en la petición actual (ej. `http://192.168.1.34:3000`
+       o `https://xxx.trycloudflare.com`).
+    3. Último origen público/LAN conocido (útil para avisos en segundo plano).
+    4. Origen local de la petición actual (ej. `http://localhost:5173`).
+    5. `FRONTEND_URL` configurado o `http://localhost:3000`.
+    """
+    env_url = _normalizar_origen(os.getenv("FRONTEND_URL", "http://localhost:3000"))
+    if env_url and not es_url_local(env_url):
+        return env_url
+    actual = _origen_peticion_actual.get()
+    if actual and not es_url_local(actual):
+        return actual
+    if _ultimo_origen_publico:
+        return _ultimo_origen_publico
+    if actual:
+        return actual
+    return env_url or "http://localhost:3000"
 
 
 def _bloque_codigo(codigo: str) -> str:
@@ -46,13 +126,17 @@ def _plantilla(titulo: str, saludo: str, cuerpo: str, boton: str, link: str, pie
         <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.55;">{cuerpo}</p>
         {_bloque_codigo(codigo) if codigo else ""}
         <table cellpadding="0" cellspacing="0" style="margin-top:22px;"><tr><td style="border-radius:999px;background:{AZUL};">
-          <a href="{link}" style="display:inline-block;padding:14px 28px;color:#fff;text-decoration:none;font-weight:700;font-size:15px;border-radius:999px;">{boton}</a>
+          <a href="{link}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:14px 28px;color:#fff;text-decoration:none;font-weight:700;font-size:15px;border-radius:999px;">{boton}</a>
         </td></tr></table>
         <p style="margin:24px 0 0;font-size:12px;color:#6B7280;line-height:1.5;">
           Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
-          <a href="{link}" style="color:{AZUL};word-break:break-all;">{link}</a>
+          <a href="{link}" target="_blank" rel="noopener noreferrer" style="color:{AZUL};word-break:break-all;">{link}</a>
         </p>
         <p style="margin:20px 0 0;font-size:12px;color:#9CA3AF;">{pie}</p>
+        <p style="margin:8px 0 0;font-size:11px;color:#B0B7C3;line-height:1.5;">
+          Recibes este mensaje porque tienes una cuenta en {APP}. Si no reconoces esta
+          actividad, ignóralo o escríbenos respondiendo a este correo.
+        </p>
       </td></tr>
       <tr><td style="padding:16px 32px;background:#F9FAFB;font-size:11px;color:#9CA3AF;text-align:center;">
         © {datetime.now().year} {APP} · Gestión de copropiedades
@@ -70,22 +154,66 @@ DOMINIOS_PRUEBA = {
 }
 
 
+# Dominios que nunca reciben correo: los de prueba y el de las cuentas demo del
+# seed (`residente@multiadmin.com`), para no generar rebotes en la cuenta remitente.
+DOMINIOS_SIN_ENVIO = set(DOMINIOS_PRUEBA) | {"multiadmin.com"}
+
+
+def envio_deshabilitado() -> bool:
+    """Interruptor para pruebas automatizadas: no se envía ningún correo real."""
+    return os.getenv("CORREO_DESHABILITADO", "").strip().lower() in ("1", "true", "yes", "si", "sí")
+
+
 async def _enviar(destinatario: str, asunto: str, html: str, texto: str) -> dict:
-    if destinatario.rsplit("@", 1)[-1].lower() in DOMINIOS_PRUEBA:
-        logger.info("[correo] '%s' a %s omitido (dominio de prueba)", asunto, destinatario)
+    dominio = destinatario.rsplit("@", 1)[-1].lower()
+    if dominio in DOMINIOS_SIN_ENVIO:
+        logger.info("[correo] '%s' a %s omitido (dominio sin envío: %s)", asunto, destinatario, dominio)
+        return {"enviado": True, "omitido": True}
+    if envio_deshabilitado():
+        logger.info("[correo] '%s' a %s omitido (CORREO_DESHABILITADO)", asunto, destinatario)
         return {"enviado": True, "omitido": True}
     if not mail_configurado():
         logger.error("[correo] SMTP no configurado; no se envió '%s'. Configura EMAIL_USER/EMAIL_PASSWORD.", asunto)
         return {"enviado": False, "error": "SMTP no configurado"}
-    mensaje = MessageSchema(
-        subject=asunto,
-        recipients=[destinatario],
-        body=html,
-        alternative_body=texto,
-        subtype=MessageType.html,
+    # Mensaje MIME con texto plano + HTML y todas las cabeceras que revisan los
+    # filtros antispam: From con nombre visible, Reply-To real, Message-ID propio
+    # del dominio del remitente, Date y Auto-Submitted (evita respuestas
+    # automáticas). Un mensaje bien formado reduce la probabilidad de spam.
+    dominio_remitente = (MAIL_FROM.split("@")[-1] or "multiadmin.local").strip("> ")
+    mensaje = EmailMessage()
+    mensaje["From"] = formataddr((MAIL_FROM_NAME, MAIL_FROM))
+    mensaje["To"] = destinatario
+    mensaje["Subject"] = asunto
+    mensaje["Date"] = formatdate(localtime=True)
+    mensaje["Message-ID"] = make_msgid(domain=dominio_remitente)
+    mensaje["Reply-To"] = formataddr((MAIL_FROM_NAME, MAIL_FROM))
+    mensaje["X-Mailer"] = f"{APP} (SMTP)"
+    mensaje["Auto-Submitted"] = "auto-generated"
+    mensaje["X-Auto-Response-Suppress"] = "All"
+    mensaje.set_content(texto, subtype="plain", charset="utf-8")
+    mensaje.add_alternative(html, subtype="html", charset="utf-8")
+
+    contexto = ssl.create_default_context()
+    if not MAIL_SSL_CERTS:
+        contexto.check_hostname = False
+        contexto.verify_mode = ssl.CERT_NONE
+    parametros = dict(
+        hostname=MAIL_SERVER,
+        port=MAIL_PORT,
+        timeout=MAIL_TIMEOUT,
+        tls_context=contexto,
+        validate_certs=MAIL_SSL_CERTS,
     )
+    if MAIL_SSL_TLS:
+        parametros["use_tls"] = True
+    else:
+        parametros["start_tls"] = MAIL_STARTTLS
+    if MAIL_AUTH:
+        parametros["username"] = EMAIL_USER
+        parametros["password"] = EMAIL_PASSWORD
+
     try:
-        await asyncio.wait_for(FastMail(conf).send_message(mensaje), timeout=30)
+        await asyncio.wait_for(aiosmtplib.send(mensaje, **parametros), timeout=MAIL_TIMEOUT + 10)
         logger.info("[correo] '%s' enviado a %s", asunto, destinatario)
         return {"enviado": True}
     except Exception as error:  # noqa: BLE001

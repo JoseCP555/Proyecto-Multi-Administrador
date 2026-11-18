@@ -4,7 +4,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import type { ChatRespuesta, ChatMensaje } from "@/types";
+import type { ChatRespuesta, ChatMensaje, ChatEstado } from "@/types";
 
 interface Sesion {
   id: number;
@@ -23,7 +23,17 @@ export default function ChatSesiones() {
   const [texto, setTexto] = useState("");
   const [escribiendo, setEscribiendo] = useState(false);
   const [cargando, setCargando] = useState(false);
+  const [estadoMotor, setEstadoMotor] = useState<ChatEstado | null>(null);
   const finRef = useRef<HTMLDivElement>(null);
+
+  const cargarEstado = async () => {
+    try {
+      const est = await api.get<ChatEstado>("/chat/estado");
+      setEstadoMotor(est);
+    } catch {
+      setEstadoMotor(null);
+    }
+  };
 
   const cargarSesiones = async () => {
     setCargando(true);
@@ -50,6 +60,7 @@ export default function ChatSesiones() {
 
   useEffect(() => {
     cargarSesiones();
+    cargarEstado();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -84,14 +95,45 @@ export default function ChatSesiones() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-gray-900">Historial del asistente</h2>
-          <p className="text-sm text-gray-500">Conversaciones guardadas del chatbot con los datos del conjunto.</p>
+          <p className="text-sm text-gray-500">Conversaciones guardadas del chatbot con IA (Ollama) y datos reales del conjunto.</p>
         </div>
-        <Button variante="outline" tamano="sm" onClick={cargarSesiones}>
-          <RefreshCw className="w-4 h-4" /> Actualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          {estadoMotor && (
+            <span
+              title={estadoMotor.detalle}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${
+                estadoMotor.ollama_disponible && estadoMotor.modelo_instalado
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : estadoMotor.ollama_disponible
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : "bg-gray-50 text-gray-600 border-gray-200"
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  estadoMotor.ollama_disponible && estadoMotor.modelo_instalado
+                    ? "bg-emerald-500"
+                    : estadoMotor.ollama_disponible
+                      ? "bg-amber-500 animate-pulse"
+                      : "bg-gray-400"
+                }`}
+              />
+              {estadoMotor.ollama_disponible && estadoMotor.modelo_instalado
+                ? `Ollama${estadoMotor.ollama_version ? ` v${estadoMotor.ollama_version}` : ""} · ${estadoMotor.modelo}`
+                : estadoMotor.ollama_disponible
+                  ? `Preparando ${estadoMotor.modelo}`
+                  : estadoMotor.motor_configurado === "ollama"
+                    ? "Respaldo local (Ollama desconectado)"
+                    : "Motor local"}
+            </span>
+          )}
+          <Button variante="outline" tamano="sm" onClick={() => { cargarSesiones(); cargarEstado(); }}>
+            <RefreshCw className="w-4 h-4" /> Actualizar
+          </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5">

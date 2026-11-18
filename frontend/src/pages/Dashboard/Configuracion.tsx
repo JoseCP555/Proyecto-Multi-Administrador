@@ -4,7 +4,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { useFetch } from "@/hooks/useFetch";
 import { usePermisos } from "@/lib/usePermisos";
-import { api } from "@/lib/api";
+import { api, API_BASE } from "@/lib/api";
 import { descargarArchivo } from "@/lib/download";
 
 interface ConfItem {
@@ -14,7 +14,7 @@ interface ConfItem {
   descripcion?: string;
 }
 
-const BASE = import.meta.env.VITE_API_URL || "/api";
+const BASE = API_BASE;
 
 // Configuración global + respaldo de base de datos (solo administradores).
 export default function Configuracion() {

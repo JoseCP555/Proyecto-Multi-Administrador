@@ -40,6 +40,8 @@ class Conjunto(Base):
     # Color del tema: id de paleta ("azul", "verde", ...) o hexadecimal
     # "#RRGGBB". NULL = automático según la posición en la lista.
     color = Column(String(20))
+    # UH-26: umbral de gasto que dispara la alerta al consejo.
+    umbral_gasto = Column(Numeric(12, 2), default=2000000)
     activo = Column(Boolean, default=True, nullable=False, server_default="true")
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
@@ -98,6 +100,9 @@ class Usuario(Base):
     # campana del dashboard). Por defecto ambos canales activados.
     notificaciones_correo = Column(Boolean, default=True, nullable=False, server_default="true")
     notificaciones_push = Column(Boolean, default=True, nullable=False, server_default="true")
+
+    # Foto de perfil (data URI o URL) — UH-20.
+    foto = Column(Text, nullable=True)
 
     rol = relationship("Rol", back_populates="usuarios")
 
@@ -205,6 +210,9 @@ class TareaMantenimiento(Base):
     residente_id = Column(Integer, ForeignKey("residentes.id"), nullable=True)
     titulo = Column(String(150), nullable=False)
     descripcion = Column(Text, nullable=False)
+    # UH-21: reportar daños/novedades en zonas comunes con fotos.
+    categoria = Column(String(30), default="unidad")  # zona_comun | unidad | otro
+    evidencias = Column(Text)                          # nombres de archivo separados por coma
     prioridad = Column(String(20), default="media")  # baja | media | alta | critica
     estado = Column(String(30), default="pendiente")  # pendiente | en_proceso | completada | rechazada
     asignado_a = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
@@ -246,7 +254,11 @@ class Evento(Base):
     titulo = Column(String(150), nullable=False)
     descripcion = Column(Text)
     fecha = Column(Date, nullable=False)
+    hora = Column(String(5))            # HH:MM (UH-04)
+    tipo = Column(String(30), default="actividad")  # asamblea | reunion | actividad | mantenimiento
     lugar = Column(String(150))
+    # Evita repetir el aviso de "faltan menos de 48 horas" (UH-01).
+    notificado_48h = Column(Boolean, default=False, nullable=False, server_default="false")
     creado_por = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
@@ -337,3 +349,270 @@ class PushSuscripcion(Base):
     auth = Column(Text, nullable=False)
     activa = Column(Boolean, default=True, nullable=False, server_default="true")
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+# ===========================================================================
+# MÓDULOS DE LAS HISTORIAS DE USUARIO UH-09 a UH-32
+# ===========================================================================
+# Todas las tablas llevan `id_conjunto` para respetar el aislamiento entre
+# copropiedades (HU-07) y se crean de forma aditiva: `create_all` y las
+# migraciones ligeras de `main.py` las añaden a una base ya existente.
+# ---------------------------------------------------------------------------
+
+
+class Pqrs(Base):
+    """PQRS: petición, queja, reclamo o sugerencia (UH-09 / UH-16 / UH-32)."""
+
+    __tablename__ = "pqrs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    radicado = Column(String(30), unique=True, nullable=False, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True, index=True)
+    residente_id = Column(Integer, ForeignKey("residentes.id", ondelete="SET NULL"), nullable=True)
+    tipo = Column(String(20), nullable=False)          # peticion | queja | reclamo | sugerencia
+    categoria = Column(String(40), nullable=False)     # zonas_comunes | administracion | convivencia | finanzas | otra
+    asunto = Column(String(200), nullable=False)
+    descripcion = Column(Text, nullable=False)
+    adjunto = Column(String(500))                      # ruta del archivo opcional
+    estado = Column(String(20), default="pendiente", nullable=False)  # pendiente | en_proceso | cerrada
+    respuesta = Column(Text)
+    respondido_por = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    fecha_respuesta = Column(DateTime)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ZonaComun(Base):
+    """Zona común reservable: salón, BBQ, piscina, cancha, etc. (UH-10 / UH-14)."""
+
+    __tablename__ = "zonas_comunes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(120), nullable=False)
+    descripcion = Column(Text)
+    capacidad = Column(Integer, default=20)
+    hora_apertura = Column(String(5), default="08:00")   # HH:MM
+    hora_cierre = Column(String(5), default="22:00")
+    requiere_aprobacion = Column(Boolean, default=True, nullable=False, server_default="true")
+    activo = Column(Boolean, default=True, nullable=False, server_default="true")
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="CASCADE"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class ReservaZona(Base):
+    """Reserva de una zona común por parte de un residente (UH-10 / UH-14)."""
+
+    __tablename__ = "reservas_zonas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    zona_id = Column(Integer, ForeignKey("zonas_comunes.id", ondelete="CASCADE"), nullable=False, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha = Column(Date, nullable=False, index=True)
+    hora_inicio = Column(String(5), nullable=False)     # HH:MM
+    hora_fin = Column(String(5), nullable=False)
+    motivo = Column(String(255))
+    asistentes = Column(Integer, default=1)
+    estado = Column(String(20), default="pendiente", nullable=False)  # pendiente | aprobada | rechazada | cancelada
+    motivo_decision = Column(String(255))
+    decidido_por = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    fecha_decision = Column(DateTime)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class Comunicado(Base):
+    """Comunicado o circular masiva para los residentes (UH-11 / UH-18)."""
+
+    __tablename__ = "comunicados"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String(200), nullable=False)
+    contenido = Column(Text, nullable=False)
+    categoria = Column(String(30), default="informativo")  # informativo | normas | evento | urgente
+    prioridad = Column(String(10), default="media", nullable=False)  # alta | media | baja
+    fijado = Column(Boolean, default=False, nullable=False, server_default="false")
+    enviado_por = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class Visitante(Base):
+    """Registro y control de acceso de visitantes (UH-12)."""
+
+    __tablename__ = "visitantes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(150), nullable=False)
+    documento = Column(String(30), nullable=False, index=True)
+    telefono = Column(String(30))
+    apartamento = Column(String(30), nullable=False)
+    residente_id = Column(Integer, ForeignKey("residentes.id", ondelete="SET NULL"), nullable=True)
+    motivo = Column(String(200))
+    observaciones = Column(Text)
+    hora_ingreso = Column(DateTime, default=datetime.utcnow, nullable=False)
+    hora_salida = Column(DateTime)
+    estado = Column(String(20), default="dentro", nullable=False)  # dentro | salio
+    registrado_por = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class ComprobantePago(Base):
+    """Comprobante de pago subido por el residente (UH-13)."""
+
+    __tablename__ = "comprobantes_pago"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
+    movimiento_id = Column(Integer, ForeignKey("movimientos_financieros.id", ondelete="SET NULL"), nullable=True)
+    periodo = Column(String(30))                       # ej. "2026-11"
+    monto = Column(Numeric(12, 2), nullable=False)
+    ruta_archivo = Column(String(500), nullable=False)
+    nombre_archivo = Column(String(255))
+    mime = Column(String(120))
+    tamano = Column(Integer)
+    estado = Column(String(20), default="en_revision", nullable=False)  # en_revision | aprobado | rechazado
+    observacion = Column(Text)
+    revisado_por = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    fecha_revision = Column(DateTime)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class Votacion(Base):
+    """Votación del consejo de administración (UH-25)."""
+
+    __tablename__ = "votaciones"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String(200), nullable=False)
+    descripcion = Column(Text)
+    fecha_cierre = Column(Date, nullable=False)
+    estado = Column(String(20), default="abierta", nullable=False)  # abierta | cerrada
+    creado_por = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class VotacionOpcion(Base):
+    __tablename__ = "votacion_opciones"
+
+    id = Column(Integer, primary_key=True, index=True)
+    votacion_id = Column(Integer, ForeignKey("votaciones.id", ondelete="CASCADE"), nullable=False, index=True)
+    texto = Column(String(200), nullable=False)
+    orden = Column(Integer, default=0)
+
+
+class Voto(Base):
+    """Un voto por miembro del consejo y votación (único)."""
+
+    __tablename__ = "votos"
+    __table_args__ = (
+        UniqueConstraint("votacion_id", "usuario_id", name="uq_voto_votacion_usuario"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    votacion_id = Column(Integer, ForeignKey("votaciones.id", ondelete="CASCADE"), nullable=False, index=True)
+    opcion_id = Column(Integer, ForeignKey("votacion_opciones.id", ondelete="CASCADE"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class SolicitudAprobacion(Base):
+    """Solicitud del administrador que el consejo aprueba o rechaza (UH-24)."""
+
+    __tablename__ = "solicitudes_aprobacion"
+
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String(200), nullable=False)
+    descripcion = Column(Text, nullable=False)
+    monto = Column(Numeric(12, 2), nullable=False, default=0)
+    categoria = Column(String(40), default="gasto")   # gasto | contrato | presupuesto | otro
+    estado = Column(String(20), default="pendiente", nullable=False)  # pendiente | aprobada | rechazada
+    creado_por = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    decidido_por = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    fecha_decision = Column(DateTime)
+    motivo_decision = Column(Text)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class Auditoria(Base):
+    """Historial de auditoría de acciones (UH-29).
+
+    Se escribe automáticamente desde `app.auditoria` para toda operación que
+    modifica datos y no se puede eliminar desde la interfaz: sólo existe el
+    endpoint de consulta (sin DELETE), de modo que un usuario común no puede
+    borrar la trazabilidad.
+    """
+
+    __tablename__ = "auditoria"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True, index=True)
+    usuario_nombre = Column(String(150))
+    usuario_rol = Column(String(60))
+    accion = Column(String(30), nullable=False, index=True)   # crear | editar | eliminar | login | logout | consultar
+    modulo = Column(String(60), nullable=False, index=True)
+    metodo = Column(String(10))
+    ruta = Column(String(255))
+    entidad = Column(String(80))
+    entidad_id = Column(Integer)
+    detalle = Column(Text)
+    ip = Column(String(60))
+    estado_http = Column(Integer)
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+# ---------------------------------------------------------------------------
+# MENSAJERÍA DIRECTA: CHAT RESIDENTE <-> ADMINISTRACIÓN
+# ---------------------------------------------------------------------------
+class ConversacionDirecta(Base):
+    """Hilo de chat directo entre un residente y la administración de su conjunto.
+
+    Cada residente tiene una conversación continua por conjunto con el equipo
+    de administración (roles `admin` / `super_admin`). Respeta el aislamiento
+    multi-conjunto (`id_conjunto`).
+    """
+
+    __tablename__ = "conversaciones_directas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    residente_usuario_id = Column(
+        Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    id_conjunto = Column(
+        Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    asunto = Column(String(200), default="Chat con Administración", nullable=False)
+    estado = Column(String(20), default="abierta", nullable=False)  # abierta | resuelta
+    ultimo_mensaje = Column(Text, nullable=True)
+    ultimo_mensaje_en = Column(DateTime, nullable=True, index=True)
+    ultimo_remitente_id = Column(Integer, nullable=True)
+    ultimo_remitente_rol = Column(String(20), nullable=True)  # residente | admin
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+
+class MensajeDirecto(Base):
+    """Mensaje individual dentro de una conversación directa residente <-> admin."""
+
+    __tablename__ = "mensajes_directos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversacion_id = Column(
+        Integer, ForeignKey("conversaciones_directas.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    remitente_id = Column(
+        Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    rol_remitente = Column(String(20), nullable=False)  # residente | admin
+    contenido = Column(Text, nullable=False)
+    adjunto = Column(String(500), nullable=True)
+    adjunto_nombre = Column(String(255), nullable=True)
+    adjunto_mime = Column(String(120), nullable=True)
+    leido = Column(Boolean, default=False, nullable=False, server_default="false")
+    fecha_lectura = Column(DateTime, nullable=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow, index=True)
+

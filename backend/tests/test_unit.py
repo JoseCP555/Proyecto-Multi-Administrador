@@ -62,3 +62,38 @@ def test_detectar_intent_sin_tildes():
 def test_format_money():
     assert "1.500" in _format_money(1500)
     assert "$" in _format_money(0)
+
+
+# --------------------------- Enlaces de correos ---------------------------
+def test_correo_notificacion_usa_origen_real_y_abre_en_navegador(monkeypatch):
+    from app import correo
+    from app.correo_notificaciones import construir_url_notificacion, _html
+
+    monkeypatch.setenv("FRONTEND_URL", "http://localhost:3000")
+    correo._ultimo_origen_publico = ""
+
+    tok = correo.registrar_origen_frontend("http://192.168.1.34:3000")
+    try:
+        url = construir_url_notificacion("/dashboard/mensajes", id_conjunto=3)
+        assert url == "http://192.168.1.34:3000/dashboard/mensajes?conjunto=3"
+        html = _html("Sayeth", "Prueba", "Mensaje", url)
+        assert 'target="_blank"' in html
+        assert 'rel="noopener noreferrer"' in html
+        assert "Ver en la aplicación" in html
+        assert url in html
+    finally:
+        correo.restaurar_origen_frontend(tok)
+        correo._ultimo_origen_publico = ""
+
+
+def test_correo_respeta_frontend_url_publica_explicita(monkeypatch):
+    from app import correo
+    from app.correo_notificaciones import construir_url_notificacion
+
+    monkeypatch.setenv("FRONTEND_URL", "https://mi-conjunto.com")
+    tok = correo.registrar_origen_frontend("http://192.168.1.34:3000")
+    try:
+        assert construir_url_notificacion("/dashboard/inicio") == "https://mi-conjunto.com/dashboard/inicio"
+    finally:
+        correo.restaurar_origen_frontend(tok)
+        correo._ultimo_origen_publico = ""

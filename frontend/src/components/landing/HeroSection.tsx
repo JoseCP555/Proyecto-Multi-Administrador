@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Bot, CheckCircle2, ChevronDown, PlayCircle, ShieldCheck, Sparkles, Wallet } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, ChevronDown, PlayCircle, ShieldCheck, Lightbulb , Wallet } from "lucide-react";
 import Button from "@/components/ui/Button";
 import DashboardMock from "./DashboardMock";
 import { contenedor, item } from "./motion";
@@ -41,7 +41,7 @@ export default function HeroSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] gap-14 items-center">
         <motion.div variants={contenedor} initial="hidden" animate="show" className="min-w-0">
           <motion.span variants={item} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur border border-blue-100 text-primary-600 text-xs font-semibold shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" /> La plataforma #1 para administradoras de conjuntos
+            <Lightbulb  className="w-3.5 h-3.5" /> La plataforma #1 para administrar conjuntos
           </motion.span>
           <motion.h1 variants={item} className="mt-6 text-[2.35rem] sm:text-5xl lg:text-[3.6rem] font-extrabold tracking-tight text-dark-100 leading-[1.08]">
             Administra tus propiedades de forma{" "}

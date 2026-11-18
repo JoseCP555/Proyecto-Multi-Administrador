@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Menu, Search, X, ChevronDown, Home, MessagesSquare, MoreHorizontal } from "lucide-react";
+import { Menu, Search, X, ChevronDown, Home, MessagesSquare, MessageCircleMore, MoreHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { tienePermiso } from "@/lib/permisos";
 import Notificaciones from "@/components/layout/Notificaciones";
 import SelectorConjunto from "@/components/layout/SelectorConjunto";
 import { useConjunto } from "@/context/ConjuntoContext";
+import { useMensajesNoLeidos } from "@/hooks/useMensajesNoLeidos";
 
 const TITULOS: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -19,15 +20,33 @@ const TITULOS: Record<string, string> = {
   "/dashboard/documentos": "Documentos",
   "/dashboard/eventos": "Eventos",
   "/dashboard/chat": "Chat asistente",
+  "/dashboard/mensajes": "Chat con Administración",
   "/dashboard/configuracion": "Configuración",
+  "/dashboard/pqrs": "PQRS",
+  "/dashboard/reservas": "Reservas",
+  "/dashboard/comunicados": "Comunicados",
+  "/dashboard/pagos": "Pagos",
+  "/dashboard/visitantes": "Visitantes",
+  "/dashboard/votaciones": "Votaciones",
+  "/dashboard/aprobaciones": "Aprobaciones",
+  "/dashboard/consejo": "Consejo",
+  "/dashboard/auditoria": "Auditoría",
+  "/dashboard/perfil": "Mi perfil",
 };
 
 export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { usuario } = useAuth();
   const { pathname } = useLocation();
   const { activo: conjunto, conjuntos } = useConjunto();
+  const { noLeidos: mensajesNoLeidos } = useMensajesNoLeidos();
   const [buscar, setBuscar] = useState("");
-  const titulo = TITULOS[pathname] ?? "Panel";
+  const esGestorMensajes = tienePermiso(usuario, "mensajes.gestionar");
+  const titulo =
+    pathname === "/dashboard/mensajes"
+      ? esGestorMensajes
+        ? "Chat con residentes"
+        : "Chat con Administración"
+      : (TITULOS[pathname] ?? "Panel");
   const subtitulo =
     pathname === "/dashboard"
       ? "Panel Multi-Administrador"
@@ -36,7 +55,7 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
         : undefined;
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-4 sm:px-6 lg:px-8 pt-5 pb-4 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-4 sm:px-6 lg:px-8 pt-[max(1.25rem,env(safe-area-inset-top))] pb-4 flex items-center justify-between gap-4">
       {/* Menú móvil + título */}
       <div className="flex items-center gap-3 min-w-0">
         <button
@@ -75,8 +94,23 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
         <button className="hidden md:inline-flex p-2 rounded-full text-primary-500 hover:bg-primary-50" aria-label="Más">
           <MoreHorizontal className="w-5 h-5" />
         </button>
+        {tienePermiso(usuario, "mensajes.ver") && (
+          <Link
+            to="/dashboard/mensajes"
+            className="relative inline-flex p-2 rounded-full text-primary-500 hover:bg-primary-50"
+            aria-label={esGestorMensajes ? "Chat con residentes" : "Chat con Administración"}
+            title={esGestorMensajes ? "Chat con residentes" : "Chat con Administración"}
+          >
+            <MessageCircleMore className="w-5 h-5" />
+            {mensajesNoLeidos > 0 && (
+              <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold">
+                {mensajesNoLeidos > 99 ? "99+" : mensajesNoLeidos}
+              </span>
+            )}
+          </Link>
+        )}
         {tienePermiso(usuario, "chat.usar") && (
-          <Link to="/dashboard/chat" className="hidden md:inline-flex p-2 rounded-full text-primary-500 hover:bg-primary-50" aria-label="Mensajes">
+          <Link to="/dashboard/chat" className="hidden md:inline-flex p-2 rounded-full text-primary-500 hover:bg-primary-50" aria-label="Asistente" title="Chat asistente">
             <MessagesSquare className="w-5 h-5" />
           </Link>
         )}
@@ -91,16 +125,22 @@ export default function Topbar({ onToggleSidebar }: { onToggleSidebar: () => voi
           </>
         )}
         <span className="hidden md:block w-px h-7 bg-gray-200 mx-1" />
-        <div className="flex items-center gap-2 pl-1">
+        <Link to="/dashboard/perfil" className="flex items-center gap-2 pl-1 group" title="Mi perfil">
           <div className="hidden md:block text-right">
-            <p className="text-sm font-bold text-gray-900 uppercase tracking-wide leading-tight">{usuario?.nombre}</p>
+            <p className="text-sm font-bold text-gray-900 uppercase tracking-wide leading-tight group-hover:text-primary-600 transition">
+              {usuario?.nombre}
+            </p>
             <p className="text-[11px] text-gray-400 capitalize">{usuario?.nombre_rol?.replace("_", " ")}</p>
           </div>
           <ChevronDown className="w-4 h-4 text-gray-400 hidden md:block" />
-          <div className="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold ring-4 ring-primary-100">
-            {usuario?.nombre?.charAt(0)?.toUpperCase() || "U"}
+          <div className="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold ring-4 ring-primary-100 overflow-hidden shrink-0">
+            {usuario?.foto ? (
+              <img src={usuario.foto} alt={usuario.nombre} className="w-full h-full object-cover" />
+            ) : (
+              usuario?.nombre?.charAt(0)?.toUpperCase() || "U"
+            )}
           </div>
-        </div>
+        </Link>
       </div>
     </header>
   );

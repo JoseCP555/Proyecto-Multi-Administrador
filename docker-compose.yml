@@ -1,8 +1,9 @@
-# Multi-Administrador - Orquestación completa (PostgreSQL + Redis + Backend + Frontend)
+# Multi-Administrador - Orquestación completa (PostgreSQL + Redis + Ollama + Backend + Frontend)
 #
 #   docker compose up --build -d      ->  http://localhost:3000
 #   docker compose logs -f backend    ->  ver el arranque de la API
-#   docker compose down -v            ->  borrar TODO (incluida la BD) y empezar limpio
+#   docker compose logs -f ollama-init -> ver la descarga automática del modelo de Ollama
+#   docker compose down -v            ->  borrar TODO (incluida la BD y modelos) y empezar limpio
 #
 # El frontend NO habla directamente con el puerto 8000: usa /api y nginx
 # (dentro del contenedor frontend) reenvía a backend:8000. Así funciona desde
@@ -49,6 +50,62 @@ services:
       retries: 20
       start_period: 5s
 
+  # ------------------------------------------------------------- Ollama
+  # Servidor local de modelos IA para el chatbot (última versión estable de Ollama).
+  # Los modelos descargados se conservan en el volumen persistente `ollama_data`.
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-10m}
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  # Descarga automáticamente el modelo configurado (por defecto llama3.2:3b) la
+  # primera vez que se levanta Docker Compose. En arranques posteriores termina
+  # al instante porque el modelo queda cacheado en `ollama_data`.
+  ollama-init:
+    image: ollama/ollama:latest
+    restart: "no"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "[ollama-init] Verificando modelo: $$OLLAMA_MODEL"
+        ollama pull "$$OLLAMA_MODEL"
+        echo "[ollama-init] Modelo $$OLLAMA_MODEL listo para el chatbot."
+
+  # ------------------------------------------------- Mailpit (opcional)
+  # Buzón de correo local para DESARROLLO: captura todos los correos que envía
+  # la aplicación y los muestra en una interfaz web, sin necesidad de Gmail ni
+  # de credenciales. Se levanta solo si se pide:
+  #
+  #   docker compose --profile correo up -d mailpit
+  #   MAIL_SERVER=mailpit  MAIL_PORT=1025  MAIL_AUTH=false   (en .env)
+  #   Interfaz: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    profiles: ["correo"]
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"   # interfaz web
+      - "${MAILPIT_SMTP_PORT:-1025}:1025" # SMTP
+    environment:
+      MP_MAX_MESSAGES: 500
+
   # ------------------------------------------------------------ Backend
   backend:
     build:
@@ -59,6 +116,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      ollama:
+        condition: service_started
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-multiadmin}:${POSTGRES_PASSWORD:-multiadmin}@db:5432/${POSTGRES_DB:-multiadmin_db}
       SECRET_KEY: ${SECRET_KEY:-cambia-esto-por-un-valor-secreto-largo-y-aleatorio}
@@ -76,15 +135,25 @@ services:
       MAIL_FROM: ${MAIL_FROM:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_SERVER: ${MAIL_SERVER:-}
+      # Cifrado y autenticación del SMTP (ver README -> correo):
+      #   587 -> STARTTLS (por defecto)  ·  465 -> SSL/TLS automático
+      #   MAIL_AUTH=false para servidores locales de pruebas (Mailpit/MailHog).
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-}
+      MAIL_SSL_TLS: ${MAIL_SSL_TLS:-}
+      MAIL_AUTH: ${MAIL_AUTH:-true}
+      MAIL_SSL_CERTS: ${MAIL_SSL_CERTS:-true}
+      MAIL_TIMEOUT: ${MAIL_TIMEOUT:-30}
       # ---- Notificaciones reales (correo + Web Push / VAPID) ----
       NOTIFICACIONES_CORREO: ${NOTIFICACIONES_CORREO:-true}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:no-reply@multiadmin.com}
-      # ---- Chatbot ----
-      CHATBOT_ENGINE: ${CHATBOT_ENGINE:-local}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      # ---- Chatbot (Ollama) ----
+      CHATBOT_ENGINE: ${CHATBOT_ENGINE:-ollama}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-120}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-10m}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -114,3 +183,4 @@ volumes:
   db_data:
   redis_data:
   documentos_data:
+  ollama_data:

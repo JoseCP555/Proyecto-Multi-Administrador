@@ -1,0 +1,123 @@
+======================================================================
+ MULTI-ADMINISTRADOR — SISTEMA DE COPROPIEDADES
+ Entrega: implementación de las 32 historias de usuario (HU-01 a HU-32)
+======================================================================
+
+QUÉ HAY EN ESTE PAQUETE
+-----------------------
+Proyecto completo (backend + frontend + base de datos + documentación).
+
+Este ZIP contiene el árbol de trabajo final (código, documentación e informe),
+pero NO la carpeta oculta `.git` (para que el archivo pese poco).
+
+Por eso se incluye además el archivo:
+
+    CAMBIOS_HUs.patch
+
+que contiene los commits de la entrega:
+
+    feat(HU): implementar las historias de usuario HU-01 a HU-32
+    feat(correo): envío SMTP real configurable, diagnóstico y pruebas
+    chore(env): plantilla .env.example con SMTP completo
+
+Con él puedes aplicar exactamente los mismos cambios sobre tu clon del
+repositorio (ver más abajo).
+
+No se incluyen las carpetas generadas (node_modules, .venv, dist), ni las
+bases de datos locales, ni los archivos subidos en tiempo de ejecución.
+
+
+CORREO (SMTP) YA CONFIGURADO
+----------------------------
+Este paquete incluye los archivos .env ya configurados con la cuenta de Gmail
+multiadmin0@gmail.com (contraseña de aplicación) para que los correos de
+verificación y recuperación lleguen de verdad:
+
+    .env             -> configuración de Docker Compose
+    backend/.env     -> configuración de ejecución local (uvicorn)
+
+⚠️  Esos dos archivos son PRIVADOS (están en .gitignore): no se suben a GitHub
+    y conviene no compartir este ZIP con nadie.
+
+Comprobación rápida:
+
+    cd backend
+    .venv/bin/python probar_correo.py tu_correo@gmail.com
+
+Si cambias de cuenta, edita EMAIL_USER / EMAIL_PASSWORD en ambos .env
+(Gmail exige una contraseña de aplicación de 16 letras).
+
+
+PUBLICAR EN GITHUB
+------------------
+Opción 1 (recomendada) — aplicar el commit sobre tu clon:
+
+    git clone https://github.com/JoseCP555/Proyecto-Multi-Administrador.git
+    cd Proyecto-Multi-Administrador
+    git am CAMBIOS_HUs.patch      # aplica los commits con su mensaje original
+    git push origin main
+
+Opción 2 — copiar los archivos:
+
+    Copia el contenido de este ZIP dentro de tu clon (sobrescribiendo) y luego:
+    git add -A
+    git commit -m "feat(HU): implementar las historias de usuario HU-01 a HU-32"
+    git push origin main
+
+
+CÓMO EJECUTARLO
+---------------
+Opción A — Docker (recomendado):
+
+    docker compose up --build -d
+    # Frontend: http://localhost:3000
+    # API docs: http://localhost:8000/docs
+
+Opción B — Local:
+
+    # Backend
+    cd backend
+    python -m venv .venv
+    # Windows: .venv\Scripts\activate     Linux/macOS: source .venv/bin/activate
+    pip install -r requirements.txt
+    cp .env.example .env      # Windows: copy .env.example .env
+    uvicorn app.main:app --reload --port 8000
+
+    # Frontend (otra terminal)
+    cd frontend
+    npm install
+    npm run dev               # http://localhost:3000
+
+Sin PostgreSQL el backend arranca con SQLite (backend/multiadmin.db) y siembra
+los datos de demostración automáticamente.
+
+
+USUARIOS DE DEMOSTRACIÓN
+------------------------
+  super_admin / admin  admin@multiadmin.com       Admin2026!
+  Consejo              consejo@multiadmin.com     Consejo2026!
+  Residente            residente@multiadmin.com   Residente2026!
+
+
+PRUEBAS
+-------
+    cd backend
+    rm -f hus_test.db && DESACTIVAR_PROGRAMADOR=1 .venv/bin/python -m pytest tests/test_hus_nuevas.py -q   # 22 passed
+    .venv/bin/python -m pytest tests/test_unit.py -q                                                       # 8 passed
+    TEST_API_URL=http://localhost:8000 .venv/bin/python -m pytest tests/test_rbac.py -q                     # RBAC 6 roles
+
+    cd frontend
+    npm ci && npx tsc --noEmit && npm run build
+
+
+DÓNDE MIRAR
+-----------
+  README.md                              Guía general del proyecto
+  REPORTE_TESTING.md                     Resultados de las pruebas
+  docs/IMPLEMENTACION_HUs.md             Trazabilidad de las 32 historias
+  docs/requisitos/HUs/                   Ficha de cada historia (HU-001 a HU-032)
+  docs/Informe_Entrega_HUs.pdf           Informe de entrega con capturas
+  docs/MULTI_CONJUNTO.md                 Detalle del módulo multi-copropiedad
+  ARRANQUE_RAPIDO.md                     Puesta en marcha paso a paso
+
+======================================================================

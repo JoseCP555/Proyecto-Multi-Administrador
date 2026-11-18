@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import AuthShell from "@/components/ui/AuthShell";
 import Button from "@/components/ui/Button";
@@ -9,6 +9,9 @@ import { api } from "@/lib/api";
 export default function Login() {
   const { login, cargando } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // UH-27: aviso cuando la sesión se cerró por 30 minutos de inactividad.
+  const sesionExpirada = params.get("sesion") === "expirada";
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
   const [verPassword, setVerPassword] = useState(false);
@@ -23,11 +26,15 @@ export default function Login() {
     setReenviado("");
     try {
       await login(correo, password);
-      navigate("/dashboard");
+      const next = params.get("next") || "";
+      const destino = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+      navigate(destino, { replace: true });
     } catch (err) {
       const m = (err as Error).message;
       if (m.toLowerCase().includes("verificar tu correo")) setNoVerificado(true);
-      setError(m.includes("incorrect") ? "Correo o contraseña incorrectos." : m);
+      // Se muestra el mensaje del backend tal cual: incluye los intentos
+      // restantes y el bloqueo temporal de la cuenta (UH-27).
+      setError(m);
     }
   };
 
@@ -113,6 +120,11 @@ export default function Login() {
             </div>
           </div>
         )}
+        {sesionExpirada && !error && (
+          <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Tu sesión se cerró tras 30 minutos de inactividad. Vuelve a iniciar sesión.
+          </div>
+        )}
         {error && !noVerificado && (
           <div className="text-sm text-danger bg-red-50 border border-red-200 rounded-lg px-3 py-2">
             {error}
@@ -122,10 +134,6 @@ export default function Login() {
         <Button variante="primary" tamano="lg" className="w-full" disabled={cargando}>
           {cargando ? "Entrando..." : "Ingresar"}
         </Button>
-
-        <p className="text-xs text-gray-400 text-center">
-          Demo: admin@multiadmin.com / Admin2026!
-        </p>
       </form>
     </AuthShell>
   );

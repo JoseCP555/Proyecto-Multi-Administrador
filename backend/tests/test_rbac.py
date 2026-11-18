@@ -17,27 +17,48 @@ c = httpx.Client(base_url=BASE, timeout=30)
 
 ADMIN_EMAIL, ADMIN_PASS = "admin@multiadmin.com", "Admin2026!"
 PASS = "Prueba2026!"
-ROLES = {"super_admin": 1, "admin": 2, "residente": 3, "tesoreria": 4, "seguridad": 5}
+ROLES = {
+    "super_admin": 1, "admin": 2, "residente": 3, "tesoreria": 4, "seguridad": 5, "consejo": 6,
+}
 
 # Matriz esperada (espejo de app/permisos.py). Si cambia la matriz, cambia aquí.
 ESPERADO = {
     "super_admin": None,  # todos
     "admin": None,        # todos: ahora es idéntico a super_admin
     "tesoreria": {
-        "dashboard.ver", "reportes.ver", "conjuntos.ver", "finanzas.ver", "finanzas.crear", "finanzas.editar",
-        "finanzas.eliminar", "propiedades.ver", "residentes.ver", "documentos.ver",
-        "documentos.descargar", "chat.usar",
+        "chat.usar", "comunicados.ver", "conjuntos.ver", "dashboard.ver",
+        "documentos.descargar", "documentos.ver", "finanzas.crear", "finanzas.editar",
+        "finanzas.eliminar", "finanzas.ver", "pagos.revisar", "pagos.ver",
+        "perfil.editar", "perfil.ver", "pqrs.ver", "propiedades.ver",
+        "reportes.ver", "residentes.ver",
     },
     "residente": {
-        "dashboard.ver", "conjuntos.ver", "propiedades.ver", "documentos.ver", "documentos.descargar",
-        "eventos.ver", "mantenimiento.ver", "mantenimiento.crear", "chat.usar",
+        "chat.usar", "comunicados.ver", "conjuntos.ver", "dashboard.ver",
+        "documentos.descargar", "documentos.ver", "eventos.ver", "mantenimiento.crear",
+        "mantenimiento.ver", "mensajes.enviar", "mensajes.ver", "pagos.crear", "pagos.ver",
+        "perfil.editar", "perfil.ver", "pqrs.crear", "pqrs.ver", "propiedades.ver",
+        "reservas.crear", "reservas.ver", "votaciones.ver", "votaciones.votar",
+        "zonas.ver",
     },
     "seguridad": {
-        "dashboard.ver", "conjuntos.ver", "propiedades.ver", "residentes.ver", "mantenimiento.ver",
-        "mantenimiento.crear", "mantenimiento.editar", "eventos.ver", "documentos.ver",
-        "documentos.descargar", "chat.usar",
+        "chat.usar", "comunicados.ver", "conjuntos.ver", "dashboard.ver",
+        "documentos.descargar", "documentos.ver", "eventos.ver", "mantenimiento.crear",
+        "mantenimiento.editar", "mantenimiento.ver", "perfil.editar", "perfil.ver",
+        "pqrs.ver", "propiedades.ver", "reservas.ver", "residentes.ver",
+        "visitantes.crear", "visitantes.editar", "visitantes.ver", "zonas.ver",
+    },
+    # Consejo de administración (UH-22 a UH-26, UH-29, UH-32).
+    "consejo": {
+        "aprobaciones.crear", "aprobaciones.decidir", "aprobaciones.ver", "auditoria.ver",
+        "chat.usar", "comunicados.ver", "conjuntos.ver", "dashboard.ver",
+        "documentos.descargar", "documentos.ver", "eventos.ver", "finanzas.ver",
+        "mantenimiento.ver", "pagos.ver", "perfil.editar", "perfil.ver",
+        "pqrs.ver", "propiedades.ver", "reportes.ver", "reservas.ver",
+        "residentes.ver", "visitantes.ver", "votaciones.cerrar", "votaciones.crear",
+        "votaciones.ver", "votaciones.votar", "zonas.ver",
     },
 }
+
 # Ya no hay permisos exclusivos del super_admin: admin tiene acceso total.
 SOLO_SUPER = set()
 

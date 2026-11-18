@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { FileText, Download, Plus, Pencil, Trash2, Upload, ChevronDown } from "lucide-react";
+import { useMemo, useState, type FormEvent } from "react";
+import { FileText, Download, Plus, Pencil, Trash2, Upload, ChevronDown, Filter, ArrowUpDown, FolderOpen } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -7,10 +7,12 @@ import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { useFetch } from "@/hooks/useFetch";
 import { usePermisos } from "@/lib/usePermisos";
-import { api } from "@/lib/api";
+import { api, API_BASE, getConjuntoActivo, getToken } from "@/lib/api";
 import { descargarArchivo } from "@/lib/download";
-import { fecha, tamano } from "@/lib/format";
+import { fecha, tamano, capitalizar } from "@/lib/format";
 import type { Documento } from "@/types";
+
+const CATEGORIAS_BASE = ["reglamento", "acta", "manual", "contrato", "financiero"];
 
 // Formulario compartido para crear/editar.
 const emptyForm = {
@@ -20,9 +22,29 @@ const emptyForm = {
   publico: false,
 };
 
+function etiquetaCategoria(cat?: string | null): string {
+  const limpia = (cat ?? "").trim().toLowerCase();
+  if (!limpia) return "Otros documentos";
+  const mapa: Record<string, string> = {
+    reglamento: "Reglamentos",
+    acta: "Actas",
+    asamblea: "Actas de asamblea",
+    manual: "Manuales",
+    contrato: "Contratos",
+    financiero: "Financiero",
+    transcripcion: "Transcripciones",
+  };
+  return mapa[limpia] ?? capitalizar(limpia);
+}
+
 export default function Documentos() {
   const { puede } = usePermisos();
-  const { data: docs, cargar, cargando } = useFetch<Documento[]>("/documentos");
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+  const [ordenFecha, setOrdenFecha] = useState<"fecha_desc" | "fecha_asc">("fecha_desc");
+  const [agruparPorCategoria, setAgruparPorCategoria] = useState(true);
+
+  const query = `?orden=${ordenFecha}${categoriaFiltro ? `&categoria=${encodeURIComponent(categoriaFiltro)}` : ""}`;
+  const { data: docs, cargar, cargando } = useFetch<Documento[]>(`/documentos${query}`, [query]);
 
   // Crear / subir
   const [abierto, setAbierto] = useState(false);
@@ -38,12 +60,50 @@ export default function Documentos() {
   const [eliminando, setEliminando] = useState<Documento | null>(null);
   const [borrando, setBorrando] = useState(false);
 
+  const categoriasDisponibles = useMemo(() => {
+    const set = new Set<string>(CATEGORIAS_BASE);
+    (docs ?? []).forEach((d) => {
+      const c = (d.tipo_documento ?? "").trim().toLowerCase();
+      if (c) set.add(c);
+    });
+    return Array.from(set);
+  }, [docs]);
+
+  // UH-19: organiza los documentos por categoría, respetando el orden por fecha de publicación.
+  const grupos = useMemo(() => {
+    const lista = docs ?? [];
+    const mapa = new Map<string, Documento[]>();
+    for (const d of lista) {
+      const clave = (d.tipo_documento ?? "").trim().toLowerCase() || "otros";
+      const arr = mapa.get(clave) ?? [];
+      arr.push(d);
+      mapa.set(clave, arr);
+    }
+    return Array.from(mapa.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [docs]);
+
   const cargarDocumento = async () => {
     await cargar();
   };
 
   const alElegir = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) setArchivo(e.target.files[0]);
+    setError("");
+    const f = e.target.files?.[0];
+    if (!f) return;
+    // UH-03: PDF o Word, hasta 20 MB.
+    const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
+    const permitidas = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".png", ".jpg", ".jpeg", ".txt", ".csv"];
+    if (!permitidas.includes(ext)) {
+      setError("Formato no permitido. Sube un archivo PDF o Word (.pdf, .doc, .docx).");
+      e.target.value = "";
+      return;
+    }
+    if (f.size > 20 * 1024 * 1024) {
+      setError("El archivo supera el máximo de 20 MB permitido.");
+      e.target.value = "";
+      return;
+    }
+    setArchivo(f);
   };
 
   const crear = async (e: FormEvent) => {
@@ -62,13 +122,24 @@ export default function Documentos() {
       fd.append("publico", String(form.publico));
       fd.append("archivo", archivo);
 
-      const token = localStorage.getItem("ma_token");
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "/api"}/documentos/upload`, {
+      const token = getToken();
+      const cid = getConjuntoActivo();
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      if (cid) headers["X-Conjunto-Id"] = String(cid);
+      const res = await fetch(`${API_BASE}/documentos/upload`, {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers,
         body: fd,
       });
-      if (!res.ok) throw new Error("No se pudo subir el documento.");
+      if (!res.ok) {
+        let detalle = "No se pudo subir el documento.";
+        try {
+          const j = await res.json();
+          if (typeof j?.detail === "string") detalle = j.detail;
+        } catch { /* respuesta sin JSON */ }
+        throw new Error(detalle);
+      }
 
       setAbierto(false);
       setForm(emptyForm);
@@ -119,66 +190,153 @@ export default function Documentos() {
 
   const descargar = async (d: Documento) => {
     try {
-      const base = import.meta.env.VITE_API_URL || "/api";
-      await descargarArchivo(`${base}/documentos/${d.id}/descargar`, `${d.titulo}.pdf`);
+      const base = API_BASE;
+      const extMatch = (d.ruta_archivo || "").match(/(\.[a-z0-9]{2,5})$/i);
+      const ext = extMatch ? extMatch[1].toLowerCase() : ".pdf";
+      const nombre = d.titulo.toLowerCase().endsWith(ext) ? d.titulo : `${d.titulo}${ext}`;
+      await descargarArchivo(`${base}/documentos/${d.id}/descargar`, nombre);
     } catch (err) {
       alert((err as Error).message);
     }
   };
+
+  const renderTarjeta = (d: Documento) => (
+    <div key={d.id} className="bg-gray-50 border border-gray-100 rounded-xl p-4 hover:shadow-card-hover transition">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-lg bg-blue-50 text-primary-600 flex items-center justify-center shrink-0">
+          <FileText className="w-5 h-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-gray-800 truncate">{d.titulo}</p>
+          <p className="text-xs text-gray-400">
+            {capitalizar(d.tipo_documento || "documento")} · {tamano(d.tamano)}
+          </p>
+        </div>
+      </div>
+      <p className="text-xs text-gray-500 mt-3 line-clamp-2">{d.descripcion ?? "Sin descripción."}</p>
+      <div className="flex items-center justify-between mt-4">
+        <div className="flex gap-1.5">
+          <Badge color={d.publico ? "info" : "neutral"}>{d.publico ? "Público" : "Privado"}</Badge>
+          <span className="text-[11px] text-gray-400 self-center">{fecha(d.fecha_creacion)}</span>
+        </div>
+        <div className="flex gap-1">
+          {puede("documentos.descargar") && (
+            <button
+              onClick={() => descargar(d)}
+              title="Descargar"
+              className="p-1.5 rounded-full btn btn-ghost text-gray-500 hover:bg-gray-100"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          )}
+          {puede("documentos.editar") && (
+            <button
+              onClick={() => setEditando(d)}
+              title="Editar"
+              className="p-1.5 rounded-full btn btn-ghost text-primary-600 hover:bg-blue-50"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          )}
+          {puede("documentos.eliminar") && (
+            <button
+              onClick={() => setEliminando(d)}
+              title="Eliminar"
+              className="p-1.5 rounded-full btn btn-ghost text-danger hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
           <h2 className="text-lg font-bold text-gray-900">Documentos</h2>
-          <p className="text-sm text-gray-500">{docs?.length ?? 0} documentos</p>
+          <p className="text-sm text-gray-500">
+            {docs?.length ?? 0} documentos · organizados por categoría y fecha de publicación
+          </p>
         </div>
-        {puede("documentos.crear") && (<Button variante="primary" tamano="sm" onClick={() => setAbierto(true)}>
-          <Plus className="w-4 h-4" /> Subir documento
-        </Button>)}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+            <Filter className="w-4 h-4 shrink-0" />
+            <select
+              className="input py-1.5 w-auto text-sm"
+              aria-label="Filtrar por categoría"
+              value={categoriaFiltro}
+              onChange={(e) => setCategoriaFiltro(e.target.value)}
+            >
+              <option value="">Todas las categorías</option>
+              {categoriasDisponibles.map((cat) => (
+                <option key={cat} value={cat}>{etiquetaCategoria(cat)}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+            <ArrowUpDown className="w-4 h-4 shrink-0" />
+            <select
+              className="input py-1.5 w-auto text-sm"
+              aria-label="Ordenar por fecha de publicación"
+              value={ordenFecha}
+              onChange={(e) => setOrdenFecha(e.target.value as "fecha_desc" | "fecha_asc")}
+            >
+              <option value="fecha_desc">Más recientes primero</option>
+              <option value="fecha_asc">Más antiguos primero</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAgruparPorCategoria((v) => !v)}
+            className="btn btn-outline py-1.5 px-3 text-xs flex items-center gap-1.5"
+            title="Alternar vista agrupada por categoría"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            {agruparPorCategoria ? "Por categoría" : "Vista lista"}
+          </button>
+          {puede("documentos.crear") && (
+            <Button variante="primary" tamano="sm" onClick={() => setAbierto(true)}>
+              <Plus className="w-4 h-4" /> Subir documento
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {docs?.map((d) => (
-          <div key={d.id} className="bg-gray-50 border border-gray-100 rounded-xl p-4 hover:shadow-card-hover transition">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 text-primary-600 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5" />
+      {!docs?.length ? (
+        <div className="py-10 text-center text-gray-400">
+          {cargando ? (
+            "Cargando..."
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <FileText className="w-4 h-4" /> Sin documentos.
+            </span>
+          )}
+        </div>
+      ) : agruparPorCategoria && !categoriaFiltro ? (
+        <div className="space-y-6">
+          {grupos.map(([cat, items]) => (
+            <section key={cat}>
+              <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4 text-primary-600" />
+                  {etiquetaCategoria(cat === "otros" ? "" : cat)}
+                </h3>
+                <span className="text-xs text-gray-400">{items.length} documento(s)</span>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-gray-800 truncate">{d.titulo}</p>
-                <p className="text-xs text-gray-400">{d.tipo_documento ?? "documento"} · {tamano(d.tamano)}</p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {items.map(renderTarjeta)}
               </div>
-            </div>
-            <p className="text-xs text-gray-500 mt-3 line-clamp-2">{d.descripcion ?? "Sin descripción."}</p>
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex gap-1.5">
-                <Badge color={d.publico ? "info" : "neutral"}>{d.publico ? "Público" : "Privado"}</Badge>
-                <span className="text-[11px] text-gray-400 self-center">{fecha(d.fecha_creacion)}</span>
-              </div>
-              <div className="flex gap-1">
-                {puede("documentos.descargar") && (<button onClick={() => descargar(d)} title="Descargar"
-                  className="p-1.5 rounded-full btn btn-ghost text-gray-500 hover:bg-gray-100">
-                  <Download className="w-4 h-4" />
-                </button>)}
-                {puede("documentos.editar") && (<button onClick={() => setEditando(d)} title="Editar"
-                  className="p-1.5 rounded-full btn btn-ghost text-primary-600 hover:bg-blue-50">
-                  <Pencil className="w-4 h-4" />
-                </button>)}
-                {puede("documentos.eliminar") && (<button onClick={() => setEliminando(d)} title="Eliminar"
-                  className="p-1.5 rounded-full btn btn-ghost text-danger hover:bg-red-50">
-                  <Trash2 className="w-4 h-4" />
-                </button>)}
-              </div>
-            </div>
-          </div>
-        ))}
-        {!docs?.length && (
-          <div className="col-span-full py-10 text-center text-gray-400">
-            {cargando ? "Cargando..." : <span className="flex items-center justify-center gap-2"><FileText className="w-4 h-4" /> Sin documentos.</span>}
-          </div>
-        )}
-      </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {docs.map(renderTarjeta)}
+        </div>
+      )}
 
       {/* Modal subir */}
       <Modal abierto={abierto} onCerrar={() => setAbierto(false)} titulo="Subir documento">
@@ -223,7 +381,13 @@ export default function Documentos() {
             <label className="btn btn-outline w-full flex items-center justify-center gap-2 cursor-pointer">
               <Upload className="w-4 h-4" />
               {archivo ? archivo.name : "Seleccionar archivo"}
-              <input type="file" className="hidden" onChange={alElegir} required />
+              <input
+                type="file"
+                className="hidden"
+                onChange={alElegir}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.txt,.csv"
+                required
+              />
             </label>
           </div>
           {error && <div className="text-sm text-danger bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>}

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import LandingPage from "@/pages/LandingPage";
@@ -12,6 +13,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Inicio from "@/pages/Dashboard/Inicio";
 import Conjuntos from "@/pages/Dashboard/Conjuntos";
 import { useConjunto } from "@/context/ConjuntoContext";
+import { setConjuntoActivo } from "@/lib/api";
 import Usuarios from "@/pages/Dashboard/Usuarios";
 import Residentes from "@/pages/Dashboard/Residentes";
 import Propiedades from "@/pages/Dashboard/Propiedades";
@@ -21,6 +23,18 @@ import Documentos from "@/pages/Dashboard/Documentos";
 import Eventos from "@/pages/Dashboard/Eventos";
 import ChatSesiones from "@/pages/Dashboard/ChatSesiones";
 import Configuracion from "@/pages/Dashboard/Configuracion";
+// Módulos de las historias UH-01 a UH-32
+import PQRS from "@/pages/Dashboard/PQRS";
+import Reservas from "@/pages/Dashboard/Reservas";
+import Comunicados from "@/pages/Dashboard/Comunicados";
+import Visitantes from "@/pages/Dashboard/Visitantes";
+import Pagos from "@/pages/Dashboard/Pagos";
+import Votaciones from "@/pages/Dashboard/Votaciones";
+import Aprobaciones from "@/pages/Dashboard/Aprobaciones";
+import Auditoria from "@/pages/Dashboard/Auditoria";
+import Perfil from "@/pages/Dashboard/Perfil";
+import Consejo from "@/pages/Dashboard/Consejo";
+import Mensajes from "@/pages/Dashboard/Mensajes";
 import { useAuth } from "@/context/AuthContext";
 import { puedeVerModulo, tienePermiso } from "@/lib/permisos";
 import SinPermiso from "@/pages/Dashboard/SinPermiso";
@@ -29,10 +43,16 @@ import TerminosCondiciones from "@/pages/TerminosCondiciones";
 
 
 
-// Ruta protegida: exige sesión iniciada.
+// Ruta protegida: exige sesión iniciada y conserva el destino (p. ej. al abrir
+// "Ver en la aplicación" desde un correo de notificación).
 function Protegida({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
-  if (!token) return <Navigate to="/login" replace />;
+  const location = useLocation();
+  if (!token) {
+    const destino = `${location.pathname}${location.search}`;
+    const qs = destino && destino !== "/dashboard" ? `?next=${encodeURIComponent(destino)}` : "";
+    return <Navigate to={`/login${qs}`} replace />;
+  }
   return <>{children}</>;
 }
 
@@ -69,6 +89,16 @@ function RutaInicial() {
 
 export default function App() {
   const location = useLocation();
+
+  // Si el enlace de un correo trae `?conjunto=ID`, selecciona automáticamente
+  // ese conjunto al abrir la aplicación en el navegador.
+  useEffect(() => {
+    const cidParam = new URLSearchParams(location.search).get("conjunto");
+    const cid = cidParam ? Number(cidParam) : NaN;
+    if (Number.isInteger(cid) && cid > 0) {
+      setConjuntoActivo(cid);
+    }
+  }, [location.search]);
 
   return (
     <>
@@ -115,6 +145,18 @@ export default function App() {
             <Route path="eventos" element={<ConPermiso modulo="eventos"><Eventos /></ConPermiso>} />
             <Route path="chat" element={<RequierePermiso codigo="chat.usar"><ChatSesiones /></RequierePermiso>} />
             <Route path="configuracion" element={<ConPermiso modulo="config"><Configuracion /></ConPermiso>} />
+            {/* Historias de usuario UH-09 a UH-32 */}
+            <Route path="pqrs" element={<ConPermiso modulo="pqrs"><PQRS /></ConPermiso>} />
+            <Route path="reservas" element={<ConPermiso modulo="reservas"><Reservas /></ConPermiso>} />
+            <Route path="comunicados" element={<ConPermiso modulo="comunicados"><Comunicados /></ConPermiso>} />
+            <Route path="visitantes" element={<ConPermiso modulo="visitantes"><Visitantes /></ConPermiso>} />
+            <Route path="pagos" element={<ConPermiso modulo="pagos"><Pagos /></ConPermiso>} />
+            <Route path="votaciones" element={<ConPermiso modulo="votaciones"><Votaciones /></ConPermiso>} />
+            <Route path="aprobaciones" element={<ConPermiso modulo="aprobaciones"><Aprobaciones /></ConPermiso>} />
+            <Route path="auditoria" element={<RequierePermiso codigo="auditoria.ver"><Auditoria /></RequierePermiso>} />
+            <Route path="consejo" element={<RequierePermiso codigo="reportes.ver"><Consejo /></RequierePermiso>} />
+            <Route path="perfil" element={<RequierePermiso codigo="perfil.ver"><Perfil /></RequierePermiso>} />
+            <Route path="mensajes" element={<ConPermiso modulo="mensajes"><Mensajes /></ConPermiso>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

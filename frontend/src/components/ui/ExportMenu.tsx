@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Download, FileSpreadsheet, FileText, ChevronDown, Loader2 } from "lucide-react";
 import { descargarArchivo } from "@/lib/download";
+import { API_BASE } from "@/lib/api";
 
 interface Opcion {
   label: string;
@@ -12,7 +13,7 @@ interface Props {
   opciones: Opcion[];
 }
 
-const BASE = import.meta.env.VITE_API_URL || "/api";
+const BASE = API_BASE;
 
 // Botón desplegable para descargar reportes en Excel/PDF desde el backend.
 export default function ExportMenu({ opciones }: Props) {

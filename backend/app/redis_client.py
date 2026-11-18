@@ -58,7 +58,22 @@ def cache_del(*keys) -> None:
     if not r:
         return
     try:
-        r.delete(*keys)
+        if keys:
+            r.delete(*keys)
+    except Exception:
+        pass
+
+
+def cache_del_prefix(*prefixes: str) -> None:
+    """Elimina todas las claves cacheadas que comiencen por los prefijos dados."""
+    r = redis()
+    if not r:
+        return
+    try:
+        for pref in prefixes:
+            claves = list(r.scan_iter(match=f"{pref}*"))
+            if claves:
+                r.delete(*claves)
     except Exception:
         pass
 

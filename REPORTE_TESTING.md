@@ -175,3 +175,59 @@ Además del enlace, cada correo incluye un **código numérico de 6 dígitos** (
 - Los enlaces de los correos siguen funcionando (`/verificar/:token`, `/restablecer/:token`).
 - Tests: `test_verificacion_con_codigo_de_6_digitos`, `test_recuperacion_con_codigo_de_6_digitos` → suite 113/113.
 - Prueba real (Playwright + Gmail real a sl99081201125@gmail.com): registro → código incorrecto rechazado → código correcto verifica → login OK → recuperar → código → nueva contraseña → login OK. Capturas: `capturas_diseno/registro_codigo*.png`, `recuperar_codigo.png`, `recuperar_nueva_password.png`, `recuperar_listo.png`.
+
+## 14. Historias de usuario HU-01 … HU-32 (2026-11-12)
+
+Cierre del proyecto: **las 32 historias de usuario están implementadas y verificadas**.
+
+### Suite nueva: `backend/tests/test_hus_nuevas.py` — 24/24 ✅
+
+Se ejecuta aislada (SQLite temporal `hus_test.db` + `TestClient`, sin PostgreSQL ni
+Redis, con `DESACTIVAR_PROGRAMADOR=1`):
+
+```bash
+cd backend
+rm -f hus_test.db
+DESACTIVAR_PROGRAMADOR=1 .venv/bin/python -m pytest tests/test_hus_nuevas.py -q
+# 24 passed
+```
+
+| Prueba | Historias | Qué verifica |
+|---|---|---|
+| `test_pqrs_flujo_completo` | UH-09, 16, 32 | Radicado `PQRS-…`, estado inicial `pendiente`, notificación `pqrs_consejo` al consejo, respuesta, cierre, `403` del residente |
+| `test_reservas_evitan_duplicados` | UH-10, 14 | `409` con el mensaje de horario ocupado al repetir zona/fecha/hora |
+| `test_disponibilidad_zona` | UH-14 | Franjas libres/ocupadas por zona y fecha |
+| `test_comunicado_masivo` | UH-11, 18 | Aviso persistente y visible para el residente |
+| `test_visitantes_registro_y_salida` | UH-12 | Registro, `dentro`, salida y exportación |
+| `test_comprobante_de_pago` | UH-13 | Estado «En revisión» y paso a `aprobado` con `fecha_revision` |
+| `test_estado_de_cuenta_y_pdf` | UH-17 | Totales por unidad y PDF (`%PDF`) |
+| `test_actualizar_perfil` | UH-20 | Teléfono y foto persistidos |
+| `test_aprobacion_del_consejo` | UH-24 | Decisión con `decidido_por` y `fecha_decision` |
+| `test_votacion_un_solo_voto` | UH-25 | Un voto por usuario (`409`) y resultados al cierre |
+| `test_alerta_por_gasto_sobre_umbral` | UH-26 | Alerta `alerta_gasto` con monto, categoría y autor |
+| `test_auditoria_registra_acciones` | UH-29 | Registro de la acción con usuario y fecha |
+| `test_residente_sin_acceso_a_auditoria` | UH-29 | `403` para el residente |
+| `test_bloqueo_tras_cinco_intentos` | UH-27 | `codigo: "cuenta_bloqueada"` tras 5 fallos |
+| `test_token_expira_en_30_minutos` | UH-27 | `exp - iat = 1800 s` |
+| `test_evento_con_hora_y_aviso_48h` | UH-01, 04 | Hora/tipo guardados y `avisar_asambleas` envía el recordatorio |
+| `test_calendario_filtra_por_tipo` | UH-15 | Calendario completo, `?tipo=asamblea` y detalle en el listado |
+| `test_documento_pdf_y_limite_de_20mb` | UH-03, 19 | Carga PDF, descarga por el residente, `415` formato y `413` > 20 MB |
+| `test_mantenimiento_con_categoria_y_evidencia` | UH-21 | Foto `evidencia-*`, tarea `zona_comun` pendiente en el panel del administrador |
+| `test_acta_y_reporte_del_consejo` | UH-22, 23 | Acta visible y no editable (`403`), balance por período, PDF y Excel |
+| `test_recuperacion_expira_en_30_minutos` | UH-30 | `expira_token` a 30 minutos |
+| `test_rbac_consejo` | UH-08, 22-26, 29, 32 | Consejo: `403` en usuarios/finanzas de escritura, `200` en auditoría y aprobaciones |
+| `test_health_expone_configuracion_de_correo` | Correo | `/health` informa configurado, servidor, puerto, cifrado y autenticación (sin exponer la contraseña) |
+| `test_registro_publico_indica_estado_del_correo` | Correo, UH-02 | El alta devuelve `verificacion.enviado`; la cuenta queda bloqueada hasta verificar y el código de 6 dígitos la activa |
+
+### Pruebas heredadas
+
+- `tests/test_unit.py` → **8 passed**.
+- `tests/test_rbac.py` → matriz de permisos actualizada a **6 roles** (incluye consejo y los
+  permisos de los módulos nuevos); se ejecuta contra la API en marcha
+  (`TEST_API_URL=http://localhost:8000`).
+
+### Frontend
+
+- `npx tsc --noEmit` → **0 errores**.
+- `npm run build` → **✓ built** (bundle 627 kB, gzip ≈ 165 kB).
+- Verificación visual con Playwright (1440×950) sobre `/dashboard/{inicio,pqrs,reservas,comunicados,pagos,visitantes,votaciones,aprobaciones,consejo,auditoria,perfil,eventos}` como super_admin, residente y consejo: **0 errores de consola**; el residente recibe «Acceso restringido» al abrir `/dashboard/auditoria`.
