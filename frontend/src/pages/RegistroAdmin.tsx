@@ -218,8 +218,7 @@ export default function RegistroAdmin() {
           <div className="text-5xl">📬</div>
           <p className="text-lg font-semibold text-gray-800">¡Cuenta creada!</p>
           <p className="text-sm text-gray-500">
-            Te enviamos un <span className="font-semibold text-gray-700">código de 6 dígitos</span> a{" "}
-            <span className="font-medium text-gray-700">{correo}</span>. Escríbelo aquí para activar tu cuenta.
+            {exito.mensaje}
           </p>
           <CodigoInput value={codigo} onChange={setCodigo} disabled={verificando} />
           {errorCodigo && (
@@ -231,7 +230,7 @@ export default function RegistroAdmin() {
             {verificando ? "Verificando..." : "Verificar código"}
           </Button>
           <div className="text-xs text-gray-400 space-y-1">
-            <p>También puedes usar el botón del correo. Revisa la carpeta de spam si no lo ves.</p>
+            <p>Correo de la cuenta: {correo}</p>
             {reenviado ? (
               <p className="text-gray-600">{reenviado}</p>
             ) : (

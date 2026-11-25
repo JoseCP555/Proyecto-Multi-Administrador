@@ -152,9 +152,11 @@ async def _respuesta_registro_publico(nuevo: Usuario, db: Session) -> dict:
             "Te enviamos un correo para verificar tu cuenta. Revisa tu bandeja de entrada (y el spam)."
             if envio.get("enviado")
             else (
-                "El servidor no tiene correo configurado (EMAIL_USER / EMAIL_PASSWORD en backend/.env). "
-                "Configúralo y usa 'Reenviar verificación' desde el inicio de sesión."
+                "El servidor no tiene configurado el envío de correo. "
+                "Contacta al administrador y usa 'Reenviar verificación' desde el inicio de sesión."
                 if envio.get("error") == "SMTP no configurado"
+                else "No se envió el código: el envío está desactivado o la dirección es de prueba."
+                if envio.get("omitido")
                 else "No se pudo enviar el correo de verificación (revisa el log del servidor). "
                      "Usa la opción 'Reenviar verificación' desde el inicio de sesión."
             )
@@ -270,7 +272,7 @@ async def reenviar_verificacion(
 ):
     """Reenvía el correo de verificación. No revela si el correo existe."""
     limitar(request, "reenviar-verificacion", max_intentos=10, ventana_segundos=600)
-    respuesta = {"mensaje": "Si el correo está registrado y pendiente de verificación, te enviamos un nuevo código."}
+    respuesta = {"mensaje": "Solicitud recibida. Si la cuenta está pendiente, revisa tu correo. Si no llega el código, contacta al administrador."}
     usuario = crud.buscar_por_correo(db, datos.correo)
     if usuario and not usuario.correo_verificado:
         await crud.enviar_verificacion(db, usuario)

@@ -228,12 +228,15 @@ export default function Notificaciones() {
         push: number;
         suscripciones: number;
       }>("/notificaciones/probar", { canal: "todos" });
+
       const correo = r.correo?.enviado
         ? (r.correo.omitido ? "correo omitido (dominio de prueba)" : "correo enviado ✅")
         : `correo no enviado (${r.correo?.error ?? "sin configurar"})`;
+
       const push = r.suscripciones
         ? `${r.push}/${r.suscripciones} push entregados`
         : "sin suscripciones push activas";
+
       setAviso(`Aviso creado e incluido en la lista · ${correo} · ${push}`);
       await cargar(false);
     } catch (e) {
@@ -270,6 +273,7 @@ export default function Notificaciones() {
                 {noLeidas > 0 ? `${noLeidas} sin leer · ` : ""}{items.length} en total
               </p>
             </div>
+
             <div className="flex items-center gap-1">
               {noLeidas > 0 && (
                 <button
@@ -280,7 +284,11 @@ export default function Notificaciones() {
                   <Check className="w-3.5 h-3.5" /> Marcar leídas
                 </button>
               )}
-              <button onClick={() => setAbierto(false)} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400" aria-label="Cerrar">
+              <button
+                onClick={() => setAbierto(false)}
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"
+                aria-label="Cerrar"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -290,6 +298,7 @@ export default function Notificaciones() {
             {cargando && !items.length && (
               <p className="text-sm text-gray-400 text-center py-8">Cargando...</p>
             )}
+
             {!cargando && !items.length && (
               <div className="text-center py-10 px-6">
                 <Bell className="w-8 h-8 mx-auto text-gray-200" />
@@ -297,9 +306,11 @@ export default function Notificaciones() {
                 <p className="text-xs text-gray-400">No tienes notificaciones pendientes.</p>
               </div>
             )}
+
             {items.map((n) => {
               const meta = ICONOS[n.tipo] ?? META_DEFECTO;
               const Icono = meta.icon;
+
               return (
                 <button
                   key={n.id}
@@ -311,26 +322,33 @@ export default function Notificaciones() {
                   {!n.leida && (
                     <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary-500" />
                   )}
+
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${meta.badge}`}>
                     <Icono className={`w-4 h-4 ${meta.color}`} />
                   </div>
+
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <p className={`text-[13px] font-semibold text-gray-800 ${n.leida ? "" : "font-bold"}`}>
                         {n.titulo}
                       </p>
+
                       <span
                         role="button"
                         tabIndex={0}
                         aria-label="Descartar notificación"
                         onClick={(e) => descartar(e, n.id)}
-                        onKeyDown={(e) => { if (e.key === "Enter") descartar(e as unknown as React.MouseEvent, n.id); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") descartar(e as unknown as React.MouseEvent, n.id);
+                        }}
                         className="opacity-0 group-hover:opacity-100 shrink-0 p-0.5 rounded text-gray-300 hover:text-red-500 hover:bg-red-50"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </span>
                     </div>
+
                     <p className="text-xs text-gray-500 leading-snug mt-0.5">{n.mensaje}</p>
+
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
                       <span>{hace(n.fecha_creacion)}</span>
                       {n.nombre_conjunto && (
@@ -351,6 +369,7 @@ export default function Notificaciones() {
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
               Cómo quieres recibirlos
             </p>
+
             <div className="flex flex-col gap-1.5">
               <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                 <input
@@ -365,6 +384,7 @@ export default function Notificaciones() {
                   <span className="ml-auto text-[10px] text-amber-600">SMTP sin configurar</span>
                 )}
               </label>
+
               <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
@@ -374,25 +394,30 @@ export default function Notificaciones() {
                 />
                 <Bell className="w-3.5 h-3.5 text-gray-400" />
                 Notificaciones del navegador
-                {pushActivo && <span className="ml-auto text-[10px] text-emerald-600">activo</span>}
+                {pushActivo && (
+                  <span className="ml-auto text-[10px] text-emerald-600">activo</span>
+                )}
                 {!config?.push_configurado && (
                   <span className="ml-auto text-[10px] text-amber-600">sin claves VAPID</span>
                 )}
               </label>
             </div>
+
             <button
               onClick={enviarPrueba}
               disabled={probando}
               className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
             >
               <Send className="w-3.5 h-3.5" />
-              {probando ? "Enviando..." : "Enviar aviso de prueba"}
+              {probando ? "Enviando..." : "Enviar"}
             </button>
+
             {aviso && (
               <p className="mt-2 rounded-lg bg-white px-2.5 py-2 text-[11px] leading-snug text-gray-600 border border-gray-100">
                 {aviso}
               </p>
             )}
+
             <p className="mt-2 text-[10px] leading-snug text-gray-400">
               Se actualizan solas cada 30 s. Los avisos nacen de pagos, eventos,
               mantenimientos, documentos y residentes reales.

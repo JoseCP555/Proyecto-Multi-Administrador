@@ -553,7 +553,7 @@ def enviar_prueba(db: Session, usuario: models.Usuario, canal: str = "todos") ->
     if canal in ("todos", "correo"):
         if getattr(usuario, "notificaciones_correo", True):
             r = enviar_correo_notificacion(
-                usuario.correo, usuario.nombre, aviso.titulo, aviso.mensaje or "", aviso.url,
+                usuario.correo, usuario.nombre, "Notificación", aviso.mensaje or "", aviso.url,
                 id_conjunto=aviso.id_conjunto,
             )
             resultado["correo"] = r

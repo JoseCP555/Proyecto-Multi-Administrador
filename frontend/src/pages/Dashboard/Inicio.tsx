@@ -22,7 +22,7 @@ import SelectorConjunto from "@/components/layout/SelectorConjunto";
 import { MapPin, Phone, Mail, UserCog, DollarSign, CalendarClock, Moon } from "lucide-react";
 import { tienePermiso } from "@/lib/permisos";
 import type { DashboardStats, Movimiento } from "@/types";
-import logoUrl from "@/lib/logo";
+import logoUrl, { urlLogo } from "@/lib/logo";
 import { Link } from "react-router-dom";
 import {
   MessageSquareWarning,
@@ -40,6 +40,16 @@ export default function Inicio() {
   const { usuario } = useAuth();
   const { activo: conjunto } = useConjunto();
   const idConjunto = conjunto?.id ?? null;
+  const srcLogo = urlLogo(conjunto?.logo);
+  const logoConjunto = srcLogo && (
+    <img
+      key={srcLogo}
+      src={srcLogo}
+      alt=""
+      className="h-16 w-16 sm:h-24 sm:w-24 shrink-0 rounded-xl bg-white object-contain p-1"
+      onError={(e) => { e.currentTarget.hidden = true; }}
+    />
+  );
 
   // RBAC: los reportes/finanzas solo se consultan si el rol lo permite.
   const puedeVerReportes = tienePermiso(usuario, "reportes.ver");
@@ -117,6 +127,7 @@ export default function Inicio() {
             </p>
 
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+              {logoConjunto}
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
                 {conjunto.nombre}
               </h2>
@@ -269,6 +280,7 @@ export default function Inicio() {
             </p>
 
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+              {logoConjunto}
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
                 {conjunto.nombre}
               </h2>

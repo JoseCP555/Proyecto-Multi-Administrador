@@ -168,10 +168,10 @@ async def _enviar(destinatario: str, asunto: str, html: str, texto: str) -> dict
     dominio = destinatario.rsplit("@", 1)[-1].lower()
     if dominio in DOMINIOS_SIN_ENVIO:
         logger.info("[correo] '%s' a %s omitido (dominio sin envío: %s)", asunto, destinatario, dominio)
-        return {"enviado": True, "omitido": True}
+        return {"enviado": False, "omitido": True}
     if envio_deshabilitado():
         logger.info("[correo] '%s' a %s omitido (CORREO_DESHABILITADO)", asunto, destinatario)
-        return {"enviado": True, "omitido": True}
+        return {"enviado": False, "omitido": True}
     if not mail_configurado():
         logger.error("[correo] SMTP no configurado; no se envió '%s'. Configura EMAIL_USER/EMAIL_PASSWORD.", asunto)
         return {"enviado": False, "error": "SMTP no configurado"}

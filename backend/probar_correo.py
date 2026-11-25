@@ -176,6 +176,11 @@ def enviar_prueba(destino: str) -> bool:
 
 def main() -> int:
     destino = sys.argv[1].strip() if len(sys.argv) > 1 else ""
+    if destino == "--interactivo":
+        destino = input("Enviar prueba a tu buzón (correo completo): ").strip()
+        if not destino or "@" not in destino or any(c.isspace() for c in destino):
+            print("Escribe una dirección de destino válida.")
+            return 2
     if not diagnosticar():
         return 1
     if destino:
