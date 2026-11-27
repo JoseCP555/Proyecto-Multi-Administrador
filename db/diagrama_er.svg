@@ -1,0 +1,554 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2154" height="1794" viewBox="0 0 2154 1794" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<text x="44" y="52" font-size="26" font-weight="700" fill="#111827">Multi-Administrador · Diagrama entidad-relación</text>
+<text x="44" y="78" font-size="14" fill="#6B7280">31 tablas · 65 relaciones (llaves foráneas) · PostgreSQL 16 · generado desde el catálogo real de la base de datos</text>
+<rect x="28" y="118" width="1410" height="206" rx="14" fill="#EEF3F9" stroke="#1E3A5F" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="42" y="130" width="5" height="18" rx="2.5" fill="#1E3A5F"/>
+<text x="56" y="144" font-size="15" font-weight="700" fill="#1E3A5F">Núcleo y accesos</text>
+<rect x="1480" y="118" width="646" height="140" rx="14" fill="#F4EEF9" stroke="#5B2C83" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="1494" y="130" width="5" height="18" rx="2.5" fill="#5B2C83"/>
+<text x="1508" y="144" font-size="15" font-weight="700" fill="#5B2C83">RBAC · Permisos</text>
+<rect x="716" y="374" width="302" height="382" rx="14" fill="#EDF7F2" stroke="#0B6E4F" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="730" y="386" width="5" height="18" rx="2.5" fill="#0B6E4F"/>
+<text x="744" y="400" font-size="15" font-weight="700" fill="#0B6E4F">Residentes y propiedades</text>
+<rect x="28" y="374" width="646" height="434" rx="14" fill="#FBF5E6" stroke="#9A6700" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="42" y="386" width="5" height="18" rx="2.5" fill="#9A6700"/>
+<text x="56" y="400" font-size="15" font-weight="700" fill="#9A6700">Finanzas</text>
+<rect x="1136" y="826" width="646" height="412" rx="14" fill="#FBF0EC" stroke="#A33B20" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="1150" y="838" width="5" height="18" rx="2.5" fill="#A33B20"/>
+<text x="1164" y="852" font-size="15" font-weight="700" fill="#A33B20">Operación</text>
+<rect x="1136" y="374" width="646" height="412" rx="14" fill="#EBF6F9" stroke="#0E7490" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="1150" y="386" width="5" height="18" rx="2.5" fill="#0E7490"/>
+<text x="1164" y="400" font-size="15" font-weight="700" fill="#0E7490">Comunidad</text>
+<rect x="28" y="1292" width="990" height="346" rx="14" fill="#FAEFF3" stroke="#8B1E3F" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="42" y="1304" width="5" height="18" rx="2.5" fill="#8B1E3F"/>
+<text x="56" y="1318" font-size="15" font-weight="700" fill="#8B1E3F">Gobierno del consejo</text>
+<rect x="1136" y="1292" width="990" height="368" rx="14" fill="#F1F6EA" stroke="#3F5E1A" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="1150" y="1304" width="5" height="18" rx="2.5" fill="#3F5E1A"/>
+<text x="1164" y="1318" font-size="15" font-weight="700" fill="#3F5E1A">Comunicación</text>
+<rect x="1824" y="374" width="302" height="324" rx="14" fill="#F1F2F4" stroke="#4B5563" stroke-opacity="0.35" stroke-width="1.5"/>
+<rect x="1838" y="386" width="5" height="18" rx="2.5" fill="#4B5563"/>
+<text x="1852" y="400" font-size="15" font-weight="700" fill="#4B5563">Configuración y auditoría</text>
+<path d="M314,457.0 H340.0 V523.0 H388" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M314,1375.0 H351.0 V1397.0 H388" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M314,1375.0 H362.0 V1537.0 H388" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M732,655.0 H695.0 V501.0 H658" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1152,201.0 H1049.5 V223.0 H1002" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1002,457.0 H1060.5 V523.0 H1152" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1002,457.0 H1071.5 V707.0 H1152" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1002,655.0 H1082.5 V953.0 H1152" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1002,457.0 H1093.5 V975.0 H1152" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1002,655.0 H1104.5 V1159.0 H1152" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1422,201.0 H1448.0 V201.0 H1496" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1422,1375.0 H1459.0 V1397.0 H1496" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1422,1537.0 H1470.0 V1537.0 H1496" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1840,201.0 H1803.0 V223.0 H1766" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M658,457.0 H688 V729.0 H658" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M658,1375.0 H699 V1559.0 H658" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1002,457.0 H1032 V699.0 H1002" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M1766,457.0 H1796 V641.0 H1766" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-linejoin="round"/>
+<line x1="323" y1="451.0" x2="323" y2="463.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="377" y1="523.0" x2="388" y2="517.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="377" y1="523.0" x2="388" y2="523.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="377" y1="523.0" x2="388" y2="529.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="373" y1="517.0" x2="373" y2="529.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="323" y1="1369.0" x2="323" y2="1381.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="377" y1="1397.0" x2="388" y2="1391.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="377" y1="1397.0" x2="388" y2="1397.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="377" y1="1397.0" x2="388" y2="1403.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="373" y1="1391.0" x2="373" y2="1403.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="323" y1="1369.0" x2="323" y2="1381.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="377" y1="1537.0" x2="388" y2="1531.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="377" y1="1537.0" x2="388" y2="1537.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="377" y1="1537.0" x2="388" y2="1543.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="373" y1="1531.0" x2="373" y2="1543.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="723" y1="649.0" x2="723" y2="661.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="669" y1="501.0" x2="658" y2="495.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="669" y1="501.0" x2="658" y2="501.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="669" y1="501.0" x2="658" y2="507.0" stroke="#374151" stroke-width="1.6"/>
+<circle cx="675" cy="501.0" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<line x1="1143" y1="195.0" x2="1143" y2="207.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1013" y1="223.0" x2="1002" y2="217.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1013" y1="223.0" x2="1002" y2="223.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1013" y1="223.0" x2="1002" y2="229.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1017" y1="217.0" x2="1017" y2="229.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1011" y1="451.0" x2="1011" y2="463.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1141" y1="523.0" x2="1152" y2="517.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="523.0" x2="1152" y2="523.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="523.0" x2="1152" y2="529.0" stroke="#374151" stroke-width="1.6"/>
+<circle cx="1135" cy="523.0" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<line x1="1011" y1="451.0" x2="1011" y2="463.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1141" y1="707.0" x2="1152" y2="701.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="707.0" x2="1152" y2="707.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="707.0" x2="1152" y2="713.0" stroke="#374151" stroke-width="1.6"/>
+<circle cx="1135" cy="707.0" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<line x1="1011" y1="649.0" x2="1011" y2="661.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1141" y1="953.0" x2="1152" y2="947.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="953.0" x2="1152" y2="953.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="953.0" x2="1152" y2="959.0" stroke="#374151" stroke-width="1.6"/>
+<circle cx="1135" cy="953.0" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<line x1="1011" y1="451.0" x2="1011" y2="463.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1141" y1="975.0" x2="1152" y2="969.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="975.0" x2="1152" y2="975.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="975.0" x2="1152" y2="981.0" stroke="#374151" stroke-width="1.6"/>
+<circle cx="1135" cy="975.0" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<line x1="1011" y1="649.0" x2="1011" y2="661.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1141" y1="1159.0" x2="1152" y2="1153.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="1159.0" x2="1152" y2="1159.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1141" y1="1159.0" x2="1152" y2="1165.0" stroke="#374151" stroke-width="1.6"/>
+<circle cx="1135" cy="1159.0" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<line x1="1431" y1="195.0" x2="1431" y2="207.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1485" y1="201.0" x2="1496" y2="195.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1485" y1="201.0" x2="1496" y2="201.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1485" y1="201.0" x2="1496" y2="207.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1481" y1="195.0" x2="1481" y2="207.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1431" y1="1369.0" x2="1431" y2="1381.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1485" y1="1397.0" x2="1496" y2="1391.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1485" y1="1397.0" x2="1496" y2="1397.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1485" y1="1397.0" x2="1496" y2="1403.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1481" y1="1391.0" x2="1481" y2="1403.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1431" y1="1531.0" x2="1431" y2="1543.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1485" y1="1537.0" x2="1496" y2="1531.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1485" y1="1537.0" x2="1496" y2="1537.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1485" y1="1537.0" x2="1496" y2="1543.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1481" y1="1531.0" x2="1481" y2="1543.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1831" y1="195.0" x2="1831" y2="207.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1777" y1="223.0" x2="1766" y2="217.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1777" y1="223.0" x2="1766" y2="223.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1777" y1="223.0" x2="1766" y2="229.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1781" y1="217.0" x2="1781" y2="229.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="667" y1="451.0" x2="667" y2="463.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="669" y1="729.0" x2="658" y2="723.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="669" y1="729.0" x2="658" y2="729.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="669" y1="729.0" x2="658" y2="735.0" stroke="#374151" stroke-width="1.6"/>
+<circle cx="675" cy="729.0" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<line x1="667" y1="1369.0" x2="667" y2="1381.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="669" y1="1559.0" x2="658" y2="1553.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="669" y1="1559.0" x2="658" y2="1559.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="669" y1="1559.0" x2="658" y2="1565.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="673" y1="1553.0" x2="673" y2="1565.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1011" y1="451.0" x2="1011" y2="463.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1013" y1="699.0" x2="1002" y2="693.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1013" y1="699.0" x2="1002" y2="699.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1013" y1="699.0" x2="1002" y2="705.0" stroke="#374151" stroke-width="1.6"/>
+<circle cx="1019" cy="699.0" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<line x1="1775" y1="451.0" x2="1775" y2="463.0" stroke="#374151" stroke-width="1.8"/>
+<line x1="1777" y1="641.0" x2="1766" y2="635.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1777" y1="641.0" x2="1766" y2="641.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1777" y1="641.0" x2="1766" y2="647.0" stroke="#374151" stroke-width="1.6"/>
+<line x1="1781" y1="635.0" x2="1781" y2="647.0" stroke="#374151" stroke-width="1.8"/>
+<rect x="46" y="161" width="270" height="84" rx="8" fill="#000" opacity="0.07"/>
+<rect x="44" y="158" width="270" height="84" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2.2"/>
+<path d="M44,190 V166 a8,8 0 0 1 8,-8 H306 a8,8 0 0 1 8,8 V190 Z" fill="#1E3A5F"/>
+<text x="56" y="179" font-size="13.5" font-weight="700" fill="#fff">conjuntos</text>
+<rect x="252" y="166" width="50" height="16" rx="8" fill="#FFFFFF" opacity="0.95"/>
+<text x="277" y="177.5" font-size="9.5" font-weight="700" fill="#1D4ED8" text-anchor="middle">CENTRAL</text>
+<rect x="45" y="190" width="268" height="22" fill="#EEF3F9" opacity="0.55"/>
+<text x="56" y="205" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="302" y="205" font-size="9.5" font-weight="700" fill="#1E3A5F" text-anchor="end">PK</text>
+<text x="56" y="227" font-size="10" font-style="italic" fill="#9CA3AF">+ 17 columnas</text>
+<rect x="390" y="161" width="270" height="106" rx="8" fill="#000" opacity="0.07"/>
+<rect x="388" y="158" width="270" height="106" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.4"/>
+<path d="M388,190 V166 a8,8 0 0 1 8,-8 H650 a8,8 0 0 1 8,8 V190 Z" fill="#1E3A5F"/>
+<text x="400" y="179" font-size="13.5" font-weight="700" fill="#fff">usuario_conjuntos</text>
+<rect x="389" y="190" width="268" height="22" fill="#EEF3F9" opacity="0.55"/>
+<text x="400" y="205" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="646" y="205" font-size="9.5" font-weight="700" fill="#1E3A5F" text-anchor="end">PK</text>
+<text x="400" y="227" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="646" y="227" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<rect x="389" y="234" width="268" height="22" fill="#EEF3F9" opacity="0.55"/>
+<text x="400" y="249" font-size="11.5" fill="#111827">conjunto_id</text>
+<text x="646" y="249" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="734" y="161" width="270" height="150" rx="8" fill="#000" opacity="0.07"/>
+<rect x="732" y="158" width="270" height="150" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2.2"/>
+<path d="M732,190 V166 a8,8 0 0 1 8,-8 H994 a8,8 0 0 1 8,8 V190 Z" fill="#1E3A5F"/>
+<text x="744" y="179" font-size="13.5" font-weight="700" fill="#fff">usuarios</text>
+<rect x="940" y="166" width="50" height="16" rx="8" fill="#FFFFFF" opacity="0.95"/>
+<text x="965" y="177.5" font-size="9.5" font-weight="700" fill="#C2410C" text-anchor="middle">CENTRAL</text>
+<rect x="733" y="190" width="268" height="22" fill="#EEF3F9" opacity="0.55"/>
+<text x="744" y="205" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="990" y="205" font-size="9.5" font-weight="700" fill="#1E3A5F" text-anchor="end">PK</text>
+<text x="744" y="227" font-size="11.5" fill="#111827">rol_id</text>
+<text x="990" y="227" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ roles</text>
+<rect x="733" y="234" width="268" height="22" fill="#EEF3F9" opacity="0.55"/>
+<text x="744" y="249" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="990" y="249" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<text x="744" y="271" font-size="11.5" fill="#111827">id_copropiedad</text>
+<text x="990" y="271" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<text x="744" y="293" font-size="10" font-style="italic" fill="#9CA3AF">+ 17 columnas</text>
+<rect x="1154" y="161" width="270" height="84" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1152" y="158" width="270" height="84" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.4"/>
+<path d="M1152,190 V166 a8,8 0 0 1 8,-8 H1414 a8,8 0 0 1 8,8 V190 Z" fill="#1E3A5F"/>
+<text x="1164" y="179" font-size="13.5" font-weight="700" fill="#fff">roles</text>
+<rect x="1153" y="190" width="268" height="22" fill="#EEF3F9" opacity="0.55"/>
+<text x="1164" y="205" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1410" y="205" font-size="9.5" font-weight="700" fill="#1E3A5F" text-anchor="end">PK</text>
+<text x="1164" y="227" font-size="10" font-style="italic" fill="#9CA3AF">+ 3 columnas</text>
+<rect x="1498" y="161" width="270" height="84" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1496" y="158" width="270" height="84" rx="8" fill="#FFFFFF" stroke="#5B2C83" stroke-width="1.4"/>
+<path d="M1496,190 V166 a8,8 0 0 1 8,-8 H1758 a8,8 0 0 1 8,8 V190 Z" fill="#5B2C83"/>
+<text x="1508" y="179" font-size="13.5" font-weight="700" fill="#fff">rol_permisos</text>
+<rect x="1497" y="190" width="268" height="22" fill="#F4EEF9" opacity="0.55"/>
+<text x="1508" y="205" font-size="11.5" font-weight="700" fill="#111827">rol_id</text>
+<text x="1754" y="205" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">PK · → roles</text>
+<text x="1508" y="227" font-size="11.5" font-weight="700" fill="#111827">permiso_id</text>
+<text x="1754" y="227" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">PK · → permisos</text>
+<rect x="1842" y="161" width="270" height="84" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1840" y="158" width="270" height="84" rx="8" fill="#FFFFFF" stroke="#5B2C83" stroke-width="1.4"/>
+<path d="M1840,190 V166 a8,8 0 0 1 8,-8 H2102 a8,8 0 0 1 8,8 V190 Z" fill="#5B2C83"/>
+<text x="1852" y="179" font-size="13.5" font-weight="700" fill="#fff">permisos</text>
+<rect x="1841" y="190" width="268" height="22" fill="#F4EEF9" opacity="0.55"/>
+<text x="1852" y="205" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="2098" y="205" font-size="9.5" font-weight="700" fill="#5B2C83" text-anchor="end">PK</text>
+<text x="1852" y="227" font-size="10" font-style="italic" fill="#9CA3AF">+ 4 columnas</text>
+<rect x="46" y="417" width="270" height="84" rx="8" fill="#000" opacity="0.07"/>
+<rect x="44" y="414" width="270" height="84" rx="8" fill="#FFFFFF" stroke="#9A6700" stroke-width="1.4"/>
+<path d="M44,446 V422 a8,8 0 0 1 8,-8 H306 a8,8 0 0 1 8,8 V446 Z" fill="#9A6700"/>
+<text x="56" y="435" font-size="13.5" font-weight="700" fill="#fff">conceptos_financieros</text>
+<rect x="45" y="446" width="268" height="22" fill="#FBF5E6" opacity="0.55"/>
+<text x="56" y="461" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="302" y="461" font-size="9.5" font-weight="700" fill="#9A6700" text-anchor="end">PK</text>
+<text x="56" y="483" font-size="10" font-style="italic" fill="#9CA3AF">+ 6 columnas</text>
+<rect x="390" y="417" width="270" height="172" rx="8" fill="#000" opacity="0.07"/>
+<rect x="388" y="414" width="270" height="172" rx="8" fill="#FFFFFF" stroke="#9A6700" stroke-width="1.4"/>
+<path d="M388,446 V422 a8,8 0 0 1 8,-8 H650 a8,8 0 0 1 8,8 V446 Z" fill="#9A6700"/>
+<text x="400" y="435" font-size="13.5" font-weight="700" fill="#fff">movimientos_financieros</text>
+<rect x="389" y="446" width="268" height="22" fill="#FBF5E6" opacity="0.55"/>
+<text x="400" y="461" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="646" y="461" font-size="9.5" font-weight="700" fill="#9A6700" text-anchor="end">PK</text>
+<text x="400" y="483" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="646" y="483" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="389" y="490" width="268" height="22" fill="#FBF5E6" opacity="0.55"/>
+<text x="400" y="505" font-size="11.5" fill="#111827">propiedad_id</text>
+<text x="646" y="505" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ propiedades</text>
+<text x="400" y="527" font-size="11.5" fill="#111827">concepto_id</text>
+<text x="646" y="527" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ conceptos_financieros</text>
+<rect x="389" y="534" width="268" height="22" fill="#FBF5E6" opacity="0.55"/>
+<text x="400" y="549" font-size="11.5" fill="#111827">creado_por</text>
+<text x="646" y="549" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="400" y="571" font-size="10" font-style="italic" fill="#9CA3AF">+ 9 columnas</text>
+<rect x="390" y="623" width="270" height="172" rx="8" fill="#000" opacity="0.07"/>
+<rect x="388" y="620" width="270" height="172" rx="8" fill="#FFFFFF" stroke="#9A6700" stroke-width="1.4"/>
+<path d="M388,652 V628 a8,8 0 0 1 8,-8 H650 a8,8 0 0 1 8,8 V652 Z" fill="#9A6700"/>
+<text x="400" y="641" font-size="13.5" font-weight="700" fill="#fff">comprobantes_pago</text>
+<rect x="389" y="652" width="268" height="22" fill="#FBF5E6" opacity="0.55"/>
+<text x="400" y="667" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="646" y="667" font-size="9.5" font-weight="700" fill="#9A6700" text-anchor="end">PK</text>
+<text x="400" y="689" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="646" y="689" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="389" y="696" width="268" height="22" fill="#FBF5E6" opacity="0.55"/>
+<text x="400" y="711" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="646" y="711" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="400" y="733" font-size="11.5" fill="#111827">movimiento_id</text>
+<text x="646" y="733" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ movimientos_financieros</text>
+<rect x="389" y="740" width="268" height="22" fill="#FBF5E6" opacity="0.55"/>
+<text x="400" y="755" font-size="11.5" fill="#111827">revisado_por</text>
+<text x="646" y="755" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="400" y="777" font-size="10" font-style="italic" fill="#9CA3AF">+ 10 columnas</text>
+<rect x="734" y="417" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="732" y="414" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#0B6E4F" stroke-width="1.4"/>
+<path d="M732,446 V422 a8,8 0 0 1 8,-8 H994 a8,8 0 0 1 8,8 V446 Z" fill="#0B6E4F"/>
+<text x="744" y="435" font-size="13.5" font-weight="700" fill="#fff">residentes</text>
+<rect x="733" y="446" width="268" height="22" fill="#EDF7F2" opacity="0.55"/>
+<text x="744" y="461" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="990" y="461" font-size="9.5" font-weight="700" fill="#0B6E4F" text-anchor="end">PK</text>
+<text x="744" y="483" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="990" y="483" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<rect x="733" y="490" width="268" height="22" fill="#EDF7F2" opacity="0.55"/>
+<text x="744" y="505" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="990" y="505" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<text x="744" y="527" font-size="10" font-style="italic" fill="#9CA3AF">+ 7 columnas</text>
+<rect x="734" y="615" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="732" y="612" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#0B6E4F" stroke-width="1.4"/>
+<path d="M732,644 V620 a8,8 0 0 1 8,-8 H994 a8,8 0 0 1 8,8 V644 Z" fill="#0B6E4F"/>
+<text x="744" y="633" font-size="13.5" font-weight="700" fill="#fff">propiedades</text>
+<rect x="733" y="644" width="268" height="22" fill="#EDF7F2" opacity="0.55"/>
+<text x="744" y="659" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="990" y="659" font-size="9.5" font-weight="700" fill="#0B6E4F" text-anchor="end">PK</text>
+<text x="744" y="681" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="990" y="681" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="733" y="688" width="268" height="22" fill="#EDF7F2" opacity="0.55"/>
+<text x="744" y="703" font-size="11.5" fill="#111827">residente_id</text>
+<text x="990" y="703" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ residentes</text>
+<text x="744" y="725" font-size="10" font-style="italic" fill="#9CA3AF">+ 12 columnas</text>
+<rect x="1154" y="417" width="270" height="172" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1152" y="414" width="270" height="172" rx="8" fill="#FFFFFF" stroke="#0E7490" stroke-width="1.4"/>
+<path d="M1152,446 V422 a8,8 0 0 1 8,-8 H1414 a8,8 0 0 1 8,8 V446 Z" fill="#0E7490"/>
+<text x="1164" y="435" font-size="13.5" font-weight="700" fill="#fff">pqrs</text>
+<rect x="1153" y="446" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1164" y="461" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1410" y="461" font-size="9.5" font-weight="700" fill="#0E7490" text-anchor="end">PK</text>
+<text x="1164" y="483" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1410" y="483" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1153" y="490" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1164" y="505" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="1410" y="505" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1164" y="527" font-size="11.5" fill="#111827">residente_id</text>
+<text x="1410" y="527" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ residentes</text>
+<rect x="1153" y="534" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1164" y="549" font-size="11.5" fill="#111827">respondido_por</text>
+<text x="1410" y="549" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1164" y="571" font-size="10" font-style="italic" fill="#9CA3AF">+ 11 columnas</text>
+<rect x="1154" y="623" width="270" height="150" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1152" y="620" width="270" height="150" rx="8" fill="#FFFFFF" stroke="#0E7490" stroke-width="1.4"/>
+<path d="M1152,652 V628 a8,8 0 0 1 8,-8 H1414 a8,8 0 0 1 8,8 V652 Z" fill="#0E7490"/>
+<text x="1164" y="641" font-size="13.5" font-weight="700" fill="#fff">visitantes</text>
+<rect x="1153" y="652" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1164" y="667" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1410" y="667" font-size="9.5" font-weight="700" fill="#0E7490" text-anchor="end">PK</text>
+<text x="1164" y="689" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1410" y="689" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1153" y="696" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1164" y="711" font-size="11.5" fill="#111827">residente_id</text>
+<text x="1410" y="711" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ residentes</text>
+<text x="1164" y="733" font-size="11.5" fill="#111827">registrado_por</text>
+<text x="1410" y="733" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1164" y="755" font-size="10" font-style="italic" fill="#9CA3AF">+ 10 columnas</text>
+<rect x="1498" y="417" width="270" height="106" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1496" y="414" width="270" height="106" rx="8" fill="#FFFFFF" stroke="#0E7490" stroke-width="1.4"/>
+<path d="M1496,446 V422 a8,8 0 0 1 8,-8 H1758 a8,8 0 0 1 8,8 V446 Z" fill="#0E7490"/>
+<text x="1508" y="435" font-size="13.5" font-weight="700" fill="#fff">zonas_comunes</text>
+<rect x="1497" y="446" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1508" y="461" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1754" y="461" font-size="9.5" font-weight="700" fill="#0E7490" text-anchor="end">PK</text>
+<text x="1508" y="483" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1754" y="483" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<text x="1508" y="505" font-size="10" font-style="italic" fill="#9CA3AF">+ 8 columnas</text>
+<rect x="1498" y="557" width="270" height="172" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1496" y="554" width="270" height="172" rx="8" fill="#FFFFFF" stroke="#0E7490" stroke-width="1.4"/>
+<path d="M1496,586 V562 a8,8 0 0 1 8,-8 H1758 a8,8 0 0 1 8,8 V586 Z" fill="#0E7490"/>
+<text x="1508" y="575" font-size="13.5" font-weight="700" fill="#fff">reservas_zonas</text>
+<rect x="1497" y="586" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1508" y="601" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1754" y="601" font-size="9.5" font-weight="700" fill="#0E7490" text-anchor="end">PK</text>
+<text x="1508" y="623" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1754" y="623" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1497" y="630" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1508" y="645" font-size="11.5" fill="#111827">zona_id</text>
+<text x="1754" y="645" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ zonas_comunes</text>
+<text x="1508" y="667" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="1754" y="667" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<rect x="1497" y="674" width="268" height="22" fill="#EBF6F9" opacity="0.55"/>
+<text x="1508" y="689" font-size="11.5" fill="#111827">decidido_por</text>
+<text x="1754" y="689" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1508" y="711" font-size="10" font-style="italic" fill="#9CA3AF">+ 9 columnas</text>
+<rect x="1154" y="869" width="270" height="172" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1152" y="866" width="270" height="172" rx="8" fill="#FFFFFF" stroke="#A33B20" stroke-width="1.4"/>
+<path d="M1152,898 V874 a8,8 0 0 1 8,-8 H1414 a8,8 0 0 1 8,8 V898 Z" fill="#A33B20"/>
+<text x="1164" y="887" font-size="13.5" font-weight="700" fill="#fff">tareas_mantenimiento</text>
+<rect x="1153" y="898" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1164" y="913" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1410" y="913" font-size="9.5" font-weight="700" fill="#A33B20" text-anchor="end">PK</text>
+<text x="1164" y="935" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1410" y="935" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1153" y="942" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1164" y="957" font-size="11.5" fill="#111827">propiedad_id</text>
+<text x="1410" y="957" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ propiedades</text>
+<text x="1164" y="979" font-size="11.5" fill="#111827">residente_id</text>
+<text x="1410" y="979" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ residentes</text>
+<rect x="1153" y="986" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1164" y="1001" font-size="11.5" fill="#111827">asignado_a</text>
+<text x="1410" y="1001" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1164" y="1023" font-size="10" font-style="italic" fill="#9CA3AF">+ 10 columnas</text>
+<rect x="1154" y="1075" width="270" height="150" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1152" y="1072" width="270" height="150" rx="8" fill="#FFFFFF" stroke="#A33B20" stroke-width="1.4"/>
+<path d="M1152,1104 V1080 a8,8 0 0 1 8,-8 H1414 a8,8 0 0 1 8,8 V1104 Z" fill="#A33B20"/>
+<text x="1164" y="1093" font-size="13.5" font-weight="700" fill="#fff">documentos</text>
+<rect x="1153" y="1104" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1164" y="1119" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1410" y="1119" font-size="9.5" font-weight="700" fill="#A33B20" text-anchor="end">PK</text>
+<text x="1164" y="1141" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1410" y="1141" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1153" y="1148" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1164" y="1163" font-size="11.5" fill="#111827">propiedad_id</text>
+<text x="1410" y="1163" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ propiedades</text>
+<text x="1164" y="1185" font-size="11.5" fill="#111827">subido_por</text>
+<text x="1410" y="1185" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1164" y="1207" font-size="10" font-style="italic" fill="#9CA3AF">+ 9 columnas</text>
+<rect x="1498" y="869" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1496" y="866" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#A33B20" stroke-width="1.4"/>
+<path d="M1496,898 V874 a8,8 0 0 1 8,-8 H1758 a8,8 0 0 1 8,8 V898 Z" fill="#A33B20"/>
+<text x="1508" y="887" font-size="13.5" font-weight="700" fill="#fff">eventos</text>
+<rect x="1497" y="898" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1508" y="913" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1754" y="913" font-size="9.5" font-weight="700" fill="#A33B20" text-anchor="end">PK</text>
+<text x="1508" y="935" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1754" y="935" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1497" y="942" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1508" y="957" font-size="11.5" fill="#111827">creado_por</text>
+<text x="1754" y="957" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1508" y="979" font-size="10" font-style="italic" fill="#9CA3AF">+ 8 columnas</text>
+<rect x="1498" y="1031" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1496" y="1028" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#A33B20" stroke-width="1.4"/>
+<path d="M1496,1060 V1036 a8,8 0 0 1 8,-8 H1758 a8,8 0 0 1 8,8 V1060 Z" fill="#A33B20"/>
+<text x="1508" y="1049" font-size="13.5" font-weight="700" fill="#fff">comunicados</text>
+<rect x="1497" y="1060" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1508" y="1075" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1754" y="1075" font-size="9.5" font-weight="700" fill="#A33B20" text-anchor="end">PK</text>
+<text x="1508" y="1097" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1754" y="1097" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1497" y="1104" width="268" height="22" fill="#FBF0EC" opacity="0.55"/>
+<text x="1508" y="1119" font-size="11.5" fill="#111827">enviado_por</text>
+<text x="1754" y="1119" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1508" y="1141" font-size="10" font-style="italic" fill="#9CA3AF">+ 6 columnas</text>
+<rect x="1842" y="417" width="270" height="106" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1840" y="414" width="270" height="106" rx="8" fill="#FFFFFF" stroke="#4B5563" stroke-width="1.4"/>
+<path d="M1840,446 V422 a8,8 0 0 1 8,-8 H2102 a8,8 0 0 1 8,8 V446 Z" fill="#4B5563"/>
+<text x="1852" y="435" font-size="13.5" font-weight="700" fill="#fff">configuraciones</text>
+<rect x="1841" y="446" width="268" height="22" fill="#F1F2F4" opacity="0.55"/>
+<text x="1852" y="461" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="2098" y="461" font-size="9.5" font-weight="700" fill="#4B5563" text-anchor="end">PK</text>
+<text x="1852" y="483" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="2098" y="483" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<text x="1852" y="505" font-size="10" font-style="italic" fill="#9CA3AF">+ 7 columnas</text>
+<rect x="1842" y="557" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1840" y="554" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#4B5563" stroke-width="1.4"/>
+<path d="M1840,586 V562 a8,8 0 0 1 8,-8 H2102 a8,8 0 0 1 8,8 V586 Z" fill="#4B5563"/>
+<text x="1852" y="575" font-size="13.5" font-weight="700" fill="#fff">auditoria</text>
+<rect x="1841" y="586" width="268" height="22" fill="#F1F2F4" opacity="0.55"/>
+<text x="1852" y="601" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="2098" y="601" font-size="9.5" font-weight="700" fill="#4B5563" text-anchor="end">PK</text>
+<text x="1852" y="623" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="2098" y="623" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<rect x="1841" y="630" width="268" height="22" fill="#F1F2F4" opacity="0.55"/>
+<text x="1852" y="645" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="2098" y="645" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<text x="1852" y="667" font-size="10" font-style="italic" fill="#9CA3AF">+ 12 columnas</text>
+<rect x="46" y="1335" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="44" y="1332" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#8B1E3F" stroke-width="1.4"/>
+<path d="M44,1364 V1340 a8,8 0 0 1 8,-8 H306 a8,8 0 0 1 8,8 V1364 Z" fill="#8B1E3F"/>
+<text x="56" y="1353" font-size="13.5" font-weight="700" fill="#fff">votaciones</text>
+<rect x="45" y="1364" width="268" height="22" fill="#FAEFF3" opacity="0.55"/>
+<text x="56" y="1379" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="302" y="1379" font-size="9.5" font-weight="700" fill="#8B1E3F" text-anchor="end">PK</text>
+<text x="56" y="1401" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="302" y="1401" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="45" y="1408" width="268" height="22" fill="#FAEFF3" opacity="0.55"/>
+<text x="56" y="1423" font-size="11.5" fill="#111827">creado_por</text>
+<text x="302" y="1423" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="56" y="1445" font-size="10" font-style="italic" fill="#9CA3AF">+ 5 columnas</text>
+<rect x="390" y="1335" width="270" height="106" rx="8" fill="#000" opacity="0.07"/>
+<rect x="388" y="1332" width="270" height="106" rx="8" fill="#FFFFFF" stroke="#8B1E3F" stroke-width="1.4"/>
+<path d="M388,1364 V1340 a8,8 0 0 1 8,-8 H650 a8,8 0 0 1 8,8 V1364 Z" fill="#8B1E3F"/>
+<text x="400" y="1353" font-size="13.5" font-weight="700" fill="#fff">votacion_opciones</text>
+<rect x="389" y="1364" width="268" height="22" fill="#FAEFF3" opacity="0.55"/>
+<text x="400" y="1379" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="646" y="1379" font-size="9.5" font-weight="700" fill="#8B1E3F" text-anchor="end">PK</text>
+<text x="400" y="1401" font-size="11.5" fill="#111827">votacion_id</text>
+<text x="646" y="1401" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ votaciones</text>
+<text x="400" y="1423" font-size="10" font-style="italic" fill="#9CA3AF">+ 2 columnas</text>
+<rect x="390" y="1475" width="270" height="150" rx="8" fill="#000" opacity="0.07"/>
+<rect x="388" y="1472" width="270" height="150" rx="8" fill="#FFFFFF" stroke="#8B1E3F" stroke-width="1.4"/>
+<path d="M388,1504 V1480 a8,8 0 0 1 8,-8 H650 a8,8 0 0 1 8,8 V1504 Z" fill="#8B1E3F"/>
+<text x="400" y="1493" font-size="13.5" font-weight="700" fill="#fff">votos</text>
+<rect x="389" y="1504" width="268" height="22" fill="#FAEFF3" opacity="0.55"/>
+<text x="400" y="1519" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="646" y="1519" font-size="9.5" font-weight="700" fill="#8B1E3F" text-anchor="end">PK</text>
+<text x="400" y="1541" font-size="11.5" fill="#111827">votacion_id</text>
+<text x="646" y="1541" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ votaciones</text>
+<rect x="389" y="1548" width="268" height="22" fill="#FAEFF3" opacity="0.55"/>
+<text x="400" y="1563" font-size="11.5" fill="#111827">opcion_id</text>
+<text x="646" y="1563" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ votacion_opciones</text>
+<text x="400" y="1585" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="646" y="1585" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="400" y="1607" font-size="10" font-style="italic" fill="#9CA3AF">+ 1 columnas</text>
+<rect x="734" y="1335" width="270" height="150" rx="8" fill="#000" opacity="0.07"/>
+<rect x="732" y="1332" width="270" height="150" rx="8" fill="#FFFFFF" stroke="#8B1E3F" stroke-width="1.4"/>
+<path d="M732,1364 V1340 a8,8 0 0 1 8,-8 H994 a8,8 0 0 1 8,8 V1364 Z" fill="#8B1E3F"/>
+<text x="744" y="1353" font-size="13.5" font-weight="700" fill="#fff">solicitudes_aprobacion</text>
+<rect x="733" y="1364" width="268" height="22" fill="#FAEFF3" opacity="0.55"/>
+<text x="744" y="1379" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="990" y="1379" font-size="9.5" font-weight="700" fill="#8B1E3F" text-anchor="end">PK</text>
+<text x="744" y="1401" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="990" y="1401" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="733" y="1408" width="268" height="22" fill="#FAEFF3" opacity="0.55"/>
+<text x="744" y="1423" font-size="11.5" fill="#111827">creado_por</text>
+<text x="990" y="1423" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="744" y="1445" font-size="11.5" fill="#111827">decidido_por</text>
+<text x="990" y="1445" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="744" y="1467" font-size="10" font-style="italic" fill="#9CA3AF">+ 8 columnas</text>
+<rect x="1154" y="1335" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1152" y="1332" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#3F5E1A" stroke-width="1.4"/>
+<path d="M1152,1364 V1340 a8,8 0 0 1 8,-8 H1414 a8,8 0 0 1 8,8 V1364 Z" fill="#3F5E1A"/>
+<text x="1164" y="1353" font-size="13.5" font-weight="700" fill="#fff">sesiones_chat</text>
+<rect x="1153" y="1364" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1164" y="1379" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1410" y="1379" font-size="9.5" font-weight="700" fill="#3F5E1A" text-anchor="end">PK</text>
+<text x="1164" y="1401" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1410" y="1401" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1153" y="1408" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1164" y="1423" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="1410" y="1423" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1164" y="1445" font-size="10" font-style="italic" fill="#9CA3AF">+ 3 columnas</text>
+<rect x="1154" y="1497" width="270" height="150" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1152" y="1494" width="270" height="150" rx="8" fill="#FFFFFF" stroke="#3F5E1A" stroke-width="1.4"/>
+<path d="M1152,1526 V1502 a8,8 0 0 1 8,-8 H1414 a8,8 0 0 1 8,8 V1526 Z" fill="#3F5E1A"/>
+<text x="1164" y="1515" font-size="13.5" font-weight="700" fill="#fff">conversaciones_directas</text>
+<rect x="1153" y="1526" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1164" y="1541" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1410" y="1541" font-size="9.5" font-weight="700" fill="#3F5E1A" text-anchor="end">PK</text>
+<text x="1164" y="1563" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="1410" y="1563" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<rect x="1153" y="1570" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1164" y="1585" font-size="11.5" fill="#111827">residente_usuario_id</text>
+<text x="1410" y="1585" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1164" y="1607" font-size="11.5" fill="#111827">ultimo_remitente_id</text>
+<text x="1410" y="1607" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1164" y="1629" font-size="10" font-style="italic" fill="#9CA3AF">+ 6 columnas</text>
+<rect x="1498" y="1335" width="270" height="106" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1496" y="1332" width="270" height="106" rx="8" fill="#FFFFFF" stroke="#3F5E1A" stroke-width="1.4"/>
+<path d="M1496,1364 V1340 a8,8 0 0 1 8,-8 H1758 a8,8 0 0 1 8,8 V1364 Z" fill="#3F5E1A"/>
+<text x="1508" y="1353" font-size="13.5" font-weight="700" fill="#fff">mensajes_chat</text>
+<rect x="1497" y="1364" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1508" y="1379" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1754" y="1379" font-size="9.5" font-weight="700" fill="#3F5E1A" text-anchor="end">PK</text>
+<text x="1508" y="1401" font-size="11.5" fill="#111827">sesion_id</text>
+<text x="1754" y="1401" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ sesiones_chat</text>
+<text x="1508" y="1423" font-size="10" font-style="italic" fill="#9CA3AF">+ 3 columnas</text>
+<rect x="1498" y="1475" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1496" y="1472" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#3F5E1A" stroke-width="1.4"/>
+<path d="M1496,1504 V1480 a8,8 0 0 1 8,-8 H1758 a8,8 0 0 1 8,8 V1504 Z" fill="#3F5E1A"/>
+<text x="1508" y="1493" font-size="13.5" font-weight="700" fill="#fff">mensajes_directos</text>
+<rect x="1497" y="1504" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1508" y="1519" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="1754" y="1519" font-size="9.5" font-weight="700" fill="#3F5E1A" text-anchor="end">PK</text>
+<text x="1508" y="1541" font-size="11.5" fill="#111827">conversacion_id</text>
+<text x="1754" y="1541" font-size="10" font-weight="600" fill="#6B7280" text-anchor="end">→ conversaciones_directas</text>
+<rect x="1497" y="1548" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1508" y="1563" font-size="11.5" fill="#111827">remitente_id</text>
+<text x="1754" y="1563" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1508" y="1585" font-size="10" font-style="italic" fill="#9CA3AF">+ 8 columnas</text>
+<rect x="1842" y="1335" width="270" height="128" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1840" y="1332" width="270" height="128" rx="8" fill="#FFFFFF" stroke="#3F5E1A" stroke-width="1.4"/>
+<path d="M1840,1364 V1340 a8,8 0 0 1 8,-8 H2102 a8,8 0 0 1 8,8 V1364 Z" fill="#3F5E1A"/>
+<text x="1852" y="1353" font-size="13.5" font-weight="700" fill="#fff">notificaciones</text>
+<rect x="1841" y="1364" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1852" y="1379" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="2098" y="1379" font-size="9.5" font-weight="700" fill="#3F5E1A" text-anchor="end">PK</text>
+<text x="1852" y="1401" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="2098" y="1401" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<rect x="1841" y="1408" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1852" y="1423" font-size="11.5" fill="#111827">id_conjunto</text>
+<text x="2098" y="1423" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="end">→ conjuntos</text>
+<text x="1852" y="1445" font-size="10" font-style="italic" fill="#9CA3AF">+ 13 columnas</text>
+<rect x="1842" y="1497" width="270" height="106" rx="8" fill="#000" opacity="0.07"/>
+<rect x="1840" y="1494" width="270" height="106" rx="8" fill="#FFFFFF" stroke="#3F5E1A" stroke-width="1.4"/>
+<path d="M1840,1526 V1502 a8,8 0 0 1 8,-8 H2102 a8,8 0 0 1 8,8 V1526 Z" fill="#3F5E1A"/>
+<text x="1852" y="1515" font-size="13.5" font-weight="700" fill="#fff">push_suscripciones</text>
+<rect x="1841" y="1526" width="268" height="22" fill="#F1F6EA" opacity="0.55"/>
+<text x="1852" y="1541" font-size="11.5" font-weight="700" fill="#111827">id</text>
+<text x="2098" y="1541" font-size="9.5" font-weight="700" fill="#3F5E1A" text-anchor="end">PK</text>
+<text x="1852" y="1563" font-size="11.5" fill="#111827">usuario_id</text>
+<text x="2098" y="1563" font-size="10" font-weight="600" fill="#C2410C" text-anchor="end">→ usuarios</text>
+<text x="1852" y="1585" font-size="10" font-style="italic" fill="#9CA3AF">+ 5 columnas</text>
+<rect x="44" y="1674" width="2066" height="96" rx="12" fill="#F9FAFB" stroke="#E5E7EB"/>
+<text x="64" y="1700" font-size="13" font-weight="700" fill="#111827">Cómo leer el diagrama</text>
+<line x1="64" y1="1730" x2="134" y2="1730" stroke="#4B5563" stroke-width="1.6"/>
+<line x1="73" y1="1724" x2="73" y2="1736" stroke="#374151" stroke-width="1.8"/>
+<line x1="123" y1="1730" x2="134" y2="1724" stroke="#374151" stroke-width="1.6"/>
+<line x1="123" y1="1730" x2="134" y2="1730" stroke="#374151" stroke-width="1.6"/>
+<line x1="123" y1="1730" x2="134" y2="1736" stroke="#374151" stroke-width="1.6"/>
+<circle cx="117" cy="1730" r="3.6" fill="#fff" stroke="#374151" stroke-width="1.5"/>
+<text x="146" y="1734" font-size="11.5" fill="#374151">Un registro padre (barra) tiene 0 o muchos hijos (pata de gallo). Círculo = el hijo es opcional.</text>
+<text x="64" y="1758" font-size="11.5" fill="#374151"><tspan fill="#1D4ED8" font-weight="700">→ conjuntos</tspan>: 22 tablas guardan a qué copropiedad pertenece cada dato (aislamiento multi-conjunto).   <tspan fill="#C2410C" font-weight="700">→ usuarios</tspan>: 25 relaciones registran quién creó, revisó o recibió cada registro.   Se muestran como etiqueta (no como línea) para que el diagrama sea legible.</text>
+</svg>

@@ -12,7 +12,7 @@ Uso:
 Qué hace, en orden:
  1. Se conecta a la base administrativa `postgres`.
  2. Crea la base de datos si no existe (con --recrear la elimina primero).
- 3. Ejecuta db/init.sql (crea las 18 tablas, índices, triggers y el RBAC).
+ 3. Ejecuta db/init.sql (crea las 31 tablas, índices, triggers, configuraciones y el RBAC).
  4. Muestra un resumen de lo creado.
 El usuario administrador y los datos demo los siembra el backend al arrancar
 (backend/app/seed.py), así que basta con iniciar la API después.
