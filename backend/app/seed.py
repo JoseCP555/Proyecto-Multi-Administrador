@@ -204,17 +204,47 @@ def ejecutar_seed(db: Session) -> None:
     db.flush()
 
     # ---- Configuración -----------------------------------------------------
-    configs = [
-        ("company_name", "Multi-Administrador S.A.S.", "Nombre de la empresa admin"),
-        ("currency", "COP", "Moneda (pesos colombianos)"),
-        ("interest_rate_late", "0.02", "Interés mensual por mora"),
-        ("chatbot_engine", os.getenv("CHATBOT_ENGINE", "ollama"), "Motor del chatbot (ollama o local)"),
-        ("ollama_model", os.getenv("OLLAMA_MODEL", "llama3.2:3b"), "Modelo de Ollama para el chatbot"),
-    ]
-    for clave, valor, desc in configs:
-        db.add(Configuracion(clave=clave, valor=valor, descripcion=desc))
+    sincronizar_configuraciones(db, commit=False)
 
     db.commit()
+
+
+# Parámetros globales de referencia: (clave, valor, descripción, categoría, tipo).
+# Es el mismo catálogo que carga db/init.sql; se inserta solo lo que falte.
+CONFIG_GLOBAL = [
+    ("company_name", "Multi-Administrador S.A.S.", "Nombre de la empresa administradora", "general", "texto"),
+    ("currency", "COP", "Moneda (pesos colombianos)", "general", "texto"),
+    ("timezone", "America/Bogota", "Zona horaria del sistema", "general", "texto"),
+    ("interest_rate_late", "0.02", "Interés mensual por mora", "finanzas", "numero"),
+    ("session_expire_minutes", "30", "Minutos de vigencia de la sesión", "seguridad", "numero"),
+    ("max_login_attempts", "5", "Intentos de inicio de sesión antes de bloquear", "seguridad", "numero"),
+    ("login_lockout_minutes", "10", "Minutos de bloqueo tras exceder los intentos", "seguridad", "numero"),
+    ("email_verification_hours", "24", "Horas de vigencia del enlace de verificación", "seguridad", "numero"),
+    ("max_upload_documento_mb", "20", "Tamaño máximo de documentos (MB)", "archivos", "numero"),
+    ("max_upload_pago_mb", "10", "Tamaño máximo de comprobantes de pago (MB)", "archivos", "numero"),
+    ("max_upload_adjunto_mb", "10", "Tamaño máximo de adjuntos del chat (MB)", "archivos", "numero"),
+    ("max_upload_foto_mb", "2", "Tamaño máximo de foto de perfil (MB)", "archivos", "numero"),
+    ("max_upload_logo_mb", "2", "Tamaño máximo del logo del conjunto (MB)", "archivos", "numero"),
+    ("notificaciones_correo", "true", "Envío de notificaciones por correo (global)", "notificaciones", "booleano"),
+    ("scheduler_interval_seconds", "1800", "Cada cuántos segundos corre el programador", "notificaciones", "numero"),
+    ("event_reminder_hours", "48", "Horas de anticipación del aviso de eventos", "notificaciones", "numero"),
+    ("chatbot_engine", os.getenv("CHATBOT_ENGINE", "ollama"), "Motor del chatbot (ollama o local)", "chatbot", "texto"),
+    ("ollama_model", os.getenv("OLLAMA_MODEL", "llama3.2:3b"), "Modelo de Ollama para el chatbot", "chatbot", "texto"),
+]
+
+
+def sincronizar_configuraciones(db: Session, commit: bool = True) -> None:
+    """Inserta los parámetros globales que falten (idempotente; no pisa lo ya personalizado)."""
+    existentes = {
+        c.clave for c in db.query(Configuracion).filter(Configuracion.id_conjunto.is_(None)).all()
+    }
+    for clave, valor, desc, categoria, tipo in CONFIG_GLOBAL:
+        if clave not in existentes:
+            db.add(Configuracion(
+                clave=clave, valor=valor, descripcion=desc, categoria=categoria, tipo=tipo,
+            ))
+    if commit:
+        db.commit()
 
 
 def sincronizar_config_chatbot(db: Session) -> None:
@@ -231,7 +261,7 @@ def sincronizar_config_chatbot(db: Session) -> None:
     modelo_env = (os.getenv("OLLAMA_MODEL") or "llama3.2:3b").strip()
 
     cambio = False
-    cfg_motor = db.query(Configuracion).filter(Configuracion.clave == "chatbot_engine").first()
+    cfg_motor = db.query(Configuracion).filter(Configuracion.clave == "chatbot_engine", Configuracion.id_conjunto.is_(None)).first()
     if not cfg_motor:
         db.add(Configuracion(
             clave="chatbot_engine",
@@ -244,7 +274,7 @@ def sincronizar_config_chatbot(db: Session) -> None:
         cfg_motor.descripcion = "Motor del chatbot (ollama o local)"
         cambio = True
 
-    cfg_modelo = db.query(Configuracion).filter(Configuracion.clave == "ollama_model").first()
+    cfg_modelo = db.query(Configuracion).filter(Configuracion.clave == "ollama_model", Configuracion.id_conjunto.is_(None)).first()
     if not cfg_modelo:
         db.add(Configuracion(
             clave="ollama_model",

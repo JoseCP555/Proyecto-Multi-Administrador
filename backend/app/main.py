@@ -22,7 +22,7 @@ from app.routers import (
 )
 from app.auditoria import AuditoriaMiddleware
 from app import programador
-from app.seed import ejecutar_seed, sembrar_conjuntos, sincronizar_config_chatbot
+from app.seed import ejecutar_seed, sembrar_conjuntos, sincronizar_config_chatbot, sincronizar_configuraciones
 from app.permisos import sincronizar_permisos
 
 logging.basicConfig(level=logging.INFO)
@@ -68,6 +68,14 @@ _MIGRACIONES_PG = (
     # UH-21: categoría y evidencias del reporte de daños.
     "ALTER TABLE tareas_mantenimiento ADD COLUMN IF NOT EXISTS categoria VARCHAR(30) DEFAULT 'unidad'",
     "ALTER TABLE tareas_mantenimiento ADD COLUMN IF NOT EXISTS evidencias TEXT",
+    # Configuraciones: categoría, tipo, ámbito por conjunto y bandera editable.
+    "ALTER TABLE configuraciones ADD COLUMN IF NOT EXISTS categoria VARCHAR(40) NOT NULL DEFAULT 'general'",
+    "ALTER TABLE configuraciones ADD COLUMN IF NOT EXISTS tipo VARCHAR(20) NOT NULL DEFAULT 'texto'",
+    "ALTER TABLE configuraciones ADD COLUMN IF NOT EXISTS id_conjunto INTEGER REFERENCES conjuntos(id) ON DELETE CASCADE",
+    "ALTER TABLE configuraciones ADD COLUMN IF NOT EXISTS editable BOOLEAN NOT NULL DEFAULT TRUE",
+    "ALTER TABLE configuraciones DROP CONSTRAINT IF EXISTS configuraciones_clave_key",
+    "CREATE UNIQUE INDEX IF NOT EXISTS uq_config_global ON configuraciones (clave) WHERE id_conjunto IS NULL",
+    "CREATE UNIQUE INDEX IF NOT EXISTS uq_config_conjunto ON configuraciones (clave, id_conjunto) WHERE id_conjunto IS NOT NULL",
 )
 
 _es_postgres = engine.dialect.name == "postgresql"
@@ -101,6 +109,10 @@ if not _es_postgres:
             ("conjuntos", "umbral_gasto", "NUMERIC(12, 2) DEFAULT 2000000"),
             ("tareas_mantenimiento", "categoria", "VARCHAR(30) DEFAULT 'unidad'"),
             ("tareas_mantenimiento", "evidencias", "TEXT"),
+            ("configuraciones", "categoria", "VARCHAR(40) NOT NULL DEFAULT 'general'"),
+            ("configuraciones", "tipo", "VARCHAR(20) NOT NULL DEFAULT 'texto'"),
+            ("configuraciones", "id_conjunto", "INTEGER"),
+            ("configuraciones", "editable", "BOOLEAN NOT NULL DEFAULT 1"),
         ):
             try:
                 columnas = [c["name"] for c in inspect(_conn).get_columns(_tabla)]
@@ -224,8 +236,9 @@ def arrancar():
         ejecutar_seed(db)
         try:
             sincronizar_config_chatbot(db)
+            sincronizar_configuraciones(db)
         except Exception as exc:  # noqa: BLE001
-            logging.getLogger("app.chatbot").error("No se pudo sincronizar config chatbot: %s", exc)
+            logging.getLogger("app.chatbot").error("No se pudo sincronizar la configuración: %s", exc)
             db.rollback()
         # Conjuntos de demostración y datos por conjunto (idempotente).
         try:

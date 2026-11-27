@@ -7,7 +7,7 @@ Comprueba, sobre la base que use el backend en este momento, que todo exista:
 
 Revisa:
   • Motor y destino (PostgreSQL o SQLite), y si hubo algún aviso.
-  • Que estén las 18 tablas del modelo.
+  • Que estén las 31 tablas del modelo.
   • Que no falte ninguna columna respecto a app/models.py (lo que provoca
     errores tipo "column ... does not exist").
   • Conteo de filas por tabla.

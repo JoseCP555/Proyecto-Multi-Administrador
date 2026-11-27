@@ -423,7 +423,10 @@ class EventoResponse(BaseModel):
 class ConfigSchema(BaseModel):
     clave: str
     valor: str
-    descripcion: Optional[str]
+    descripcion: Optional[str] = None
+    categoria: Optional[str] = None
+    tipo: Optional[str] = None
+    id_conjunto: Optional[int] = None
 
 
 class ConfigResponse(BaseModel):
@@ -431,6 +434,10 @@ class ConfigResponse(BaseModel):
     clave: str
     valor: str
     descripcion: Optional[str]
+    categoria: str = "general"
+    tipo: str = "texto"
+    id_conjunto: Optional[int] = None
+    editable: bool = True
 
     class Config:
         from_attributes = True

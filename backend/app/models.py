@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, Text, ForeignKey,
-    Numeric, Date, UniqueConstraint,
+    Numeric, Date, UniqueConstraint, Index, text as sa_text,
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -81,7 +81,7 @@ class Usuario(Base):
     activo = Column(Boolean, default=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
     ultimo_acceso = Column(DateTime, nullable=True)
-    id_copropiedad = Column(Integer, nullable=True)
+    id_copropiedad = Column(Integer, ForeignKey("conjuntos.id", ondelete="SET NULL"), nullable=True, index=True)  # heredado
     # Conjunto al que pertenece el usuario (contexto por defecto).
     id_conjunto = Column(Integer, ForeignKey("conjuntos.id"), nullable=True, index=True)
 
@@ -268,12 +268,32 @@ class Evento(Base):
 # CONFIGURACIÓN DEL SISTEMA
 # ---------------------------------------------------------------------------
 class Configuracion(Base):
+    """Parámetro del sistema (clave/valor), global o por conjunto.
+
+    * `categoria`   agrupa los parámetros en el panel (general, finanzas, ...).
+    * `tipo`        texto | numero | booleano | json (cómo leer `valor`).
+    * `id_conjunto` NULL = global; con valor = sobreescribe el global para ese conjunto.
+    * `editable`    False = informativo, no se modifica desde el panel.
+    """
+
     __tablename__ = "configuraciones"
+    __table_args__ = (
+        Index("uq_config_global", "clave", unique=True,
+              postgresql_where=sa_text("id_conjunto IS NULL"),
+              sqlite_where=sa_text("id_conjunto IS NULL")),
+        Index("uq_config_conjunto", "clave", "id_conjunto", unique=True,
+              postgresql_where=sa_text("id_conjunto IS NOT NULL"),
+              sqlite_where=sa_text("id_conjunto IS NOT NULL")),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
-    clave = Column(String(120), unique=True, nullable=False)
+    clave = Column(String(120), nullable=False)
     valor = Column(Text, nullable=False)
     descripcion = Column(String(255))
+    categoria = Column(String(40), nullable=False, default="general", server_default="general")
+    tipo = Column(String(20), nullable=False, default="texto", server_default="texto")
+    id_conjunto = Column(Integer, ForeignKey("conjuntos.id", ondelete="CASCADE"), nullable=True, index=True)
+    editable = Column(Boolean, nullable=False, default=True, server_default="true")
     actualizado = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
@@ -590,7 +610,7 @@ class ConversacionDirecta(Base):
     estado = Column(String(20), default="abierta", nullable=False)  # abierta | resuelta
     ultimo_mensaje = Column(Text, nullable=True)
     ultimo_mensaje_en = Column(DateTime, nullable=True, index=True)
-    ultimo_remitente_id = Column(Integer, nullable=True)
+    ultimo_remitente_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True, index=True)
     ultimo_remitente_rol = Column(String(20), nullable=True)  # residente | admin
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 

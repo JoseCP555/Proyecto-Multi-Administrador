@@ -107,7 +107,10 @@ def obtener_config_chatbot(db: Session) -> tuple[str, str]:
     try:
         filas = (
             db.query(models.Configuracion)
-            .filter(models.Configuracion.clave.in_(["chatbot_engine", "ollama_model"]))
+            .filter(
+                models.Configuracion.clave.in_(["chatbot_engine", "ollama_model"]),
+                models.Configuracion.id_conjunto.is_(None),
+            )
             .all()
         )
         mapa = {f.clave: (f.valor or "").strip() for f in filas}
