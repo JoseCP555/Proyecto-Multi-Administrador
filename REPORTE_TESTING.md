@@ -231,3 +231,45 @@ DESACTIVAR_PROGRAMADOR=1 .venv/bin/python -m pytest tests/test_hus_nuevas.py -q
 - `npx tsc --noEmit` → **0 errores**.
 - `npm run build` → **✓ built** (bundle 627 kB, gzip ≈ 165 kB).
 - Verificación visual con Playwright (1440×950) sobre `/dashboard/{inicio,pqrs,reservas,comunicados,pagos,visitantes,votaciones,aprobaciones,consejo,auditoria,perfil,eventos}` como super_admin, residente y consejo: **0 errores de consola**; el residente recibe «Acceso restringido» al abrir `/dashboard/auditoria`.
+
+
+## Ejecución adicional reportada — 26/11/2026
+
+**Responsable:** Kristian Luna  
+**Rama indicada:** `Main`  
+**Entorno:** Python 3.13, FastAPI, pytest y SQLite temporal (`hus_test.db`). No se usaron Redis, SMTP ni Ollama reales.
+
+### Resumen reportado
+
+| Suite | Casos | Pasaron | Fallaron |
+|---|---:|---:|---:|
+| `tests/test_unit.py` | 10 | 9 | 1 |
+| `tests/test_hus_nuevas.py` | 30 | 29 | 1 |
+| `tests/test_mensajeria.py` | 6 | 6 | 0 |
+| `tests/test_chatbot_ollama.py` | 5 | 5 | 0 |
+| **Total reportado** | **51** | **49** | **2** |
+
+Estas suites incluyen distintos tipos de pruebas; no se deben presentar los 51 casos como pruebas unitarias. `test_hus_nuevas.py` utiliza `TestClient` para probar flujos de la API.
+
+### Pruebas pendientes de ejecución
+
+Según el reporte de Kristian, no se ejecutaron:
+
+- `tests/test_api.py`: 20 casos; requiere PostgreSQL y Redis.
+- `tests/test_rbac.py`: 22 casos; requiere la API en ejecución.
+- `tests/test_notificaciones_reales.py`: 6 casos; requiere la API en ejecución.
+
+**Total pendiente reportado:** 48 casos.
+
+### Fallos reportados
+
+Dos pruebas fallaron por un problema relacionado con el cálculo de tiempo de expiración de los tokens:
+
+- `test_segundos_restantes`: esperaba un valor mayor que 0 y obtuvo 0.
+- `test_token_expira_en_30_minutos`: la diferencia entre `exp` e `iat` no fue la esperada.
+
+Kristian relaciona ambos fallos con el uso de `datetime.utcnow().timestamp()` en `backend/app/auth_jwt.py` y propone corregir el cálculo con `time.time()`. El defecto queda **abierto hasta que se aplique la corrección y se vuelvan a ejecutar las pruebas**.
+
+### Evidencia
+
+Adjuntar la salida de consola o captura de la ejecución de Kristian y conservar el documento original del reporte como respaldo. Los resultados de esta sección son los reportados por Kristian para la fecha indicada; no representan una ejecución nueva.

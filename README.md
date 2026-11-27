@@ -94,6 +94,19 @@ Cliente (navegador)  ──►  Frontend (:3000)  ──►  Backend FastAPI (:8
                                                        caché/sesiones
 ```
 
+## Documentación de la API (adición)
+
+El backend de este repositorio está desarrollado con FastAPI. Cuando el backend está en ejecución, se puede consultar la documentación interactiva y el esquema OpenAPI en estas direcciones:
+
+- Swagger UI: <http://localhost:8000/docs>
+- ReDoc: <http://localhost:8000/redoc>
+- Esquema OpenAPI en JSON: <http://localhost:8000/openapi.json>
+- Estado del backend: <http://localhost:8000/health>
+
+Swagger UI y ReDoc muestran las rutas y esquemas registrados por la versión del backend que esté ejecutándose. Algunas operaciones requieren iniciar sesión y tener permisos suficientes. La ruta `/health` informa el estado y parte de la configuración de servicios; no es una prueba completa de todos los módulos.
+
+Este README documenta la API FastAPI de este repositorio. Si el criterio de entrega que menciona la “API del cuarto backend” se refiere a otro backend o repositorio del equipo, no debe identificarse como este sin confirmar primero con el docente cuál es.
+
 ## Novedades de la interfaz
 
 - **Logo y color por conjunto**: el modal *Agregar conjunto / Editar conjunto*
@@ -212,6 +225,21 @@ cd ../frontend && npm ci && npx tsc --noEmit && npm run build
 
 Detalle de cada caso en [`docs/IMPLEMENTACION_HUs.md`](docs/IMPLEMENTACION_HUs.md) y
 [`REPORTE_TESTING.md`](REPORTE_TESTING.md).
+
+
+### Aclaración para registrar pruebas de la entrega (adición)
+
+Los comandos y resultados ya descritos arriba pertenecen a la documentación existente y al reporte de testing. Para la entrega actual, ejecuta las pruebas en la rama y el commit que se van a presentar y registra la salida real; no tomes la presencia de un archivo de test como prueba de que pasó.
+
+En el código consultado en la rama `Main` se observan 10 funciones de prueba (`test_...`) en `backend/tests/test_unit.py` y 30 en `backend/tests/test_hus_nuevas.py`. Es un recuento de funciones escritas, no de ejecuciones exitosas. Las pruebas de `test_hus_nuevas.py` ejercitan la API con `TestClient` y SQLite; no deben sumarse automáticamente como unitarias. Por tanto, ese recuento de `test_unit.py` por sí solo no alcanza un requisito de 20 pruebas unitarias distintas.
+
+Al actualizar el reporte de entrega, registra al menos:
+
+| Fecha de ejecución | Rama / commit | Comando o suite | Tipo de prueba | Aprobadas | Fallidas | Omitidas / errores | Evidencia |
+|---|---|---|---|---:|---:|---:|---|
+| [completar con la ejecución real] | [completar] | [completar] | [unitaria / API-integración / UI / arranque] | [n] | [n] | [n] | [ruta o enlace] |
+
+No publiques contraseñas, claves, tokens ni datos personales en la salida o en las capturas. Los resultados históricos de `REPORTE_TESTING.md` deben conservar su fecha y no presentarse como una ejecución nueva.
 
 ## Correo de verificación y recuperación (SMTP)
 
@@ -406,4 +434,3 @@ multi-admin/
 
 Desarrollado con React, FastAPI y PostgreSQL. Proyecto académico.
 # Multi.Admin
-
